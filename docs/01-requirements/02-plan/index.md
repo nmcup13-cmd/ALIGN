@@ -11,4 +11,4 @@
 
 ## เอกสาร
 
-_ยังไม่มีเอกสาร — รอกำหนด roadmap จาก [[../01-spec/requirement-align|requirement-align]]_
+- [[product-backlog|Product Backlog: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]]

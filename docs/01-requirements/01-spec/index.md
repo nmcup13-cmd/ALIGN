@@ -11,4 +11,4 @@
 
 ## เอกสาร
 
-- [[requirement-align|Requirement: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]]
+- [[requirement-align|Requirement: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]] → แตกเป็นแผนงานที่ [[../02-plan/product-backlog|product-backlog]]
