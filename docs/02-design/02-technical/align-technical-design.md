@@ -12,7 +12,7 @@
 
 ```
 [ผู้ใช้งาน]
-  อาจารย์ผู้สอน (Instructor) / ผู้ประสานหลักสูตร (Coordinator)
+  อาจารย์ผู้สอน (Instructor) / ผู้บริหารหลักสูตร (Program Administrator)
         |
         | HTTPS (REST/JSON)
         v
@@ -21,7 +21,7 @@
         |
         v
 [Backend API — ALIGN API]
-  - Auth / สิทธิ์ตามบทบาท (Instructor / Coordinator + scope หลักสูตร)
+  - Auth / สิทธิ์ตามบทบาท (Instructor / Program Administrator + scope หลักสูตร)
   - CRUD: Curriculum, PLO, CLO, CLO-PLO mapping, Course
   - บันทึกการสอน + แนบหลักฐาน
   - Orchestrate AI matching (เรียก AI Matching Service)
@@ -54,6 +54,7 @@
 - **AI Matching Service เป็นบริการแยก** ไม่เขียนผลลงฐานข้อมูลหลักโดยตรง — ผลที่ได้ทุกครั้งจะถูกเก็บเป็น "draft" ในตาราง `ai_match_result` (จับคู่ CLO/PLO) หรือ `syllabus_gap_result` (วิเคราะห์ gap เทียบ course syllabus — เป็นงานแยกจากการจับคู่ CLO/PLO) แล้วรอ backend API เรียก endpoint ยืนยันจากอาจารย์ก่อนจึงจะแปลงเป็นข้อมูลที่ใช้งานจริง (human-in-the-loop ตามกฎ #3)
 - **Evidence/File Storage แยกจาก DB เชิงสัมพันธ์** เพื่อให้ควบคุมสิทธิ์การเข้าถึงไฟล์ (ที่อาจมีข้อมูลส่วนบุคคลของนักศึกษา) ได้อย่างละเอียด ตาม PDPA (กฎ #5) โดย backend API เป็นประตูเดียวที่คุยกับ storage — ห้าม client เข้าถึง storage ตรง
 - **Word-export Service อ่านเฉพาะข้อมูลที่ยืนยันแล้ว** (confirmed) ไม่ใช่ draft จาก AI เพื่อไม่ให้เอกสารอ้างอิงหลักฐานที่ยังไม่ผ่านการตรวจสอบ (กฎ #4)
+- **งานประกันคุณภาพ (QA) ไม่ใช่ user/role ของระบบ ALIGN** — เอกสารที่ Word-export Service สร้างขึ้น (มคอ./QA ในไดอะแกรมด้านบน) มีไว้ให้ **ผู้บริหารหลักสูตร** เป็นผู้ดาวน์โหลดจากระบบแล้วนำไปส่งต่อให้ QA ใช้ตรวจสอบภายนอกระบบเท่านั้น QA ไม่มี login, ไม่มี account, และไม่มี endpoint ใดในระบบนี้ที่ให้ QA เข้าถึงโดยตรง (ตามขอบเขตในสเปค)
 
 ---
 
@@ -116,7 +117,9 @@
 | content | JSON/text (โครงสร้างยืดหยุ่น) | เนื้อหาแผนการสอน เก็บเป็นรายการหัวข้อ เช่น `[{week_no, topic, detail}]` — สเปค (AB-19) ไม่ได้กำหนดโครงสร้างข้อมูลที่แน่นอน จึงออกแบบเป็น JSON ยืดหยุ่นแทน schema ตายตัว ทีมพัฒนาปรับรายละเอียดฟิลด์ย่อยได้ตามฟอร์แมต syllabus จริงที่ใช้ |
 | origin_file_ref | string, nullable | ตัวชี้ไฟล์ต้นฉบับที่อัปโหลด (ถ้าอาจารย์อัปโหลดไฟล์ syllabus แทน/ร่วมกับการป้อนเนื้อหาเอง) เก็บใน File Storage เดียวกันกับ evidence แต่เป็น pointer แยก — syllabus ไม่ใช่ชิ้นงานนักศึกษา จึงไม่ต้องมี flag PII เหมือน `evidence` |
 | updated_by | FK → user | อาจารย์ผู้แก้ไขล่าสุด |
-| updated_at | datetime | เวลาที่แก้ไข/อัปเดตล่าสุด — รองรับ AB-19 ที่อนุญาตแก้ไข syllabus เมื่อแผนการสอนเปลี่ยน (เก็บเป็น update-in-place ไม่ทำ version history เพราะสเปคไม่ได้ระบุความต้องการนี้) |
+| updated_at | datetime | เวลาที่แก้ไข/อัปเดตล่าสุด — รองรับ AB-19 ที่อนุญาตแก้ไข syllabus เมื่อแผนการสอนเปลี่ยน (เก็บเป็น update-in-place ไม่ทำ version history) |
+
+> **Accepted Risk (ตัดสินใจแล้ว — update-in-place ไม่มี version history)**: ถ้าอาจารย์แก้ไข `syllabus.content` กลางภาคการศึกษา ผลวิเคราะห์ gap ย้อนหลัง (`syllabus_gap_result` ของ `teaching_record` ที่บันทึกไว้ก่อนแก้ไข) จะถูกคำนวณ/แสดงผลโดยเทียบกับ **syllabus เวอร์ชันปัจจุบัน (ล่าสุด) เสมอ** ไม่ใช่เวอร์ชัน ณ ช่วงเวลาที่สอนจริง ซึ่งอาจทำให้ `missing_topics`/`extra_topics` ของสัปดาห์ที่ผ่านมาคลาดเคลื่อนหากมีการแก้ไขแผนการสอนภายหลัง — ยอมรับความเสี่ยงนี้เพราะสเปคไม่ได้กำหนดให้ต้องมี version history และเพื่อลดความซับซ้อนของ schema ในระยะแรก ถ้าพบว่าเป็นปัญหาจริงในการใช้งาน ให้พิจารณาเพิ่ม versioning ในเวอร์ชันถัดไป (ดู [[../../01-requirements/03-task/task-breakdown|task-breakdown]] T-067 ที่ปรับให้ตรงกับการตัดสินใจนี้แล้ว)
 
 ### 2.7 `teaching_record` (บันทึกการสอน)
 | ฟิลด์ | ชนิด | คำอธิบาย |
@@ -188,14 +191,16 @@
 |---|---|---|
 | user_id | PK | |
 | name / email | string | |
-| role | enum('instructor','coordinator') | 2 บทบาทตามสเปค |
-| coordinator_curriculum_scope | FK[] → curriculum, nullable | สำหรับ coordinator — ระบุว่าดูแลหลักสูตรกลุ่มใด ใช้จำกัด scope การเข้าถึงข้อมูล/หลักฐานข้ามหลักสูตร |
+| role | enum('instructor','program_admin') | 2 บทบาทตามสเปค — `program_admin` คือผู้บริหารหลักสูตร (Program Administrator) อาจารย์ที่รับผิดชอบหลักสูตร ประสานหลักสูตร และจัดทำรายงานประเมินตนเอง (SAR) |
+| program_admin_curriculum_scope | FK[] → curriculum, nullable | สำหรับ `program_admin` (ผู้บริหารหลักสูตร) — ระบุว่าดูแลหลักสูตรกลุ่มใด ใช้จำกัด scope การเข้าถึงข้อมูล/หลักฐานข้ามหลักสูตร |
+
+> **หมายเหตุ — QA ไม่ใช่ role/entity ในระบบนี้:** งานประกันคุณภาพ (QA) **ไม่มี** account และ**ไม่ปรากฏ**เป็นค่าใน `role` enum ข้างต้น QA ไม่เคย login เข้าระบบ ALIGN โดยตรง — ได้รับเฉพาะเอกสาร Word ที่ `program_admin` ดาวน์โหลดจากระบบ (ดู E5 หัวข้อ 3) แล้วส่งต่อให้ QA ใช้ตรวจสอบภายนอกระบบเท่านั้น ห้ามเพิ่ม `qa` เป็นค่าใน enum หรือออกแบบ schema/endpoint ใดๆ ให้ QA เข้าถึงระบบ (ตามข้อ Out of Scope ในสเปค)
 
 ### 2.13 Access-control / PDPA (ผูกกับ evidence)
 | ฟิลด์/แนวคิด | คำอธิบาย |
 |---|---|
 | `evidence_access_log` | ตาราง log แยก บันทึกทุกครั้งที่มีการเรียกดู/ดาวน์โหลดไฟล์หลักฐาน: `(log_id, evidence_id, accessed_by, accessed_at, action)` — ตาม AB-07 |
-| กติกาสิทธิ์ | ผู้เข้าถึง `evidence` ได้ต้องเป็น (ก) `instructor_id` ของ course ที่ teaching_record นั้นสังกัด หรือ (ข) `coordinator` ที่มี `curriculum_id` ของ course นั้นอยู่ใน `coordinator_curriculum_scope` เท่านั้น — ตรวจที่ backend API layer ทุก endpoint ที่ return ไฟล์/URL ของ evidence (ดูหัวข้อ 3) |
+| กติกาสิทธิ์ | ผู้เข้าถึง `evidence` ได้ต้องเป็น (ก) `instructor_id` ของ course ที่ teaching_record นั้นสังกัด หรือ (ข) ผู้ใช้ role `program_admin` ที่มี `curriculum_id` ของ course นั้นอยู่ใน `program_admin_curriculum_scope` เท่านั้น — ตรวจที่ backend API layer ทุก endpoint ที่ return ไฟล์/URL ของ evidence (ดูหัวข้อ 3) |
 
 **แผนภาพความสัมพันธ์แบบย่อ:**
 
@@ -210,7 +215,7 @@ ai_match_result *──* plo   (ผ่าน linked_plo_ids)
 course 1──* clo_coverage_summary *──1 clo   (derived จาก ai_match_result ที่ confirmed)
 course 1──* syllabus_gap_result *──1 syllabus   (derived จาก teaching_record เทียบ syllabus.content)
 user 1──* course (instructor_id)
-user *──* curriculum (coordinator_curriculum_scope)
+user *──* curriculum (program_admin_curriculum_scope)
 evidence 1──* evidence_access_log
 ```
 
@@ -229,7 +234,7 @@ evidence 1──* evidence_access_log
 | `POST /courses/{id}/clos` | เพิ่ม CLO ให้วิชา (tag curriculum ตามวิชาอัตโนมัติ) | req: `{code, description}` |
 | `POST /courses/{id}/clo-plo-mappings` | ผูก CLO–PLO | req: `{clo_id, plo_id}` — backend ต้อง validate `clo.curriculum_id == plo.curriculum_id` มิฉะนั้น 422 |
 | `GET /courses/{id}/setup-status` | เช็คว่าวิชาผูก CLO–PLO ครบเงื่อนไข (gate ก่อนบันทึกการสอน) หรือยัง | res: `{clo_plo_ready: boolean}` |
-| `GET /curricula/{year}/courses/status-overview` | ภาพรวมความครบถ้วนการตั้งค่าของทุกวิชาในกลุ่มหลักสูตร (สำหรับ coordinator, AB-04) | res: `[{course_id, name, clo_plo_ready}]` |
+| `GET /curricula/{year}/courses/status-overview` | ภาพรวมความครบถ้วนการตั้งค่าของทุกวิชาในกลุ่มหลักสูตร (สำหรับผู้บริหารหลักสูตร/`program_admin`, AB-04) | res: `[{course_id, name, clo_plo_ready}]` |
 | `PUT /courses/{id}/syllabus` | ป้อน/แก้ไข course syllabus ของรายวิชา (สร้างใหม่ถ้ายังไม่มี, อัปเดตทับถ้ามีอยู่แล้ว) — ใหม่ตาม AB-19 | req: `{content: [{week_no, topic, detail}]}` → res: `{syllabus_id, updated_at}` |
 | `POST /courses/{id}/syllabus/upload` | อัปโหลดไฟล์ syllabus ต้นฉบับ (ทางเลือกเสริมจากป้อนเนื้อหาเอง) — backend เก็บไฟล์ที่ File Storage แล้วบันทึก `origin_file_ref`; วิธีสกัดเนื้อหา/โครงสร้างจากไฟล์ (parsing) ยังไม่ระบุในสเปค ต้องตกลงกับทีมพัฒนาก่อนเริ่มจริง | req: multipart file → res: `{syllabus_id, origin_file_ref}` |
 | `GET /courses/{id}/syllabus` | ดึง course syllabus ปัจจุบันของรายวิชา (ใช้แสดงในหน้าจัดการวิชา และเป็น input ให้ AI gap analysis ใน E3) | res: `{syllabus_id, content, origin_file_ref, updated_at}` |
@@ -263,7 +268,7 @@ evidence 1──* evidence_access_log
 |---|---|---|
 | `GET /me/dashboard` | หน้าแรกอาจารย์: % ความสอดคล้องรวม (ตามสูตรใหม่ 2.10/AB-20), รายวิชาที่สอน, แจ้งเตือน CLO ขาดหลักฐาน | res: `{courses:[{course_id, curriculum_year, coverage_percent, matched_clo_count, total_clo_count}], gap_alerts:[{clo_id, code, course_id}]}` |
 | `GET /courses/{id}/clo-week-map` | แผนที่ CLO×สัปดาห์ + จำนวนชิ้นงานสะสม + สถานะเชื่อม PLO | res: `[{clo_id, week_no, evidence_count, linked_plo_status}]` |
-| `GET /curricula/{year}/dashboard` | ภาพรวมความสอดคล้องระดับหลักสูตร แยกกลุ่ม (สำหรับ coordinator, AB-14) — ตรวจ scope สิทธิ์ก่อนตอบ | res: `{curriculum_id, courses:[{course_id, coverage_percent}]}` |
+| `GET /curricula/{year}/dashboard` | ภาพรวมความสอดคล้องระดับหลักสูตร แยกกลุ่ม (สำหรับผู้บริหารหลักสูตร/`program_admin`, AB-14) — ตรวจ scope สิทธิ์ก่อนตอบ | res: `{curriculum_id, courses:[{course_id, coverage_percent}]}` |
 | `GET /courses/{id}/teaching-vs-syllabus` | **ใหม่ (AB-23)** — ส่วนเปรียบเทียบ "การสอนจริงที่บันทึก" กับ "CLO/course syllabus" สำหรับแดชบอร์ด แยกจากส่วน % ความสอดคล้องรวม (AB-11) และแจ้งเตือน CLO ขาดหลักฐาน (AB-12) อย่างชัดเจน — อ่านเฉพาะ `syllabus_gap_result` ที่ `state = 'confirmed'` เท่านั้น | res: `{course_id, missing_topics_count, extra_topics_count, missing_topics:[...], extra_topics:[...], last_confirmed_at}` — ถ้ายังไม่มีผลที่ confirmed ให้ตอบสถานะ `not_yet_confirmed` แทนตัวเลข |
 
 หมายเหตุ: `gap_alerts` คำนวณจาก query แบบ near-real-time (เช่น เมื่อโหลดแดชบอร์ดหรือ trigger หลังบันทึกการสอน/ยืนยันผล AI) เพื่อให้ตรงกฎ #2 ที่ต้องแจ้งทันที ไม่ใช่ batch job รายวัน — ส่วนเปรียบเทียบ `teaching-vs-syllabus` เป็นคนละส่วนกับ `gap_alerts`: `gap_alerts` แจ้งเตือน "CLO ที่ไม่มีข้อมูลการสอน/หลักฐานรองรับเลย" (กฎ #2) ในขณะที่ `teaching-vs-syllabus` เทียบ "เนื้อหาที่สอนจริง" กับ "แผน syllabus" (หัวข้อขาด/หัวข้อเกิน — AB-22/AB-23) ทั้งสองใช้ข้อมูลคนละชุดและต้องแสดงแยกส่วนกันในหน้าจอ
@@ -273,7 +278,7 @@ evidence 1──* evidence_access_log
 |---|---|---|
 | `POST /courses/{id}/export-word` | สร้างเอกสารสรุป CLO/PLO ของวิชา — อ่านเฉพาะ `ai_match_result.state = 'confirmed'`, `clo_coverage_summary` ที่ได้จากค่า confirmed, `syllabus_gap_result.state = 'confirmed'` (สำหรับส่วน Area of Improvement ตาม AB-16), และ evidence ที่แนบจริง | req: `{include_area_of_improvement: boolean}` (AB-18) → res: `{file_url}` หรือไฟล์ตรง |
 | `GET /export-jobs/{id}` | เช็คสถานะงานสร้างเอกสาร (ถ้าออกแบบเป็น async job) | res: `{status, download_url}` |
-| `GET /curricula/{year}/courses/{id}/export-word` (coordinator) | coordinator ดาวน์โหลดเอกสารของวิชาที่ตนดูแลตาม scope | ตรวจ `coordinator_curriculum_scope` ก่อนตอบ (กฎ #5) |
+| `GET /curricula/{year}/courses/{id}/export-word` (program_admin) | ผู้บริหารหลักสูตร (`program_admin`) ดาวน์โหลดเอกสารของวิชาที่ตนดูแลตาม scope เพื่อนำไปส่งต่อ QA ภายนอกระบบ | ตรวจ `program_admin_curriculum_scope` ก่อนตอบ (กฎ #5) |
 
 ทุก endpoint ที่แตะ `evidence` หรือ export เอกสาร ต้องผ่าน middleware ตรวจสิทธิ์ตามบทบาท+scope ก่อนถึง business logic เสมอ
 
@@ -313,7 +318,7 @@ evidence 1──* evidence_access_log
 ### 4.3 วิเคราะห์ Gap เทียบ course syllabus (แยกจาก CLO/PLO matching — AB-22)
 
 **Input ต่อการเรียกใช้งาน 1 ครั้ง (ระดับรายวิชา ไม่ใช่ระดับบันทึกการสอนเดียว):**
-- เนื้อหา course syllabus ของรายวิชานั้น (`syllabus.content`)
+- เนื้อหา course syllabus **เวอร์ชันปัจจุบัน** ของรายวิชานั้น (`syllabus.content` — update-in-place ไม่มี version history ดู Accepted Risk ที่ §2.6)
 - หัวข้อการสอนจริงทั้งหมดที่บันทึกไว้ของรายวิชานั้น (`teaching_record.topic` ทุกรายการ ณ เวลาที่ประมวลผล)
 
 **Output:**
@@ -338,7 +343,7 @@ evidence 1──* evidence_access_log
 | Evidence/File Storage | Object storage (เช่น S3-compatible) แยกจาก DB หลัก + ควบคุมสิทธิ์ผ่าน backend (signed URL ระยะสั้น หรือ proxy download) | ไฟล์ชิ้นงานมีขนาด/ชนิดหลากหลาย และต้องคุมสิทธิ์เข้าถึงตาม PDPA ได้ละเอียดกว่าเก็บเป็น BLOB ใน DB |
 | AI Matching Service | บริการแยก (internal service หรือเรียก LLM API ภายนอก) อยู่หลัง backend API เท่านั้น ไม่ให้ frontend เรียกตรง | แยก concern และควบคุม scope ข้อมูล (ส่งเฉพาะ CLO ของ curriculum ที่ถูกต้อง) ได้ง่ายกว่าให้ client คุยตรงกับ AI |
 | Word-export Service | ไลบรารี generate เอกสาร Word ฝั่ง backend (เช่น ไลบรารีสร้าง .docx จาก template) | ต้อง generate เอกสารตาม template มคอ./QA ที่มีรูปแบบคงที่ และอ่านข้อมูลจาก DB โดยตรงได้สะดวกกว่าทำฝั่ง client |
-| Auth | Session/token-based authentication พร้อม role (`instructor`/`coordinator`) และ scope (`coordinator_curriculum_scope`) แนบใน token/session | ต้องใช้ตรวจสิทธิ์ในทุก endpoint ที่แตะ evidence/เอกสารส่งออก |
+| Auth | Session/token-based authentication พร้อม role (`instructor`/`program_admin`) และ scope (`program_admin_curriculum_scope`) แนบใน token/session | ต้องใช้ตรวจสิทธิ์ในทุก endpoint ที่แตะ evidence/เอกสารส่งออก — QA ไม่มี account จึงไม่มี role สำหรับ QA ในระบบนี้ |
 
 ---
 
@@ -346,12 +351,13 @@ evidence 1──* evidence_access_log
 
 เอกสารนี้ยึดกฎทางธุรกิจ #5 (ข้อมูลส่วนบุคคลของนักศึกษาต้องเข้าถึงแบบจำกัดสิทธิ์) เป็นหลัก และแปลงเป็นกลไกระดับออกแบบดังนี้:
 
-1. **ขอบเขตสิทธิ์ (Authorization scope):** ผู้ใช้ที่เข้าถึงข้อมูล `evidence` ของวิชาใดวิชาหนึ่งได้ ต้องเป็น (ก) อาจารย์ที่เป็น `instructor_id` ของ `course` นั้น หรือ (ข) ผู้ประสานหลักสูตรที่มี `curriculum_id` ของ `course` นั้นอยู่ใน `coordinator_curriculum_scope` ของตนเองเท่านั้น — ตรวจที่ backend API layer ทุกครั้ง (ดูหัวข้อ 3) ไม่ใช่พึ่งการซ่อน UI ฝั่ง frontend อย่างเดียว
+1. **ขอบเขตสิทธิ์ (Authorization scope):** ผู้ใช้ที่เข้าถึงข้อมูล `evidence` ของวิชาใดวิชาหนึ่งได้ ต้องเป็น (ก) อาจารย์ที่เป็น `instructor_id` ของ `course` นั้น หรือ (ข) ผู้บริหารหลักสูตร (`program_admin`) ที่มี `curriculum_id` ของ `course` นั้นอยู่ใน `program_admin_curriculum_scope` ของตนเองเท่านั้น — ตรวจที่ backend API layer ทุกครั้ง (ดูหัวข้อ 3) ไม่ใช่พึ่งการซ่อน UI ฝั่ง frontend อย่างเดียว
 2. **ห้ามเข้าถึง storage ตรง:** client (frontend) ไม่มีสิทธิ์อ่านไฟล์จาก Evidence/File Storage โดยตรง ต้องผ่าน backend API เท่านั้น (proxy download หรือ signed URL ที่หมดอายุเร็ว) เพื่อให้ทุกการเข้าถึงถูกตรวจสิทธิ์และบันทึก log ได้
 3. **Audit log:** ทุกครั้งที่มีการเรียกดู/ดาวน์โหลดหลักฐาน ต้องเขียนลง `evidence_access_log` (ใคร, เมื่อไร, ไฟล์ไหน) เพื่อตรวจสอบย้อนหลังได้ ตาม AB-07
 4. **Flag ข้อมูลส่วนบุคคล:** ตาราง `evidence` มีฟิลด์ `contains_student_pii` (default true) เพื่อเตือนทีมพัฒนา/ผู้ดูแลระบบว่าไฟล์เหล่านี้ต้องได้รับการปฏิบัติเป็นข้อมูลอ่อนไหวเสมอ แม้จะยังไม่ได้ตรวจสอบเนื้อหาจริงทีละไฟล์
-5. **แยก scope ตามหลักสูตร:** เนื่องจากผู้ประสานหลักสูตรอาจดูแลเฉพาะหลักสูตร 2565 หรือ 2570 (ไม่จำเป็นต้องดูแลทั้งสองกลุ่ม) การตรวจสิทธิ์ระดับ endpoint ของ dashboard/export ระดับหลักสูตร (`/curricula/{year}/...`) ต้องตรวจ `coordinator_curriculum_scope` ควบคู่กับสิทธิ์ evidence เสมอ ไม่ใช่ตรวจแค่บทบาท (role) อย่างเดียว
-6. **ขอบเขตของหัวข้อนี้:** เอกสารนี้ระบุเฉพาะกลไกควบคุมสิทธิ์ระดับออกแบบ (design-level access control) ยังไม่ครอบคลุมรายละเอียดเชิงกฎหมาย/นโยบายองค์กร (เช่น ระยะเวลาการเก็บข้อมูล, ขั้นตอนขอความยินยอม) ซึ่งควรปรึกษาหน่วยงานที่รับผิดชอบด้าน PDPA ของมหาวิทยาลัยเพิ่มเติมก่อนใช้งานจริง
+5. **แยก scope ตามหลักสูตร:** เนื่องจากผู้บริหารหลักสูตร (`program_admin`) อาจดูแลเฉพาะหลักสูตร 2565 หรือ 2570 (ไม่จำเป็นต้องดูแลทั้งสองกลุ่ม) การตรวจสิทธิ์ระดับ endpoint ของ dashboard/export ระดับหลักสูตร (`/curricula/{year}/...`) ต้องตรวจ `program_admin_curriculum_scope` ควบคู่กับสิทธิ์ evidence เสมอ ไม่ใช่ตรวจแค่บทบาท (role) อย่างเดียว
+6. **QA ไม่ใช่ role/entity ในระบบ:** งานประกันคุณภาพ (QA) เป็นผู้ตรวจสอบ/ประเมินผลจากรายงานที่ผู้บริหารหลักสูตรจัดทำ **อยู่นอกขอบเขตของระบบ ALIGN โดยเจตนา** — ไม่มี login, ไม่มี account, ไม่มีค่าใน `role` enum (หัวข้อ 2.12) และไม่มี endpoint ใดๆ ที่ให้ QA เข้าถึงระบบโดยตรง QA ได้รับเฉพาะเอกสาร Word ที่ `program_admin` ดาวน์โหลดจากระบบ (E5) แล้วส่งต่อภายนอกระบบด้วยตนเองเท่านั้น
+7. **ขอบเขตของหัวข้อนี้:** เอกสารนี้ระบุเฉพาะกลไกควบคุมสิทธิ์ระดับออกแบบ (design-level access control) ยังไม่ครอบคลุมรายละเอียดเชิงกฎหมาย/นโยบายองค์กร (เช่น ระยะเวลาการเก็บข้อมูล, ขั้นตอนขอความยินยอม) ซึ่งควรปรึกษาหน่วยงานที่รับผิดชอบด้าน PDPA ของมหาวิทยาลัยเพิ่มเติมก่อนใช้งานจริง
 
 ---
 
