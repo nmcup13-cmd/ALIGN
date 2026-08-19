@@ -8,6 +8,8 @@ This is a **documentation-only Obsidian vault** for the planning/design/testing 
 
 If application code is added later, prefer following whatever technical design gets recorded in `docs/02-design/02-technical/` rather than inventing a stack from scratch.
 
+`DESIGN.md` at the repo root is the source of truth for **visual/UX design** (brand identity, design tokens, components, UX rules) — read it before creating or editing anything under `docs/02-design/01-prototypes/`, the same way `CLAUDE.md` is the source of truth for workflow/business rules.
+
 ## Documentation workflow and structure
 
 The vault encodes a fixed project workflow, and each stage's folder feeds the next. Every folder has an `index.md` describing its purpose and linking forward/backward to related stages — read the relevant `index.md` before adding a note to understand where it fits and what it should link to:
@@ -47,5 +49,21 @@ Key conventions:
 2. **แจ้งเตือน CLO ที่ยังไม่มีหลักฐาน** — ต้องมีกลไกแจ้งเตือนทันทีที่ CLO ใดไม่มีข้อมูลการสอน/หลักฐานรองรับ อย่าออกแบบให้ผู้ใช้ต้องไปตรวจสอบเองแบบ manual
 3. **AI เป็นค่าตั้งต้น ไม่ใช่ค่าบังคับ** — ผลจับคู่ CLO/PLO และ match % จาก AI ต้องให้อาจารย์ตรวจสอบและยืนยันได้เสมอก่อนบันทึกจริง ห้ามออกแบบให้ระบบบันทึกผล AI ทันทีโดยไม่ผ่านการยืนยันของมนุษย์
 4. **เอกสารส่งออกอ้างอิงหลักฐานจริงเท่านั้น** — เอกสาร Word/มคอ. ที่ออกจากระบบต้องอ้างอิงเฉพาะชิ้นงาน/หลักฐานที่แนบไว้จริงในระบบ ห้ามสร้างข้อมูลอ้างอิงที่ไม่มีหลักฐานรองรับ
-5. **ข้อมูลส่วนบุคคลของนักศึกษาต้องเข้าถึงแบบจำกัดสิทธิ์ตาม PDPA** — ชิ้นงาน/หลักฐานที่แนบอาจมีข้อมูลส่วนบุคคลปะปน การออกแบบ schema, สิทธิ์การเข้าถึง หรือ API ใดๆ ต้องจำกัดสิทธิ์เฉพาะอาจารย์ผู้สอนและผู้ประสานหลักสูตรที่เกี่ยวข้องเท่านั้น
-6. **ห้ามขยายขอบเขตเกิน Out of Scope ที่ระบุไว้** — อย่าออกแบบหรือเสนอฟีเจอร์ที่เข้าข่ายระบบจัดตารางสอน, ระบบให้คะแนน/เกรดรายบุคคลของนักศึกษา, หรือระบบบริหารจัดการหลักสูตรแบบเต็มรูปแบบ (เช่น การปรับปรุงหลักสูตร มคอ.2) เว้นแต่ผู้ใช้ระบุเป็นเงื่อนไขใหม่อย่างชัดเจน
+5. **ข้อมูลส่วนบุคคลของนักศึกษาต้องเข้าถึงแบบจำกัดสิทธิ์ตาม PDPA** — ชิ้นงาน/หลักฐานที่แนบอาจมีข้อมูลส่วนบุคคลปะปน การออกแบบ schema, สิทธิ์การเข้าถึง หรือ API ใดๆ ต้องจำกัดสิทธิ์เฉพาะอาจารย์ผู้สอนและผู้บริหารหลักสูตรที่เกี่ยวข้องเท่านั้น
+6. **ห้ามขยายขอบเขตเกิน Out of Scope ที่ระบุไว้** — อย่าออกแบบหรือเสนอฟีเจอร์ที่เข้าข่ายระบบจัดตารางสอน, ระบบให้คะแนน/เกรดรายบุคคลของนักศึกษา, หรือระบบบริหารจัดการหลักสูตรแบบเต็มรูปแบบ (เช่น การปรับปรุงหลักสูตร มคอ.2) เว้นแต่ผู้ใช้ระบุเป็นเงื่อนไขใหม่อย่างชัดเจน — รวมถึงห้ามออกแบบ login/สิทธิ์การเข้าถึงระบบให้งานประกันคุณภาพ (QA) เพราะ QA อยู่นอกขอบเขตของระบบ ALIGN โดยเจตนา (รับเฉพาะเอกสารส่งออกจากผู้บริหารหลักสูตร)
+
+**บทบาทผู้ใช้ (User Roles) — 2 บทบาทเท่านั้น**: อาจารย์ผู้สอน (Instructor) และผู้บริหารหลักสูตร (Program Administrator — อาจารย์ที่รับผิดชอบหลักสูตร ประสานหลักสูตร และจัดทำรายงานประเมินตนเอง/SAR) งานประกันคุณภาพ (QA) ไม่ใช่ user ของระบบ
+
+## Sub Agents & Agent Skills
+
+โปรเจกต์นี้มี Agent Skill ที่มอบหมายงานเอกสารแต่ละ stage ให้ subagent เฉพาะทางทำในบริบทแยก (ไม่ใช้ context ของบทสนทนาหลัก) — เรียกผ่าน Skill tool ชื่อที่ระบุ ไม่ต้องทำงานเหล่านี้เองในบทสนทนาหลัก:
+
+| Skill | Subagent | ใช้เมื่อ |
+|---|---|---|
+| `requirement-to-backlog` | `backlog-analyst` | แตก `01-spec/requirement-align.md` เป็น/อัปเดต Product Backlog ใน `02-plan/` |
+| `requirement-to-prototype` | `prototype-designer` | ออกแบบ/อัปเดต Screens, User Flow, User Journey ใน `02-design/01-prototypes/` (ต้องอ่าน `DESIGN.md` ก่อนเสมอ) |
+| `backlog-to-test-plan` | `test-designer` | แตก Acceptance Criteria เป็น Test Case + ประกอบ Test Plan ใน `03-testing/01-test-plan/` |
+| `audit-align-docs` | `backlog-auditor` (read-only) | ตรวจสอบเอกสารทั้งหมดว่าสอดคล้อง/เป็นปัจจุบันหรือไม่ (terminology drift, traceability gap, contradiction, orphaned link) — รายงานเท่านั้น ไม่แก้ไขเอง ต้องให้ผู้ใช้ตัดสินใจก่อนส่งต่อไปแก้ |
+| `check-prototype-updates` | `prototype-sync-checker` (read-only) → `prototype-designer` | เช็คว่า prototype ตกรุ่นจาก `DESIGN.md`/backlog หรือไม่ ถ้าเป็นแค่ token/role/entity เปลี่ยนชื่อ จะส่งต่อให้ `prototype-designer` แก้อัตโนมัติ ถ้าเป็น story ใหม่ที่ต้องออกแบบเพิ่มจะถามผู้ใช้ก่อน |
+
+ทุก subagent อ่าน `CLAUDE.md` และไฟล์เอกสารที่เกี่ยวข้องเองจาก path ที่ให้ไปใน prompt (ไม่มีความจำจากบทสนทนาหลัก) และยึดกฎ "ห้ามลบเนื้อหาเดิม" + "ห้ามสมมติ requirement ที่ไม่มีในสเปค/backlog" เหมือนกันทุกตัว
