@@ -1,0 +1,76 @@
+# Test Case: E3 — AI ประมวลผลจับคู่ Course Syllabus/CLO/PLO
+
+ครอบคลุม AB-08, AB-09, AB-10, AB-20, AB-21, AB-22 จาก [[../../01-requirements/02-plan/product-backlog|product-backlog]] — ใช้ชุดข้อมูลทดสอบตาม [[test-plan-align|test-plan-align §3 (ชุดข้อมูลทดสอบ)]] โดยเฉพาะ `TR-001..TR-003`, `AIM-001..AIM-003` และ syllabus ตัวอย่าง §3.4
+
+อ้างอิงกฎทางธุรกิจ: **BR#3** (AI เป็นค่าตั้งต้น ต้องยืนยันก่อนเสมอ — human-in-the-loop) เป็นกฎหลักของทั้ง Epic นี้ + แนวทางแยกกลุ่มหลักสูตร (ห้ามจับคู่ข้าม 2565↔2570)
+
+**State ที่ใช้อ้างอิง** (ตาม `align-technical-design.md` §2.9/§2.11 และ `DESIGN.md` Match % Indicator): `draft` (เส้นขอบประ, สี `status.draft`) → `edited`/`confirmed` (เส้นทึบ, สี `status.confirmed`) / `rejected`
+
+---
+
+## AB-08 — AI จับคู่การสอนกับ CLO เฉพาะกลุ่มหลักสูตรที่ถูกต้อง พร้อม match %
+
+| ID | ประเภท | Given | When | Then | อ้างอิง |
+|---|---|---|---|---|---|
+| TC-AB08-01 | Happy path | `TR-001` ("โครงสร้างข้อมูล Stack และ Queue") อยู่ใน `COS101` (2565, CLO1–CLO4) | เรียก `POST /teaching-records/{TR-001}/ai-match` | ระบบส่งเฉพาะ CLO1–CLO4 (ของ `CUR-2565`) ให้ AI Matching Service พิจารณา ได้ผลลัพธ์เป็น `ai_match_result` state=`draft` เช่น จับคู่ CLO3 ด้วย `match_confidence` ประมาณ 0.82 (`AIM-001`) | AB-08 AC ข้อ 1–2, BR#3 |
+| TC-AB08-02 | **Rejection — ห้ามข้ามกลุ่มหลักสูตร** | `TR-001` อยู่ใน `COS101` (2565) และมี CLO ของ `COS301` (2570) อยู่ในระบบด้วย | ตรวจผลลัพธ์จาก `POST /teaching-records/{TR-001}/ai-match` | ผลลัพธ์ที่ได้ **ต้องไม่มี** CLO ใดของ `COS301`/`CUR-2570` ปรากฏเลย แม้เนื้อหาจะมีความคล้ายคลึงกันทางความหมาย (backend กรอง CLO set ก่อนส่งให้ AI เสมอ ไม่ให้ AI เลือกข้ามกลุ่ม) | AB-08 AC ข้อ 1, align-technical-design §4.1 |
+| TC-AB08-03 | **Rejection — รายวิชายังไม่ระบุกลุ่มหลักสูตร** | `COS-DRAFT` (§3.3) สร้าง `teaching_record` ไว้แล้วแต่ตัวรายวิชายังไม่ระบุ `curriculum_id` | เรียก `POST /teaching-records/{id}/ai-match` สำหรับบันทึกการสอนของ `COS-DRAFT` | ระบบปฏิเสธ/ไม่ประมวลผล AI จนกว่าจะระบุกลุ่มหลักสูตรของรายวิชาให้ครบก่อน | AB-08 AC ข้อ 3 |
+| TC-AB08-04 | Edge case | `COS102` ไม่มี CLO เลย (0 ข้อ) แต่สมมติมี `teaching_record` หลุดเข้ามาได้ (ทดสอบ defensive) | เรียก `POST /teaching-records/{id}/ai-match` สำหรับบันทึกของ `COS102` | ระบบคืนผลลัพธ์ว่างเปล่า (ไม่มี CLO ให้จับคู่) ไม่ error/crash และไม่สร้าง `ai_match_result` ที่ไม่มี `clo_id` อ้างอิง | AB-08, edge case ไม่มี CLO |
+| TC-AB08-05 | Happy path | `TR-003` ("Workshop เสริม Git/GitHub") อยู่ใน `COS101` | เรียก AI matching สำหรับ `TR-003` | ได้ผลลัพธ์ที่แสดง `match_confidence` ต่อ CLO แต่ละข้อในชุด CLO1–CLO4 (แม้ค่าต่ำ เช่น 0.40 ตาม `AIM-003`) — แสดงเป็นค่าต่อ CLO ไม่ใช่ตัวเลขเดียวรวมทั้งวิชา | AB-08 AC ข้อ 2 |
+
+## AB-09 — เชื่อมโยงผลจับคู่ CLO ไปยัง PLO กลุ่มหลักสูตรเดียวกัน
+
+| ID | ประเภท | Given | When | Then | อ้างอิง |
+|---|---|---|---|---|---|
+| TC-AB09-01 | Happy path | `AIM-001` จับคู่ `TR-001` กับ CLO3 ซึ่งผูกกับ `PLO1565-2`, `PLO1565-3` (§3.2) | ระบบสร้าง/แสดงผล `ai_match_result` ของ `AIM-001` | `linked_plo_ids` ของ `AIM-001` มีเฉพาะ `PLO1565-2` และ `PLO1565-3` (ดึงจาก `clo_plo_mapping` ที่มีอยู่แล้ว ไม่ใช่ AI เดาเอง) แสดงเป็น "PLO 2 · PLO 3 เชื่อมแล้ว" | AB-09 AC ข้อ 1–2 |
+| TC-AB09-02 | **Rejection — PLO ข้ามกลุ่มหลักสูตร** | สมมติเกิด data corruption ที่ CLO3 (2565) ถูกผูกผิดพลาดกับ PLO ของ 2570 ไว้ก่อนแล้ว (bypass ชั้นตรวจสอบของ AB-03) | ระบบพยายามแสดง `linked_plo_ids` ของ CLO3 ในผลจับคู่ AI | ระบบต้องกรอง/ปฏิเสธไม่แสดง PLO ที่ curriculum ไม่ตรงกับ CLO แม้จะมี mapping หลุดเข้ามาในฐานข้อมูลจริง (defense-in-depth ชั้นที่ 2 นอกเหนือจาก constraint ตอนสร้าง mapping ใน AB-03) | AB-09 AC ข้อ 1, BR ที่เกี่ยวข้องกับการแยกกลุ่มหลักสูตร |
+| TC-AB09-03 | Edge case | CLO1 ของ `COS101` ยังไม่ถูกผูกกับ PLO ใดเลย (สมมติสถานการณ์ระหว่างตั้งค่า) | AI จับคู่ `teaching_record` หนึ่งเข้ากับ CLO1 ได้ | `linked_plo_ids` ของผลลัพธ์นี้เป็นค่าว่าง (ไม่มี PLO ให้เชื่อมโยง) ระบบแสดงสถานะ "ยังไม่เชื่อมโยง PLO" แทนการ error | AB-09 AC ข้อ 2 |
+
+## AB-10 — ตรวจสอบและยืนยัน/แก้ไขผลจับคู่ AI ก่อนบันทึกจริง (human-in-the-loop)
+
+| ID | ประเภท | Given | When | Then | อ้างอิง |
+|---|---|---|---|---|---|
+| TC-AB10-01 | Happy path | `AIM-002` (`TR-002` ↔ CLO2, confidence 0.75) สถานะ `draft` | `U-INSTR-A` เปิด AI Review Panel และกด "ยืนยัน" | `state` เปลี่ยนเป็น `confirmed`, `confirmed_by = U-INSTR-A`, `confirmed_at` ถูกบันทึก — badge เปลี่ยนจากเส้นขอบประ (`status.draft`) เป็นเส้นทึบ (`status.confirmed`) ตาม `DESIGN.md` | AB-10 AC ข้อ 1, 3, BR#3 |
+| TC-AB10-02 | Happy path | `AIM-003` (`TR-003` ↔ CLO1, confidence 0.40 — ค่าต่ำ/จับคู่ไม่แม่น) สถานะ `draft` | `U-INSTR-A` กด "แก้ไข" แล้วปลด CLO1 ออก (เพราะเห็นว่าไม่เกี่ยวข้องจริง) ก่อนกดยืนยัน | `state` เปลี่ยนเป็น `edited` จากนั้นเมื่อกดยืนยันภายหลังกลายเป็น `confirmed` โดยไม่มี CLO1 อยู่ในผลที่ยืนยันแล้ว | AB-10 AC ข้อ 2 |
+| TC-AB10-03 | **Rejection — ห้ามบันทึกผล AI โดยไม่ผ่านการยืนยัน (หัวใจของ BR#3)** | `AIM-001` เพิ่งถูกสร้างจาก `POST /teaching-records/{TR-001}/ai-match` สถานะ `draft` (ยังไม่มีใครกดยืนยัน) | ระบบ/เอกสาร/แดชบอร์ดใดๆ พยายามอ่านค่านี้ไปใช้เป็น "หลักฐานยืนยันแล้ว" (เช่น แผนที่ CLO×สัปดาห์, `clo_coverage_summary`, เอกสาร Word) | ต้อง**ไม่**ถูกนับ — `clo_coverage_summary`/เอกสารต้องคำนวณ/อ้างอิงเฉพาะ `ai_match_result.state = 'confirmed'` เท่านั้น draft ที่ยังไม่ยืนยันจะไม่ปรากฏเป็นข้อมูลจริงที่ไหนเลยในระบบ | AB-10 AC ข้อ 3, BR#3, align-technical-design §2.9 "กฎสำคัญ" |
+| TC-AB10-04 | **Rejection — ไม่มี endpoint auto-confirm** | `AIM-002` สถานะ `draft` ค่า `match_confidence` สูงมาก (สมมติ 0.99) | ระบบประมวลผล AI เสร็จ | แม้ค่าความมั่นใจจะสูงเพียงใด ระบบ**ต้องไม่**เปลี่ยน `state` เป็น `confirmed` เองโดยอัตโนมัติ ต้องรอเรียก `POST /ai-match-results/{id}/confirm` โดยอาจารย์เท่านั้น | AB-10 AC ข้อ 3, BR#3, align-technical-design §4.1 |
+| TC-AB10-05 | Happy path | `AIM-003` สถานะ `draft` | `U-INSTR-A` กด "ปฏิเสธ" (reject) เพราะเห็นว่าจับคู่ผิดทั้งหมด | `state` เปลี่ยนเป็น `rejected` ไม่ถูกนับเป็นหลักฐานใดๆ ในการคำนวณ coverage/ความถี่ (align-technical-design §2.9) | AB-10 AC ข้อ 2, BR#3 |
+| TC-AB10-06 | Rejection | `AIM-001` เป็นผลจับคู่ของ `teaching_record` ใน `COS101` (สอนโดย `U-INSTR-A`) | `U-INSTR-B` (ไม่ใช่อาจารย์วิชานี้) พยายามเรียก `POST /ai-match-results/{AIM-001}/confirm` | ระบบปฏิเสธ (403) — สิทธิ์ยืนยันผล AI ต้องจำกัดเฉพาะอาจารย์ผู้สอนวิชานั้น | AB-10, BR#5 (ขอบเขตสิทธิ์) |
+
+## AB-20 — คำนวณ % ความสอดคล้องโดยใช้จำนวน CLO ทั้งหมดของวิชาเป็นฐาน 100%
+
+| ID | ประเภท | Given | When | Then | อ้างอิง |
+|---|---|---|---|---|---|
+| TC-AB20-01 | Happy path | `COS101` มี CLO ทั้งหมด 4 ข้อ (`total_clo_count = 4`); `AIM-001` (CLO3) และ `AIM-002` (CLO2) ถูกยืนยันแล้ว (`confirmed`), CLO1 และ CLO4 ยังไม่มีผลยืนยันใดๆ | เรียก `GET /courses/{COS101}/clo-coverage` | `matched_clo_count = 2` (CLO2, CLO3), `total_clo_count = 4`, `coverage_percent = 50%` (2÷4×100) — คำนวณจากสัดส่วนของวิชานี้เท่านั้น ไม่ใช่ค่าคงที่ | AB-20 AC ข้อ 1–2 |
+| TC-AB20-02 | Edge case | `COS301` (2570) มี CLO ทั้งหมด 3 ข้อ (`total_clo_count = 3`) ต่างจาก `COS101` ที่มี 4 ข้อ | เปรียบเทียบสูตรคำนวณของทั้งสองวิชาที่มี 1 CLO ที่ confirmed เท่ากัน | `coverage_percent` ของ `COS301` = 1/3×100 ≈ 33.33% ในขณะที่ `COS101` ถ้ามี 1 CLO confirmed จะได้ 1/4×100 = 25% — ค่า % ต่างกันตามฐาน CLO ของแต่ละวิชา ไม่ใช้ค่าคงที่ตายตัวข้ามวิชา | AB-20 AC ข้อ 2 |
+| TC-AB20-03 | **Edge case — วิชาไม่มี CLO เลย** | `COS102` มี `total_clo_count = 0` (ไม่มี CLO ใดๆ) | เรียก `GET /courses/{COS102}/clo-coverage` | ระบบต้องไม่คำนวณหารด้วยศูนย์ (0/0) — ต้องคืนสถานะพิเศษ (เช่น "ยังไม่มี CLO ให้คำนวณ" / `coverage_percent = null`) แทนการ error หรือแสดงค่าที่ทำให้เข้าใจผิด เช่น 0% หรือ 100% | AB-20, edge case ไม่มี CLO เลย |
+| TC-AB20-04 | **Rejection — ค่ายังไม่ยืนยันห้ามใช้เป็นทางการ** | `AIM-003` (CLO1) สถานะยังเป็น `draft` (ยังไม่ยืนยัน) | เรียก `GET /courses/{COS101}/clo-coverage` | CLO1 ต้อง**ไม่ถูกนับ**เป็น `is_matched = true` เพราะมีเฉพาะ `ai_match_result.state = 'confirmed'` เท่านั้นที่นับ — `coverage_percent` ต้องไม่รวมผลจาก draft | AB-20 AC ข้อ 3, BR#3, align-technical-design §2.10 |
+| TC-AB20-05 | Happy path | `COS101` มี CLO1, CLO2, CLO3 confirmed ครบ, CLO4 ไม่มีเลย | เรียก `GET /courses/{COS101}/clo-coverage` | `coverage_percent = 75%` (3/4×100) ตรงกับตัวอย่าง CLO4 ที่ไม่มีหลักฐานในสเปคต้นฉบับ | AB-20 AC ข้อ 1–2 |
+
+## AB-21 — แสดงค่าความถี่ที่แมทช์ (match frequency) ประกอบ % ความสอดคล้อง
+
+| ID | ประเภท | Given | When | Then | อ้างอิง |
+|---|---|---|---|---|---|
+| TC-AB21-01 | Happy path | CLO2 ของ `COS101` ถูกจับคู่และยืนยันแล้วจาก `TR-002` เพียงรายการเดียว | เรียก `GET /courses/{COS101}/clo-coverage` (ฟิลด์ `per_clo`) | CLO2 แสดง `match_frequency = 1` | AB-21 AC ข้อ 1 |
+| TC-AB21-02 | Happy path | เพิ่มบันทึกการสอนใหม่ `TR-004` (สัปดาห์ 11) ที่ AI จับคู่และอาจารย์ยืนยันว่าเชื่อมกับ CLO2 อีกครั้ง (นอกเหนือจาก `TR-002`) | เรียก `GET /courses/{COS101}/clo-coverage` อีกครั้ง | CLO2 แสดง `match_frequency = 2` (นับข้ามหลาย `teaching_record` ได้ ไม่ใช่แค่ครั้งเดียว) | AB-21 AC ข้อ 1 |
+| TC-AB21-03 | Rejection | CLO2 มีผลจับคู่ 2 รายการ แต่ 1 ใน 2 รายการมีสถานะ `rejected` (อาจารย์ปฏิเสธไปแล้ว) | เรียก `GET /courses/{COS101}/clo-coverage` | `match_frequency` ของ CLO2 นับเฉพาะรายการที่ `confirmed` เท่านั้น (=1) ไม่รวมรายการที่ `rejected` หรือยังเป็น `draft` | AB-21 AC ข้อ 1, 3, BR#3 |
+| TC-AB21-04 | `[PLACEHOLDER — รอคำตอบ]` หน่วยนับ/ช่วงเวลา | `COS101` มีการสอนต่อเนื่องข้าม 2 ภาคการศึกษา (เช่น เปิดสอนซ้ำในเทอมถัดไปโดยใช้ CLO ชุดเดิม) | คำนวณ `match_frequency` ของ CLO2 | **ยังไม่สามารถระบุผลลัพธ์ที่คาดหวังได้** เพราะสเปคไม่ได้กำหนดว่านับแยกต่อภาคการศึกษาหรือรวมสะสมข้ามภาค (ดู [[test-plan-align|test-plan-align §6.1]]) — เขียน test case ละเอียดต่อเมื่อได้คำตอบเรื่อง scope ช่วงเวลาแล้ว | AB-21, คำถามเปิด §6.1 |
+| TC-AB21-05 | `[PLACEHOLDER — รอคำตอบ]` สูตรรวมกับ % | CLO2 มี `coverage` ที่นับ CLO2 เป็น matched (1 ใน 4) และ `match_frequency = 2` | ผู้ใช้ต้องการทราบว่าค่า "ประกอบกัน" ระหว่างสัดส่วน % และความถี่ หมายถึงอะไรในเชิงตัวเลข/UI | **ยังไม่มีสูตรรวมที่ชัดเจน** — align-technical-design.md §4.2 ระบุว่าแสดง "ประกอบกัน" (คู่กัน) ไม่ใช่รวมเป็นค่าเดียว แต่ backlog AB-21 AC ใช้คำว่า "ตามสูตรที่ระบุในสเปค" ซึ่งสเปคต้นฉบับไม่มีสูตรตัวเลขจริง ต้องยืนยันก่อนเขียน test case ที่ตรวจค่าตัวเลขรวมได้ | AB-21, คำถามเปิด §6.1 |
+
+## AB-22 — วิเคราะห์ gap เทียบ course syllabus (หัวข้อที่ขาด/หัวข้อที่สอนเพิ่ม)
+
+| ID | ประเภท | Given | When | Then | อ้างอิง |
+|---|---|---|---|---|---|
+| TC-AB22-01 | Happy path | `COS101` มี syllabus ตาม [[test-plan-align|test-plan-align §3.4]] (4 หัวข้อ: week 1, 5, 10, 14) และมี `teaching_record` จริง `TR-001` (week10), `TR-002` (week5), `TR-003` (week12, extra) | เรียก `POST /courses/{COS101}/syllabus-gap-analysis` | ระบบสร้าง `syllabus_gap_result` state=`draft` ที่มี `missing_topics = ["แนะนำภาษา Python และเครื่องมือพัฒนา" (week1), "การจัดการข้อผิดพลาด (Exception Handling)" (week14)]` และ `extra_topics = ["Workshop เสริม: Git และ GitHub Workflow" (week12)]` | AB-22 AC ข้อ 1–3 |
+| TC-AB22-02 | **Rejection — ต้องมี syllabus ก่อน** | `COS102` ไม่มี syllabus เลย | เรียก `POST /courses/{COS102}/syllabus-gap-analysis` | ระบบปฏิเสธด้วย HTTP 409 (ต้องมี syllabus ของวิชานี้ก่อนจึงวิเคราะห์ gap ได้) | align-technical-design §3 (E3), AB-19/AB-22 |
+| TC-AB22-03 | **Rejection — ห้ามใช้ผลที่ยังไม่ยืนยัน (BR#3)** | `syllabus_gap_result` ของ `COS101` เพิ่งสร้างใหม่ state=`draft` (ยังไม่มีใครยืนยัน) | แดชบอร์ด (AB-23) หรือเอกสาร Area of Improvement (AB-16) พยายามอ่านค่านี้ | ต้อง**ไม่**แสดง/ใช้ผลลัพธ์นี้เป็นข้อมูลจริง — ต้องรอ `POST /syllabus-gap-results/{id}/confirm` ก่อนเท่านั้น (เหมือนกฎเดียวกับ `ai_match_result`) | AB-22 AC ข้อ 4, BR#3, align-technical-design §2.11 |
+| TC-AB22-04 | Happy path | `syllabus_gap_result` ของ `COS101` state=`draft` มี `missing_topics` 2 รายการตาม TC-AB22-01 | `U-INSTR-A` แก้ไขผลลัพธ์ (เช่น ลบ week1 ออกจาก missing_topics เพราะจริงๆ สอนไปแล้วแต่ลืมบันทึก) แล้วกดยืนยัน | `state` เปลี่ยนเป็น `edited` แล้ว `confirmed` โดย `missing_topics` เหลือเฉพาะ week14 ตามที่อาจารย์แก้ไข | AB-22 AC ข้อ 4, BR#3 |
+| TC-AB22-05 | Edge case | `COS301` (2570) มี syllabus 12 สัปดาห์ แต่ยังไม่มี `teaching_record` ใดถูกบันทึกเลย (เพิ่งเริ่มเทอม) | เรียก `syllabus-gap-analysis` สำหรับ `COS301` | `missing_topics` ครอบคลุมหัวข้อ **ทั้งหมด** ของ syllabus (12 หัวข้อ), `extra_topics` เป็นค่าว่าง — ไม่ error แม้ยังไม่มีการสอนเกิดขึ้นจริงเลย | AB-22 AC ข้อ 2–3 |
+| TC-AB22-06 | `[PLACEHOLDER — รอคำตอบ]` ความละเอียดการเทียบหัวข้อ | `syllabus.content` เก็บหัวข้อเป็นข้อความอิสระ (ไม่ใช่รหัสมาตรฐาน) เช่น "OOP เบื้องต้น" ในขณะที่ `teaching_record.topic` บันทึกว่า "สอนเรื่อง Object-Oriented Programming เบื้องต้น" (คำพ้องความหมายแต่ไม่ตรงตัวอักษร) | ระบบเปรียบเทียบหัวข้อทั้งสอง | **ยังไม่สามารถระบุผลลัพธ์ที่คาดหวังได้แน่ชัด** ว่าระบบจะถือว่า "ตรงกัน" หรือไม่ เพราะขึ้นกับโครงสร้าง/วิธี matching ของ syllabus ที่ยังไม่ได้กำหนด (free text vs structured — ดู [[test-plan-align|test-plan-align §6.2]]) | AB-22, คำถามเปิด §6.2 |
+
+---
+
+## เชื่อมโยง
+
+- ย้อนกลับไปยัง [[test-plan-align|test-plan-align]] และ [[e2-teaching-record-evidence|e2-teaching-record-evidence]] (ที่มาของ `teaching_record`/`evidence` ที่ป้อนเข้า AI)
+- ต่อเนื่องไปยัง [[e4-dashboard-alerts|e4-dashboard-alerts]] (แดชบอร์ดใช้เฉพาะผลที่ `confirmed` จาก Epic นี้) และ [[e5-word-export|e5-word-export]] (เอกสาร Area of Improvement อ้างอิงผล gap ที่ยืนยันแล้ว)
