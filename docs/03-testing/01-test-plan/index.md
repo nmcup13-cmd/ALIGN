@@ -20,7 +20,7 @@
 - [[e5-word-export|e5-word-export]] — Test case ของ Epic E5 (AB-15, AB-16, AB-17, AB-18): ออกเอกสาร Word, ส่วน Area of Improvement, ดาวน์โหลดเอกสารสำหรับ SAR, ตัวเลือกรวม/ไม่รวม Area of Improvement
 - [[e6-user-registration-approval|e6-user-registration-approval]] — Test case ของ Epic E6 (AB-24, AB-25, AB-26, AB-27): สมัครใช้งานเอง (self-service registration), gate ตรวจสอบ `account_status = 'approved'` ทุก request ก่อนเข้าถึง E1–E5, รายการบัญชี/อนุมัติ/ปฏิเสธแบบ admin-only visibility, การเห็นสถานะบัญชีของตนเองเท่านั้น
 
-**สรุป**: รวม 129 test case ครอบคลุมทั้ง 27 User Stories — ดูรายละเอียดขอบเขต/ชุดข้อมูลทดสอบ/คำถามเปิดทั้งหมดใน [[test-plan-align|test-plan-align]]
+**สรุป**: รวม 137 test case ครอบคลุมทั้ง 27 User Stories — ดูรายละเอียดขอบเขต/ชุดข้อมูลทดสอบ/คำถามเปิดทั้งหมดใน [[test-plan-align|test-plan-align]] (คำถามเปิดที่ตอบแล้ว: "ความถี่ที่แมทช์" §6.1, โครงสร้างข้อมูล course syllabus §6.2, "Area of Improvement 3 ระดับ" §6.3, ฟิลด์ฟอร์มสมัครสมาชิก §6.5, `rejection_reason` บังคับกรอกหรือไม่ §6.6 — เหลือคำถามเปิดเพียง 1 ข้อ คือ algorithm จับคู่คำพ้องความหมายของหัวข้อ syllabus แบบ free text ใน §6.2)
 
 ### Test Spec เดี่ยว (companion เฉพาะ Feature/User Journey)
 
