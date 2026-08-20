@@ -2,7 +2,7 @@
 
 **สถานะเอกสาร**: Test Spec เดี่ยว (standalone) — เป็นตัวอย่าง Test Spec ที่ผูกกับ **1 Feature** และ **1 จุดใน User Journey** อย่างชัดเจน ตามข้อกำหนด "ต้องมี Test Spec อย่างน้อย 1 ฉบับที่สอดคล้องกับ User Journey/Feature ที่เลือก"
 
-**ความสัมพันธ์กับเอกสารอื่น**: เอกสารนี้ **ไม่ใช่ตัวแทน** ของ [[e3-ai-matching-gap-analysis|e3-ai-matching-gap-analysis]] ซึ่งเป็น Test Case ฉบับเต็มของ Epic E3 ทั้งหมด (ครอบคลุม AB-08, AB-09, AB-10, AB-20, AB-21, AB-22 รวม 30 test case) — เอกสารนี้เป็น**ฉบับโฟกัส (companion)** ที่หยิบเฉพาะ AB-08/AB-09/AB-10 (ส่วน "ตรวจสอบและยืนยันผล AI" ล้วนๆ ไม่รวมสูตรคำนวณ % ของ AB-20/AB-21 หรือ gap analysis ของ AB-22) มาเรียบเรียงใหม่ให้เห็นภาพ **Feature เดียว + User Journey step เดียว** อย่างเป็นระบบ พร้อม traceability ที่ตามรอยกลับไปยัง test case เต็มในไฟล์ e3 ได้ทุกจุด — ไม่มี test case ใดในเอกสารนี้ที่ขัดแย้งกับ e3
+**ความสัมพันธ์กับเอกสารอื่น**: เอกสารนี้ **ไม่ใช่ตัวแทน** ของ [[e3-ai-matching-gap-analysis|e3-ai-matching-gap-analysis]] ซึ่งเป็น Test Case ฉบับเต็มของ Epic E3 ทั้งหมด (ครอบคลุม AB-08, AB-09, AB-10, AB-20, AB-21, AB-22 รวม 32 test case) — เอกสารนี้เป็น**ฉบับโฟกัส (companion)** ที่หยิบเฉพาะ AB-08/AB-09/AB-10 (ส่วน "ตรวจสอบและยืนยันผล AI" ล้วนๆ ไม่รวมสูตรคำนวณ % ของ AB-20/AB-21 หรือ gap analysis ของ AB-22) มาเรียบเรียงใหม่ให้เห็นภาพ **Feature เดียว + User Journey step เดียว** อย่างเป็นระบบ พร้อม traceability ที่ตามรอยกลับไปยัง test case เต็มในไฟล์ e3 ได้ทุกจุด — ไม่มี test case ใดในเอกสารนี้ที่ขัดแย้งกับ e3
 
 ---
 
