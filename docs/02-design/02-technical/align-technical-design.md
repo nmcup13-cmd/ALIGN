@@ -22,6 +22,7 @@
         v
 [Backend API — ALIGN API]
   - Auth / สิทธิ์ตามบทบาท (Instructor / Program Administrator + scope หลักสูตร)
+    + ตรวจสถานะบัญชี (account_status = 'approved') ก่อนทุก request ที่ต้อง login (E6)
   - CRUD: Curriculum, PLO, CLO, CLO-PLO mapping, Course
   - บันทึกการสอน + แนบหลักฐาน
   - Orchestrate AI matching (เรียก AI Matching Service)
@@ -55,6 +56,7 @@
 - **Evidence/File Storage แยกจาก DB เชิงสัมพันธ์** เพื่อให้ควบคุมสิทธิ์การเข้าถึงไฟล์ (ที่อาจมีข้อมูลส่วนบุคคลของนักศึกษา) ได้อย่างละเอียด ตาม PDPA (กฎ #5) โดย backend API เป็นประตูเดียวที่คุยกับ storage — ห้าม client เข้าถึง storage ตรง
 - **Word-export Service อ่านเฉพาะข้อมูลที่ยืนยันแล้ว** (confirmed) ไม่ใช่ draft จาก AI เพื่อไม่ให้เอกสารอ้างอิงหลักฐานที่ยังไม่ผ่านการตรวจสอบ (กฎ #4)
 - **งานประกันคุณภาพ (QA) ไม่ใช่ user/role ของระบบ ALIGN** — เอกสารที่ Word-export Service สร้างขึ้น (มคอ./QA ในไดอะแกรมด้านบน) มีไว้ให้ **ผู้บริหารหลักสูตร** เป็นผู้ดาวน์โหลดจากระบบแล้วนำไปส่งต่อให้ QA ใช้ตรวจสอบภายนอกระบบเท่านั้น QA ไม่มี login, ไม่มี account, และไม่มี endpoint ใดในระบบนี้ที่ให้ QA เข้าถึงโดยตรง (ตามขอบเขตในสเปค)
+- **Backend API บังคับ gate การอนุมัติบัญชีก่อนทุก request ที่ต้อง login (E6, กฎทางธุรกิจ #6)** — อาจารย์ผู้สอนสมัครใช้งานเองได้ (self-service registration) แต่บัญชีจะอยู่ในสถานะ "รออนุมัติ" จนกว่าผู้บริหารหลักสูตรจะอนุมัติ ระหว่างนั้น (หรือถ้าถูกปฏิเสธ) ต้องเข้าถึง endpoint อื่นใดของระบบไม่ได้เลย — ดูฟิลด์ `account_status` ที่ §2.12 และรายละเอียด endpoint ที่ §3 (E6)
 
 ---
 
@@ -191,8 +193,18 @@
 |---|---|---|
 | user_id | PK | |
 | name / email | string | |
-| role | enum('instructor','program_admin') | 2 บทบาทตามสเปค — `program_admin` คือผู้บริหารหลักสูตร (Program Administrator) อาจารย์ที่รับผิดชอบหลักสูตร ประสานหลักสูตร และจัดทำรายงานประเมินตนเอง (SAR) |
+| department | string | สังกัด/ภาควิชาของอาจารย์ผู้สอน — ฟิลด์จากฟอร์มสมัครสมาชิกแบบ self-service (E6/AB-24) |
+| password_hash | string | รหัสผ่านที่ hash แล้ว (เช่น bcrypt) ใช้กับการสมัครสมาชิกเอง/login ของ E6 |
+| role | enum('instructor','program_admin') | 2 บทบาทตามสเปค — `program_admin` คือผู้บริหารหลักสูตร (Program Administrator) อาจารย์ที่รับผิดชอบหลักสูตร ประสานหลักสูตร และจัดทำรายงานประเมินตนเอง (SAR) — บัญชีที่สมัครเองผ่าน E6 (`POST /auth/register`) ได้ `role = 'instructor'` เสมอ เพราะสเปค (E6) ระบุว่าเฉพาะอาจารย์ผู้สอนเท่านั้นที่สมัครใช้งานเองได้; สเปคไม่ได้ระบุวิธีสร้างบัญชี `program_admin` ไว้ (นอกขอบเขตของ E6) — ต้องยืนยันกับทีมพัฒนาว่าบัญชี `program_admin` ชุดแรกถูกสร้างอย่างไร (เช่น seed ข้อมูลเริ่มต้น/สร้างโดยผู้ดูแลระบบนอกเอกสารนี้) |
+| account_status | enum('pending','approved','rejected') | **ใหม่ตาม E6/กฎทางธุรกิจ #6** — สถานะบัญชี: `pending` = "รออนุมัติ" (ค่าเริ่มต้นทันทีที่สมัครสำเร็จผ่าน `POST /auth/register`, AB-24), `approved` = "อนุมัติแล้ว" (เข้าใช้งานฟีเจอร์อื่น E1–E5 ได้ตามสิทธิ์บทบาท, AB-26), `rejected` = "ถูกปฏิเสธ" (เข้าถึงข้อมูล/ฟีเจอร์ใดๆ ของระบบไม่ได้เช่นเดียวกับ `pending`, AB-25/AB-26) — ดูหมายเหตุบังคับใช้ด้านล่างตาราง |
+| approved_by | FK → user, nullable | ผู้บริหารหลักสูตร (`program_admin`) ที่กดอนุมัติ/ปฏิเสธบัญชีนี้ครั้งล่าสุด — ต้อง not-null เมื่อ `account_status != 'pending'` (audit trail ตาม AB-26) |
+| approved_at | datetime, nullable | เวลาที่อนุมัติ/ปฏิเสธครั้งล่าสุด — ต้อง not-null คู่กับ `approved_by` |
+| rejection_reason | text, nullable | เหตุผลที่ปฏิเสธบัญชี (กรอกโดยผู้บริหารหลักสูตรตอนกด "ปฏิเสธ") — **ยังไม่ฟันธง:** AB-26 ระบุเพียงว่าต้องบันทึก "ผู้อนุมัติ, เวลาที่ดำเนินการ" เท่านั้น ไม่ได้กำหนดว่าต้องมีเหตุผลประกอบหรือไม่ เพิ่มฟิลด์นี้ไว้เป็นข้อเสนอ (nullable จึงไม่กระทบถ้าไม่ใช้) ต้องยืนยันกับทีมพัฒนา/ผู้บริหารหลักสูตรก่อนเริ่มจริงว่าจำเป็นต้องบังคับกรอกหรือไม่ |
 | program_admin_curriculum_scope | FK[] → curriculum, nullable | สำหรับ `program_admin` (ผู้บริหารหลักสูตร) — ระบุว่าดูแลหลักสูตรกลุ่มใด ใช้จำกัด scope การเข้าถึงข้อมูล/หลักฐานข้ามหลักสูตร |
+
+> **ข้อเสนอ — ยืนยันกับทีมพัฒนาก่อนเริ่มจริง (ฟิลด์ฟอร์มสมัครสมาชิก):** ชุดฟิลด์ `name`, `email`, `department`, `password_hash` ข้างต้นอ้างตามข้อสมมติที่ระบุไว้แล้วใน [[../01-prototypes/align-interactive-prototype|align-interactive-prototype]] (ฟอร์ม `M-SignUp`: ชื่อ-นามสกุล, อีเมลสถาบัน, สังกัด/ภาควิชา, รหัสผ่าน) เพราะ AB-24 ในสเปคยังไม่ได้กำหนดรายการฟิลด์ที่แน่นอน — คงชุดฟิลด์เดียวกันไว้เพื่อความสอดคล้องกับต้นแบบที่ทำไว้แล้ว หากมีข้อกำหนดจริงจากมหาวิทยาลัย (เช่น ต้องใช้ SSO/รหัสพนักงานแทนอีเมล+รหัสผ่าน) ต้องปรับ schema นี้ตาม
+
+> **หมายเหตุบังคับ — กลไกที่ทำให้กฎทางธุรกิจ #6 มีผลจริง (จุดที่ audit พบว่าขาดไปก่อนหน้านี้):** การมีฟิลด์ `account_status` เพียงอย่างเดียวไม่พอ — **ทุก endpoint ที่ต้อง authenticate (ต้อง login) ในระบบ ต้องตรวจสอบ `user.account_status == 'approved'` ก่อนดำเนินการเสมอทุกครั้งที่เรียก** ไม่ใช่ตรวจครั้งเดียวตอน login (ตาม AB-25 ที่ระบุชัดว่าต้องตรวจทุกครั้งที่ร้องขอ ไม่ใช่แค่ตอน login) มิฉะนั้นบัญชีที่ยังไม่ได้รับอนุมัติจะยังคงเรียก endpoint อื่นได้อยู่ดีแม้มีฟิลด์นี้ในฐานข้อมูล — **ยกเว้นเฉพาะ 2 endpoint เท่านั้น** ที่ไม่ต้องผ่านการตรวจนี้: (1) `POST /auth/register` (สมัครสมาชิก — ยังไม่มีบัญชีให้ตรวจ) และ (2) `GET /auth/me/account-status` (เช็คสถานะบัญชีตนเอง — บัญชีที่ยัง `pending`/`rejected` ต้องเรียกดูสถานะตนเองได้ตาม AB-27) ดู endpoint ทั้งหมดที่ §3 (E6) และการตรวจสิทธิ์ตามบทบาท/PDPA ที่ §2.13/§6 ซึ่งต้องรัน**ต่อจาก**การตรวจ `account_status` นี้เสมอ ไม่ใช่แทนกัน
 
 > **หมายเหตุ — QA ไม่ใช่ role/entity ในระบบนี้:** งานประกันคุณภาพ (QA) **ไม่มี** account และ**ไม่ปรากฏ**เป็นค่าใน `role` enum ข้างต้น QA ไม่เคย login เข้าระบบ ALIGN โดยตรง — ได้รับเฉพาะเอกสาร Word ที่ `program_admin` ดาวน์โหลดจากระบบ (ดู E5 หัวข้อ 3) แล้วส่งต่อให้ QA ใช้ตรวจสอบภายนอกระบบเท่านั้น ห้ามเพิ่ม `qa` เป็นค่าใน enum หรือออกแบบ schema/endpoint ใดๆ ให้ QA เข้าถึงระบบ (ตามข้อ Out of Scope ในสเปค)
 
@@ -216,6 +228,7 @@ course 1──* clo_coverage_summary *──1 clo   (derived จาก ai_match_
 course 1──* syllabus_gap_result *──1 syllabus   (derived จาก teaching_record เทียบ syllabus.content)
 user 1──* course (instructor_id)
 user *──* curriculum (program_admin_curriculum_scope)
+user 1──* user (approved_by — self-referencing, program_admin ผู้อนุมัติ/ปฏิเสธบัญชีอาจารย์ผู้สอน, E6)
 evidence 1──* evidence_access_log
 ```
 
@@ -280,7 +293,16 @@ evidence 1──* evidence_access_log
 | `GET /export-jobs/{id}` | เช็คสถานะงานสร้างเอกสาร (ถ้าออกแบบเป็น async job) | res: `{status, download_url}` |
 | `GET /curricula/{year}/courses/{id}/export-word` (program_admin) | ผู้บริหารหลักสูตร (`program_admin`) ดาวน์โหลดเอกสารของวิชาที่ตนดูแลตาม scope เพื่อนำไปส่งต่อ QA ภายนอกระบบ | ตรวจ `program_admin_curriculum_scope` ก่อนตอบ (กฎ #5) |
 
-ทุก endpoint ที่แตะ `evidence` หรือ export เอกสาร ต้องผ่าน middleware ตรวจสิทธิ์ตามบทบาท+scope ก่อนถึง business logic เสมอ
+### E6 — สมัครและอนุมัติบัญชีผู้ใช้ (User Registration & Approval)
+| Method & Path | จุดประสงค์ | Request/Response สำคัญ |
+|---|---|---|
+| `POST /auth/register` | สมัครใช้งานเอง (self-service, **public — ไม่ต้อง auth**) — สร้างบัญชีอาจารย์ผู้สอนใหม่เสมอด้วย `account_status = 'pending'` ทันที (AB-24) ไม่พาเข้าใช้งานฟีเจอร์ใดของระบบทันทีหลังสมัคร | req: `{name, email, department, password}` (ชุดฟิลด์เป็นข้อเสนอ ยังไม่ยืนยัน ดูหมายเหตุที่ §2.12) → res: `{user_id, account_status: "pending"}` — ถ้า `email` ซ้ำในระบบ ตอบ 409 |
+| `GET /auth/me/account-status` | อาจารย์ผู้สอนที่เคยสมัครไว้เช็คสถานะบัญชีของตนเอง (ต้อง auth ด้วย credential พื้นฐาน แต่**ไม่ต้องผ่านการตรวจ `account_status = 'approved'`** เพราะบัญชี pending/rejected ต้องเรียก endpoint นี้ได้ตาม AB-27) — จำกัดเห็นเฉพาะสถานะของตนเองเท่านั้น ห้ามรับพารามิเตอร์ user อื่น | res: `{account_status, rejection_reason}` (แสดง `rejection_reason` เฉพาะเมื่อ `account_status = 'rejected'` และมีค่า) |
+| `GET /admin/accounts?status=pending` | ผู้บริหารหลักสูตร (`program_admin`, **admin-only visibility** ตาม AB-26) ดูรายการบัญชีที่รออนุมัติ — ไม่ระบุ `status` = ดึงบัญชีทั้งหมดที่เคยสมัคร (ทุกสถานะ) | res: `[{user_id, name, email, department, account_status, approved_by, approved_at}]` — role อื่นเรียก endpoint นี้ต้องได้ 403 |
+| `POST /admin/accounts/{user_id}/approve` | ผู้บริหารหลักสูตรอนุมัติบัญชี (`account_status → 'approved'`, บันทึก `approved_by`/`approved_at` เป็นผู้อนุมัติ+เวลาปัจจุบัน) — บัญชีเข้าใช้งาน E1–E5 ได้ทันทีหลังจากนี้ (AB-26) | res: `{user_id, account_status: "approved", approved_by, approved_at}` |
+| `POST /admin/accounts/{user_id}/reject` | ผู้บริหารหลักสูตรปฏิเสธบัญชี (`account_status → 'rejected'`, บันทึก `approved_by`/`approved_at` เช่นกัน) — บัญชียังคงเข้าถึงข้อมูลใดๆ ของระบบไม่ได้ (กฎทางธุรกิจ #6) | req: `{reason?}` (nullable — ดูหมายเหตุ `rejection_reason` ที่ §2.12) → res: `{user_id, account_status: "rejected", approved_by, approved_at}` |
+
+ทุก endpoint ที่แตะ `evidence` หรือ export เอกสาร ต้องผ่าน middleware ตรวจสิทธิ์ตามบทบาท+scope ก่อนถึง business logic เสมอ — และตาม E6 ทุก endpoint ที่ต้อง auth ในเอกสารนี้ (ทั้งหมดใน E1–E5 และ E6 ยกเว้น `POST /auth/register` กับ `GET /auth/me/account-status` ที่ระบุไว้ข้างต้น) ต้องผ่านการตรวจ `account_status = 'approved'` ก่อนไปถึงการตรวจสิทธิ์ตามบทบาท/scope นั้นเสมอ (ดูหมายเหตุบังคับที่ §2.12)
 
 ---
 
