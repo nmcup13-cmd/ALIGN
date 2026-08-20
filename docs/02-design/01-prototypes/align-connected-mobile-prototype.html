@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ALIGN — Full Mobile Prototype</title>
+<style>
+  :root {
+    --bg-base:#F6F2EA; --bg-surface:#FDFBF7; --bg-sunken:#EFE9DD;
+    --border-default:#E2D9C8; --border-strong:#C9BBA0;
+    --text-primary:#2B2620; --text-secondary:#6B6255; --text-disabled:#B3AA9A;
+    --green:#5B6E4F; --green-dark:#46543D; --green-tint:#E8ECE2; --on-green:#FBF9F3;
+    --draft:#9C7530; --draft-tint:#F3E6CE;
+    --gap:#A65D45; --gap-tint:#F5E3DC;
+    --cur-2565:#8C6F4E; --cur-2565-tint:#F1E9DD;
+    --cur-2570:#5F7350; --cur-2570-tint:#EDF1E7;
+    --page-bg:#DCD5C4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg-base:#201D18; --bg-surface:#29251F; --bg-sunken:#221F1A;
+      --border-default:#3C362C; --border-strong:#554D3D;
+      --text-primary:#EEE8DB; --text-secondary:#A79C89; --text-disabled:#6B6255;
+      --green:#92A57E; --green-dark:#B0C09B; --green-tint:#333C2B; --on-green:#1B2016;
+      --draft:#D8A857; --draft-tint:#3A2E17;
+      --gap:#CC8267; --gap-tint:#3A241D;
+      --cur-2565:#CBAC81; --cur-2565-tint:#362E20;
+      --cur-2570:#9DB08C; --cur-2570-tint:#29321F;
+      --page-bg:#141210;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg-base:#201D18; --bg-surface:#29251F; --bg-sunken:#221F1A;
+    --border-default:#3C362C; --border-strong:#554D3D;
+    --text-primary:#EEE8DB; --text-secondary:#A79C89; --text-disabled:#6B6255;
+    --green:#92A57E; --green-dark:#B0C09B; --green-tint:#333C2B; --on-green:#1B2016;
+    --draft:#D8A857; --draft-tint:#3A2E17;
+    --gap:#CC8267; --gap-tint:#3A241D;
+    --cur-2565:#CBAC81; --cur-2565-tint:#362E20;
+    --cur-2570:#9DB08C; --cur-2570-tint:#29321F;
+    --page-bg:#141210;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: var(--page-bg); color: var(--text-primary);
+    font-family: "IBM Plex Sans Thai Looped","Noto Sans Thai Looped","Leelawadee UI","Segoe UI",sans-serif;
+    font-size: 15px; line-height: 22px;
+    display: flex; justify-content: center;
+  }
+  button, input { font-family: inherit; }
+  .mono { font-family: "IBM Plex Mono","Cascadia Mono",monospace; }
+  .num { font-variant-numeric: tabular-nums; }
+  button { cursor: pointer; border: none; background: none; color: inherit; }
+  input:focus { outline: none; border-color: var(--green) !important; }
+  :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+
+  .phone { width: 100%; max-width: 430px; min-height: 100vh; background: var(--bg-base); display: flex; flex-direction: column; }
+  @media (min-width: 431px) { .phone { min-height: 860px; margin: 24px 0; box-shadow: 0 20px 60px rgba(20,18,16,.35); border-radius: 20px; overflow: hidden; } }
+
+  .topbar { height: 54px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--bg-surface); border-bottom: 1px solid var(--border-default); }
+  .wordmark { font-size: 17px; font-weight: 600; color: var(--green); }
+  .role-pill { font-size: 10.5px; font-weight: 500; padding: 3px 9px; border-radius: 999px; background: var(--green-tint); color: var(--green-dark); }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-sunken); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+
+  .devbar { flex-shrink: 0; background: var(--bg-sunken); border-bottom: 1px solid var(--border-default); padding: 8px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 11px; color: var(--text-secondary); }
+  .devbar b { color: var(--text-primary); }
+  .devbtn { border: 1px solid var(--border-strong); border-radius: 999px; padding: 4px 10px; font-size: 11px; background: var(--bg-surface); color: var(--text-secondary); }
+  .devbtn.active { background: var(--green); color: var(--on-green); border-color: var(--green); font-weight: 500; }
+
+  .content { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .h1 { font-size: 20px; line-height: 26px; font-weight: 600; margin: 0; }
+  .h2 { font-size: 15.5px; line-height: 21px; font-weight: 500; margin: 0; }
+  .body-sm { font-size: 13px; line-height: 18px; }
+  .caption { font-size: 11px; line-height: 15px; }
+  .text-secondary { color: var(--text-secondary); }
+  .display { font-size: 30px; line-height: 36px; font-weight: 600; margin: 0; }
+
+  .card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 8px; padding: 16px; }
+  .card.tap { cursor: pointer; }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .row.between { justify-content: space-between; }
+
+  .btn { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 500; border-radius: 6px; padding: 11px 16px; min-height: 44px; width: 100%; }
+  .btn-primary { background: var(--green); color: var(--on-green); }
+  .btn-primary:disabled { background: var(--border-strong); color: var(--text-disabled); }
+  .btn-ghost { background: transparent; color: var(--text-primary); border: 1px solid var(--border-default); }
+  .btn-text { background: none; color: var(--green); font-size: 13px; font-weight: 500; padding: 4px 0; width: auto; }
+  .btn-auto { width: auto; }
+  .btn-sm { font-size: 12.5px; padding: 8px 12px; min-height: 38px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+  .field input { font-size: 14px; color: var(--text-primary); background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 6px; padding: 11px 12px; width: 100%; }
+  .field input.err { border-color: var(--gap); }
+  .field-err { font-size: 11px; color: var(--gap); }
+
+  .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; white-space: nowrap; }
+  .chip-2565 { background: var(--cur-2565-tint); color: var(--cur-2565); }
+  .chip-2570 { background: var(--cur-2570-tint); color: var(--cur-2570); }
+
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; padding: 3px 10px; border-radius: 999px; font-weight: 500; }
+  .badge-confirmed { border: 1.5px solid var(--green); color: var(--green); background: var(--green-tint); }
+  .badge-draft { border: 1.5px dashed var(--draft); color: var(--draft); background: var(--draft-tint); }
+  .badge-gap { border: 1.5px solid var(--gap); color: var(--gap); background: var(--gap-tint); }
+
+  .bar { position: relative; height: 7px; border-radius: 999px; background: var(--bg-sunken); overflow: hidden; }
+  .bar > span { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--green); }
+  .gapbanner { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: var(--gap-tint); border: 1px solid var(--gap); border-radius: 8px; }
+  .gapbanner .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--gap); margin-top: 6px; flex-shrink: 0; }
+
+  .tabbar { flex-shrink: 0; background: var(--bg-surface); border-top: 1px solid var(--border-default); display: flex; }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10px; color: var(--text-secondary); min-height: 56px; }
+  .tab.active { color: var(--green); }
+  .tab svg { width: 19px; height: 19px; }
+
+  .locked-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border-default); border-radius: 8px; background: var(--bg-surface); font-size: 13px; opacity: .45; }
+
+  table.grid { border-collapse: collapse; width: 100%; }
+  table.grid th, table.grid td { border: 1px solid var(--border-default); text-align: center; padding: 6px 4px; font-size: 11px; }
+  table.grid th { background: var(--bg-sunken); color: var(--text-secondary); font-weight: 500; }
+  table.grid td.hit { background: var(--green-tint); color: var(--green-dark); font-weight: 600; }
+  table.grid td.empty { background: var(--bg-sunken); color: var(--text-disabled); }
+  .gridwrap { overflow-x: auto; }
+
+  .switch { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 100%; height: 100%; margin: 0; }
+  .switch .track { position: absolute; inset: 0; background: var(--border-strong); border-radius: 999px; }
+  .switch .thumb { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 999px; background: var(--bg-surface); transition: transform .15s ease; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+  .switch input:checked ~ .track { background: var(--green); }
+  .switch input:checked ~ .thumb { transform: translateX(16px); }
+
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(20,18,16,.4); display: none; align-items: flex-end; justify-content: center; z-index: 30; }
+  .modal-backdrop.open { display: flex; }
+  .modal-backdrop.open .phone { position: relative; }
+  .sheet { background: var(--bg-surface); border-radius: 16px 16px 0 0; padding: 20px 16px; width: 100%; max-width: 430px; display: flex; flex-direction: column; gap: 14px; }
+
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--green); color: var(--on-green); padding: 10px 18px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .2s ease; z-index: 40; pointer-events: none; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+
+  <div class="topbar">
+    <div class="wordmark">ALIGN</div>
+    <div class="row">
+      <span class="role-pill" id="rolePill">Instructor</span>
+      <div class="avatar" id="avatarInit">?</div>
+    </div>
+  </div>
+
+  <div class="devbar">
+    <b>สาธิต:</b>
+    <button class="devbtn" id="devInstr" onclick="setRole('instructor')">อาจารย์ผู้สอน</button>
+    <button class="devbtn" id="devAdmin" onclick="setRole('admin')">ผู้บริหารหลักสูตร</button>
+    <span style="margin-left:auto;color:var(--text-secondary);">บัญชี: <b id="devStatus">รออนุมัติ</b></span>
+  </div>
+
+  <div class="content" id="content"></div>
+
+  <div class="tabbar" id="tabbar"></div>
+</div>
+
+<div class="modal-backdrop" id="exportModal">
+  <div class="sheet">
+    <div class="row between"><div class="h2">ออกเอกสาร Word — COS101 <span class="chip chip-2565" style="margin-left:4px;">2565</span></div><button onclick="closeExport()" style="font-size:18px;">×</button></div>
+    <div class="body-sm text-secondary">CLO/PLO ที่ยืนยันแล้ว 2 ข้อ (CLO2, CLO3) · ความสอดคล้องรวม 50% · หลักฐานอ้างอิง: EV-001.pdf, EV-002.docx</div>
+    <div class="row" style="gap:10px;"><span class="switch"><input type="checkbox" id="aoiToggle" checked><span class="track"></span><span class="thumb"></span></span><span class="body-sm">รวมส่วน Area of Improvement</span></div>
+    <button class="btn btn-primary" onclick="doExport()">ดาวน์โหลดเอกสาร Word</button>
+    <div class="caption text-secondary">เอกสารอ้างอิงเฉพาะข้อมูลและหลักฐานที่ยืนยันแล้วในระบบเท่านั้น</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- shared state ---------------- */
+const S = {
+  role: 'instructor',
+  accountStatus: 'none',      // none -> pending -> approved | rejected
+  screen: 'signup',
+  signup: { name:'', email:'', dept:'', pw:'', pw2:'', touched:false },
+  review: { clo1Confirmed:false },
+  pendingAccounts: [
+    { id:1, name:'อ.กมลชนก พรหมมา', email:'kamonchanok.p@university.ac.th', dept:'ภาควิชาวิทยาการคอมพิวเตอร์' }
+  ],
+  handledAccounts: []
+};
+
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+function setRole(role){
+  S.role = role;
+  document.getElementById('devInstr').classList.toggle('active', role==='instructor');
+  document.getElementById('devAdmin').classList.toggle('active', role==='admin');
+  document.getElementById('rolePill').textContent = role==='instructor' ? 'Instructor' : 'Program Admin';
+  document.getElementById('avatarInit').textContent = role==='instructor' ? 'สช' : 'สพ';
+  if (role === 'instructor') {
+    S.screen = S.accountStatus === 'approved' ? 'dashboard' : (S.accountStatus === 'none' ? 'signup' : 'pending');
+  } else {
+    S.screen = 'admin-dashboard';
+  }
+  render();
+}
+
+function goto(screen){ S.screen = screen; render(); window.scrollTo(0,0); }
+function openExport(){ document.getElementById('exportModal').classList.add('open'); }
+function closeExport(){ document.getElementById('exportModal').classList.remove('open'); }
+function doExport(){ closeExport(); toast('ดาวน์โหลดเอกสาร Word แล้ว'); }
+
+/* ---------------- icons ---------------- */
+const ICON = {
+  home:'<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/>',
+  courses:'<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H18a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6.5A1.5 1.5 0 0 1 5 18.5z"/><path d="M5 17.5C5 16.7 5.7 16 6.5 16H19"/>',
+  grid:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',
+  settings:'<line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2"/>',
+  doc:'<path d="M14 3H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 12v6M9.5 15.5 12 18l2.5-2.5"/>',
+  shield:'<path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/>',
+  account:'<path d="M8 8.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/><path d="M4.5 19c0-3 3.5-5 7-5s7 2 7 5"/><path d="M15.5 10.5l1.5 1.5 3-3"/>'
+};
+function svg(name){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICON[name]}</svg>`; }
+
+/* ---------------- tab bars ---------------- */
+function tabbarInstructor(active){
+  const tabs = [['dashboard','home','หน้าแรก'],['courses','courses','รายวิชา'],['cloweek','grid','CLO×สัปดาห์']];
+  return tabs.map(([id,icon,label]) => `<div class="tab ${active===id?'active':''}" onclick="goto('${id}')">${svg(icon)}<span>${label}</span></div>`).join('');
+}
+function tabbarAdmin(active){
+  const tabs = [['admin-dashboard','grid','หลักสูตร'],['admin-coursestatus','courses','รายวิชา'],['admin-plosetup','settings','ตั้งค่า'],['admin-sar','doc','SAR'],['admin-accesslog','shield','Log'],['admin-approve','account','บัญชี']];
+  return tabs.map(([id,icon,label]) => `<div class="tab ${active===id?'active':''}" onclick="goto('${id}')">${svg(icon)}<span>${label}</span></div>`).join('');
+}
+
+/* ---------------- SCREENS: onboarding ---------------- */
+function screenSignup(){
+  const f = S.signup;
+  const emailErr = f.touched && !/^\S+@\S+\.\S+$/.test(f.email);
+  const pwMismatch = f.touched && f.pw2 && f.pw !== f.pw2;
+  const filled = f.name.trim() && f.email.trim() && f.dept.trim() && f.pw.length>=6 && f.pw2.length>=6;
+  const disable = !(filled && !emailErr && !pwMismatch);
+  document.getElementById('tabbar').innerHTML = '';
+  return `
+    <div><div class="h1">สมัครใช้งาน ALIGN</div><div class="body-sm text-secondary" style="margin-top:4px;">สำหรับอาจารย์ผู้สอน — บัญชีต้องรอผู้บริหารหลักสูตรอนุมัติก่อนใช้งานจริง</div></div>
+    <div class="stack">
+      <div class="field"><label>ชื่อ-นามสกุล</label><input type="text" value="${f.name}" placeholder="เช่น นายสมชาย ใจดี" oninput="S.signup.name=this.value;render()"></div>
+      <div class="field"><label>อีเมลสถาบัน</label><input type="text" class="${emailErr?'err':''}" value="${f.email}" placeholder="name@university.ac.th" oninput="S.signup.email=this.value;S.signup.touched=true;render()">${emailErr?'<span class="field-err">กรุณากรอกอีเมลสถาบันให้ถูกต้อง</span>':''}</div>
+      <div class="field"><label>สังกัด/ภาควิชา</label><input type="text" value="${f.dept}" placeholder="เช่น ภาควิชาวิทยาการคอมพิวเตอร์" oninput="S.signup.dept=this.value;render()"></div>
+      <div class="field"><label>รหัสผ่าน</label><input type="password" value="${f.pw}" oninput="S.signup.pw=this.value;render()"></div>
+      <div class="field"><label>ยืนยันรหัสผ่าน</label><input type="password" class="${pwMismatch?'err':''}" value="${f.pw2}" oninput="S.signup.pw2=this.value;S.signup.touched=true;render()">${pwMismatch?'<span class="field-err">รหัสผ่านไม่ตรงกัน</span>':''}</div>
+    </div>
+    <button class="btn btn-primary" ${disable?'disabled':''} onclick="submitSignup()">สมัครสมาชิก</button>
+  `;
+}
+function submitSignup(){
+  S.accountStatus = 'pending';
+  S.pendingAccounts.push({ id: Date.now(), name: S.signup.name, email: S.signup.email, dept: S.signup.dept });
+  document.getElementById('devStatus').textContent = 'รออนุมัติ';
+  goto('pending');
+}
+function screenPending(){
+  document.getElementById('tabbar').innerHTML = '';
+  const st = S.accountStatus;
+  const map = {
+    pending: { icon:'circle', color:'var(--draft)', badge:'badge-draft', label:'รออนุมัติ', title:'บัญชีของคุณอยู่ระหว่างตรวจสอบ', body:'ผู้บริหารหลักสูตรกำลังตรวจสอบคำขอสมัครของคุณ (สลับไปมุมมอง "ผู้บริหารหลักสูตร" ด้านบนเพื่อลองอนุมัติดูได้) — ระหว่างนี้ยังไม่สามารถเข้าถึงฟีเจอร์อื่นของระบบได้' },
+    rejected: { icon:'x', color:'var(--gap)', badge:'badge-gap', label:'ถูกปฏิเสธ', title:'คำขอสมัครไม่ได้รับการอนุมัติ', body:'กรุณาติดต่อผู้บริหารหลักสูตรของท่านเพื่อสอบถามรายละเอียด' }
+  }[st] || {};
+  return `
+    <div class="stack" style="align-items:center;text-align:center;padding-top:24px;">
+      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="${map.color}" stroke-width="1.5"><circle cx="12" cy="12" r="9.5"/>${st==='pending'?'<path d="M12 7v5l3 2"/>':'<path d="M9 9l6 6M15 9l-6 6"/>'}</svg>
+      <span class="badge ${map.badge}">${map.label}</span>
+      <div class="h1">${map.title}</div>
+      <div class="body-sm text-secondary">${map.body}</div>
+      ${st==='rejected' ? '<button class="btn btn-ghost" onclick="S.accountStatus=\'none\';S.screen=\'signup\';render()">สมัครสมาชิกใหม่</button>' : ''}
+    </div>
+    <div class="stack">
+      <div class="locked-row">${svg('settings')} ตั้งค่ารายวิชา (CLO/PLO)</div>
+      <div class="locked-row">${svg('doc')} บันทึกการสอน</div>
+      <div class="locked-row">${svg('grid')} แดชบอร์ดและฟีเจอร์อื่น</div>
+    </div>
+    <div class="caption text-secondary" style="text-align:center;">ฟีเจอร์ทั้งหมดถูกล็อกจนกว่าบัญชีจะได้รับการอนุมัติ (กฎทางธุรกิจ #6)</div>
+  `;
+}
+
+/* ---------------- SCREENS: instructor ---------------- */
+const COURSES = [
+  { id:'COS101', name:'หลักการเขียนโปรแกรม', cur:'2565', pct:50, ready:true },
+  { id:'COS201', name:'ฐานข้อมูล', cur:'2565', pct:100, ready:true },
+  { id:'COS301', name:'การพัฒนาเว็บสมัยใหม่', cur:'2570', pct:0, ready:false }
+];
+function chip(cur){ return `<span class="chip chip-${cur}">${cur}</span>`; }
+
+function screenDashboard(){
+  document.getElementById('tabbar').innerHTML = tabbarInstructor('dashboard');
+  return `
+    <div><div class="h1">สวัสดี, สมชาย</div><div class="caption text-secondary">ภาพรวมความสอดคล้อง CLO/PLO ภาคการศึกษานี้</div></div>
+    <div class="card"><div class="display">50%</div><div class="caption text-secondary">ความสอดคล้องรวม (ยืนยันแล้วเท่านั้น) · CLO 2/4 ข้อ ของ COS101</div></div>
+    <div class="stack">
+      <div class="h2">รายวิชาที่สอน</div>
+      ${COURSES.map(c=>`
+        <div class="card tap stack" onclick="goto('summary')">
+          <div class="row between">${chip(c.cur)}<span class="h2" style="flex:1;">${c.name}</span></div>
+          <div class="row"><div class="bar" style="flex:1;"><span style="width:${c.pct}%"></span></div><span class="body-sm mono">${c.pct}%</span></div>
+          <span class="badge ${c.ready?'badge-confirmed':'badge-draft'}" style="align-self:flex-start;">${c.ready?'พร้อมบันทึกการสอน':'ยังตั้งค่าไม่ครบ'}</span>
+        </div>`).join('')}
+    </div>
+    <div class="gapbanner"><span class="dot"></span><div class="body-sm" style="flex:1;"><b>CLO4</b> (COS101 ${chip('2565')}) — ยังไม่มีข้อมูลการสอนรองรับ</div></div>
+    <button class="btn btn-ghost" onclick="goto('record')">บันทึกการสอน</button>
+  `;
+}
+function screenCourses(){
+  document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
+  return `
+    <div class="row between"><div class="h1">รายวิชาของฉัน</div></div>
+    <button class="btn btn-ghost btn-auto btn-sm" style="align-self:flex-start;">+ เพิ่มรายวิชา</button>
+    <div class="stack">
+      ${COURSES.map(c=>`
+        <div class="card tap row between" onclick="goto('cloplo')">
+          <div class="stack" style="gap:4px;">${chip(c.cur)}<span class="h2">${c.name}</span></div>
+          <span class="badge ${c.ready?'badge-confirmed':'badge-draft'}">${c.ready?'พร้อม':'ไม่ครบ'}</span>
+        </div>`).join('')}
+    </div>
+  `;
+}
+function screenCloPlo(){
+  document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
+  const clos = [
+    { code:'CLO1', desc:'อธิบายหลักการเขียนโปรแกรมเชิงโครงสร้างได้', plo:['PLO1565-1'] },
+    { code:'CLO2', desc:'ออกแบบและเขียนโปรแกรมเชิงวัตถุ (OOP) เบื้องต้นได้', plo:['PLO1565-2'] },
+    { code:'CLO3', desc:'เลือกใช้โครงสร้างข้อมูลพื้นฐานได้อย่างเหมาะสม', plo:['PLO1565-2','PLO1565-3'] },
+    { code:'CLO4', desc:'จัดการข้อผิดพลาดของโปรแกรม (Exception Handling) ได้', plo:['PLO1565-4'] }
+  ];
+  return `
+    <div class="h1">COS101 ${chip('2565')}</div>
+    <div class="row" style="border-bottom:1px solid var(--border-default);">
+      <button class="btn-text" style="color:var(--text-primary);font-weight:600;border-bottom:2px solid var(--green);border-radius:0;padding-bottom:8px;">CLO &amp; PLO</button>
+      <button class="btn-text" onclick="goto('syllabus')" style="padding-bottom:8px;">Course Syllabus</button>
+    </div>
+    <div class="stack">
+      ${clos.map(c=>`<div class="card stack" style="gap:6px;"><div class="row"><span class="mono chip" style="background:var(--bg-sunken);color:var(--text-primary);">${c.code}</span><span class="body-sm">${c.desc}</span></div><div class="row">${c.plo.map(p=>`<span class="mono chip" style="background:var(--green-tint);color:var(--green-dark);">${p}</span>`).join('')}</div></div>`).join('')}
+    </div>
+    <button class="btn btn-ghost btn-auto btn-sm" style="align-self:flex-start;">+ เพิ่ม CLO</button>
+  `;
+}
+function screenSyllabus(){
+  document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
+  const rows = [[1,'แนะนำภาษา Python และเครื่องมือพัฒนา'],[5,'การเขียนโปรแกรมเชิงวัตถุ (OOP) เบื้องต้น'],[10,'โครงสร้างข้อมูล Stack และ Queue'],[14,'การจัดการข้อผิดพลาด (Exception Handling)']];
+  return `
+    <div class="h1">COS101 ${chip('2565')}</div>
+    <div class="row" style="border-bottom:1px solid var(--border-default);">
+      <button class="btn-text" onclick="goto('cloplo')" style="padding-bottom:8px;">CLO &amp; PLO</button>
+      <button class="btn-text" style="color:var(--text-primary);font-weight:600;border-bottom:2px solid var(--green);border-radius:0;padding-bottom:8px;">Course Syllabus</button>
+    </div>
+    <div class="stack">
+      ${rows.map(([w,t])=>`<div class="card row between"><span class="mono body-sm">week ${w}</span><span class="body-sm" style="flex:1;margin:0 10px;">${t}</span></div>`).join('')}
+    </div>
+    <div class="caption text-secondary">แก้ไขล่าสุดโดย อ.สมชาย ใจดี</div>
+  `;
+}
+function screenRecord(){
+  document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
+  return `
+    <div class="h1">บันทึกการสอน</div>
+    <div class="stack">
+      <div class="field"><label>รายวิชา</label><input type="text" value="COS101 · หลักการเขียนโปรแกรม (2565)" disabled></div>
+      <div class="field"><label>สัปดาห์ที่สอน</label><input type="text" value="12" class="mono" style="max-width:80px;"></div>
+      <div class="field"><label>หัวข้อการสอน</label><input type="text" value="Workshop เสริม: Git และ GitHub Workflow"></div>
+      <div class="field"><label>วันที่สอนจริง</label><input type="date" value="2026-08-20"></div>
+      <div class="field"><label>หลักฐาน/ชิ้นงาน</label>
+        <div class="card row between" style="padding:10px 12px;"><span class="body-sm">ภาพกิจกรรม_Git_Workshop.jpg</span><span>×</span></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="goto('review')">บันทึกและให้ AI ประมวลผล</button>
+  `;
+}
+function screenReview(){
+  document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
+  const clo1Confirmed = S.review.clo1Confirmed;
+  return `
+    <div><div class="h1">ตรวจสอบผล AI</div><div class="caption text-secondary">COS101 ${chip('2565')} — ต้องยืนยันก่อนถือเป็นข้อมูลจริง</div></div>
+    <div class="h2">ผลจับคู่ CLO/PLO</div>
+    <div class="card stack" style="border:1.5px solid var(--green);background:var(--bg-surface);">
+      <div class="row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO3</span><span class="badge badge-confirmed">ยืนยันแล้ว</span></div>
+      <div class="body-sm">จาก "โครงสร้างข้อมูล Stack และ Queue" (week 10)</div>
+    </div>
+    <div class="card stack" style="border:1.5px solid var(--green);background:var(--bg-surface);">
+      <div class="row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO2</span><span class="badge badge-confirmed">ยืนยันแล้ว</span></div>
+      <div class="body-sm">จาก "การเขียนโปรแกรมเชิงวัตถุ (OOP) เบื้องต้น" (week 5)</div>
+    </div>
+    <div class="card stack" style="border:1.5px ${clo1Confirmed?'solid var(--green)':'dashed var(--draft)'};background:${clo1Confirmed?'var(--bg-surface)':'var(--draft-tint)'};">
+      <div class="row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO1</span><span class="badge ${clo1Confirmed?'badge-confirmed':'badge-draft'}">${clo1Confirmed?'ยืนยันแล้ว':'ผลจาก AI — ยังไม่ยืนยัน'}</span></div>
+      <div class="body-sm">จาก "Workshop เสริม: Git และ GitHub Workflow" (week 12)</div>
+      <div class="row"><div class="bar" style="width:100px;"><span style="width:40%;background:${clo1Confirmed?'var(--green)':'var(--draft)'};"></span></div><span class="body-sm mono">40%</span><span class="caption text-secondary">ความมั่นใจของ AI</span></div>
+      ${clo1Confirmed ? '' : `<div class="row" style="gap:8px;"><button class="btn btn-primary btn-sm btn-auto" onclick="S.review.clo1Confirmed=true;render();toast('ยืนยันผลจับคู่ CLO1 แล้ว')">ยืนยัน</button><button class="btn btn-ghost btn-sm btn-auto">แก้ไข</button><button class="btn btn-ghost btn-sm btn-auto">ปฏิเสธ</button></div>`}
+    </div>
+    <div class="h2">Gap เทียบ Course Syllabus</div>
+    <div class="card stack" style="border:1.5px dashed var(--draft);background:var(--draft-tint);">
+      <div class="row between"><span class="body-sm">หัวข้อที่ยังไม่พบการสอนรองรับ</span><span class="badge badge-draft">ยังไม่ยืนยัน</span></div>
+      <div class="body-sm">week 1 — แนะนำภาษา Python · week 14 — Exception Handling</div>
+    </div>
+    <button class="btn btn-ghost" onclick="goto('cloweek')">ไปแผนที่ CLO × สัปดาห์</button>
+  `;
+}
+function screenCloWeek(){
+  document.getElementById('tabbar').innerHTML = tabbarInstructor('cloweek');
+  const weeks = Array.from({length:15},(_,i)=>i+1);
+  const hits = { 'CLO1':[12], 'CLO2':[5], 'CLO3':[10], 'CLO4':[] };
+  return `
+    <div class="row between"><div class="h1">CLO × สัปดาห์</div></div>
+    <div class="caption text-secondary">COS101 ${chip('2565')}</div>
+    <div class="gridwrap"><table class="grid"><thead><tr><th>CLO</th>${weeks.map(w=>`<th>${w}</th>`).join('')}</tr></thead><tbody>
+      ${Object.entries(hits).map(([clo,hw])=>`<tr><td class="mono" style="text-align:left;">${clo}</td>${weeks.map(w=>`<td class="${hw.includes(w)?'hit':'empty'}">${hw.includes(w)?'1':'–'}</td>`).join('')}</tr>`).join('')}
+    </tbody></table></div>
+    <button class="btn btn-ghost" onclick="goto('summary')">ไปสรุปรายวิชา</button>
+  `;
+}
+function screenSummary(){
+  document.getElementById('tabbar').innerHTML = tabbarInstructor('dashboard');
+  return `
+    <div class="row between"><div class="h1">สรุปรายวิชา</div><div class="display" style="font-size:22px;">50%</div></div>
+    <div class="caption text-secondary">COS101 ${chip('2565')}</div>
+    <div class="gapbanner" style="background:var(--draft-tint);border-color:var(--draft);"><span class="dot" style="background:var(--draft);"></span><div class="body-sm" style="flex:1;">มีผลจาก AI ที่ยังไม่ยืนยัน 1 รายการ <button class="btn-text" onclick="goto('review')" style="display:inline;">ไปตรวจสอบ</button></div></div>
+    <div class="stack">
+      <div class="card row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO2</span><span class="body-sm" style="flex:1;margin:0 8px;">แมทช์แล้ว 100%</span></div>
+      <div class="card row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO3</span><span class="body-sm" style="flex:1;margin:0 8px;">แมทช์แล้ว 100%</span></div>
+      <div class="card row between" style="border-style:dashed;border-color:var(--gap);"><span class="mono chip" style="background:var(--bg-sunken);">CLO4</span><span class="badge badge-gap">ยังไม่มีหลักฐาน</span></div>
+    </div>
+    <div class="h2">Area of Improvement</div>
+    <div class="card body-sm">CLO4 ยังมีหลักฐานรองรับน้อย — พิจารณาเพิ่มกิจกรรม/ชิ้นงานที่เชื่อมโยงกับหัวข้อนี้ในรอบถัดไป</div>
+    <button class="btn btn-primary" onclick="openExport()">ออกเอกสาร Word</button>
+  `;
+}
+
+/* ---------------- SCREENS: admin ---------------- */
+function screenAdminDashboard(){
+  document.getElementById('tabbar').innerHTML = tabbarAdmin('admin-dashboard');
+  return `
+    <div class="h1">แดชบอร์ดภาพรวมหลักสูตร</div>
+    <div class="card"><div class="display">50%</div><div class="caption text-secondary">ความสอดคล้องเฉลี่ย · หลักสูตร 2565</div></div>
+    <div class="h2">รายวิชาในกลุ่ม 2565</div>
+    <div class="stack">
+      <div class="card row between"><span class="body-sm" style="flex:1;">COS101</span><div class="bar" style="width:60px;"><span style="width:50%"></span></div><span class="body-sm mono">50%</span></div>
+      <div class="card row between"><span class="body-sm" style="flex:1;">COS201</span><div class="bar" style="width:60px;"><span style="width:100%"></span></div><span class="body-sm mono">100%</span></div>
+    </div>
+  `;
+}
+function screenAdminCourseStatus(){
+  document.getElementById('tabbar').innerHTML = tabbarAdmin('admin-coursestatus');
+  return `
+    <div class="h1">ภาพรวมรายวิชา</div>
+    <div class="card"><div class="h2">3/4</div><div class="caption text-secondary">วิชาพร้อมใช้งานในกลุ่ม 2565</div></div>
+    <div class="stack">
+      <div class="card row between">${chip('2565')}<span class="body-sm" style="flex:1;margin-left:8px;">COS101</span><span class="badge badge-confirmed">พร้อม</span></div>
+      <div class="card row between">${chip('2565')}<span class="body-sm" style="flex:1;margin-left:8px;">COS102</span><span class="badge badge-draft">ไม่ครบ</span></div>
+    </div>
+  `;
+}
+function screenAdminPloSetup(){
+  document.getElementById('tabbar').innerHTML = tabbarAdmin('admin-plosetup');
+  return `
+    <div class="h1">ตั้งค่าหลักสูตร/PLO</div>
+    <div class="row" style="border-bottom:1px solid var(--border-default);">
+      <button class="btn-text" style="color:var(--cur-2565);font-weight:600;border-bottom:2px solid var(--cur-2565);border-radius:0;padding-bottom:8px;">หลักสูตร 2565</button>
+      <button class="btn-text" style="padding-bottom:8px;">หลักสูตร 2570</button>
+    </div>
+    <div class="stack">
+      <div class="card body-sm"><span class="mono">PLO1565-1</span> — ประยุกต์ใช้หลักการเขียนโปรแกรมพื้นฐานในการแก้ปัญหาได้</div>
+      <div class="card body-sm"><span class="mono">PLO1565-2</span> — ออกแบบซอฟต์แวร์ตามแนวคิดเชิงวัตถุได้</div>
+    </div>
+  `;
+}
+function screenAdminSar(){
+  document.getElementById('tabbar').innerHTML = tabbarAdmin('admin-sar');
+  return `
+    <div class="h1">เอกสาร SAR</div>
+    <div class="caption text-secondary">QA ไม่มีสิทธิ์เข้าระบบ ALIGN โดยตรง — ดาวน์โหลดแล้วส่งต่อภายนอกระบบ</div>
+    <div class="stack">
+      <div class="card row between">${chip('2565')}<span class="body-sm" style="flex:1;margin-left:8px;">COS101</span><button class="btn btn-ghost btn-sm btn-auto">ดาวน์โหลด</button></div>
+    </div>
+  `;
+}
+function screenAdminAccessLog(){
+  document.getElementById('tabbar').innerHTML = tabbarAdmin('admin-accesslog');
+  return `
+    <div class="h1">ประวัติการเข้าถึงหลักฐาน</div>
+    <div class="stack">
+      <div class="card body-sm"><span class="mono caption">2026-08-18 09:12</span><br>อ.สมชาย ใจดี (Instructor) — ดู — COS101 ${chip('2565')}</div>
+      <div class="card body-sm"><span class="mono caption">2026-08-17 14:05</span><br>ผู้บริหารหลักสูตร — ดาวน์โหลด — COS101 ${chip('2565')}</div>
+    </div>
+    <div class="caption text-secondary">ไม่แสดงชื่อไฟล์ในตาราง log นี้ตามข้อกำหนด PDPA</div>
+  `;
+}
+function screenAdminApprove(){
+  document.getElementById('tabbar').innerHTML = tabbarAdmin('admin-approve');
+  const decide = (id, status) => {
+    const item = S.pendingAccounts.find(p=>p.id===id);
+    if(!item) return;
+    S.pendingAccounts = S.pendingAccounts.filter(p=>p.id!==id);
+    S.handledAccounts.unshift({ ...item, status, at:'เมื่อสักครู่' });
+    if (S.signup.email && item.email === S.signup.email) {
+      S.accountStatus = status;
+      document.getElementById('devStatus').textContent = status==='approved' ? 'อนุมัติแล้ว' : 'ถูกปฏิเสธ';
+    }
+    render();
+    toast(status==='approved' ? `อนุมัติ ${item.name} แล้ว` : `ปฏิเสธ ${item.name} แล้ว`);
+  };
+  window.__decide = decide;
+  return `
+    <div class="row between"><div class="h1">อนุมัติบัญชีผู้ใช้</div><span class="badge badge-confirmed" style="font-size:10px;">Admin only</span></div>
+    <div class="h2">รออนุมัติ (${S.pendingAccounts.length})</div>
+    <div class="stack">
+      ${S.pendingAccounts.length===0 ? '<div class="caption text-secondary">ไม่มีคำขอที่รออนุมัติ</div>' : S.pendingAccounts.map(r=>`
+        <div class="card stack">
+          <div class="row between"><span class="h2">${r.name}</span><span class="badge badge-draft">รออนุมัติ</span></div>
+          <div class="caption text-secondary">${r.email}</div>
+          <div class="caption text-secondary">${r.dept}</div>
+          <div class="row" style="gap:8px;"><button class="btn btn-primary btn-sm" style="background:var(--green);color:var(--on-green);" onclick="__decide(${r.id},'approved')">อนุมัติ</button><button class="btn btn-sm" style="border:1.5px solid var(--gap);color:var(--gap);" onclick="__decide(${r.id},'rejected')">ปฏิเสธ</button></div>
+        </div>`).join('')}
+    </div>
+    ${S.handledAccounts.length ? `<div class="h2">ดำเนินการแล้ว</div><div class="stack">${S.handledAccounts.map(h=>`<div class="card row between" style="opacity:.7;"><span class="body-sm" style="flex:1;">${h.name}</span><span class="badge ${h.status==='approved'?'badge-confirmed':'badge-gap'}">${h.status==='approved'?'อนุมัติแล้ว':'ถูกปฏิเสธ'}</span></div>`).join('')}</div>` : ''}
+  `;
+}
+
+/* ---------------- router ---------------- */
+const SCREENS = {
+  signup: screenSignup, pending: screenPending,
+  dashboard: screenDashboard, courses: screenCourses, cloplo: screenCloPlo, syllabus: screenSyllabus,
+  record: screenRecord, review: screenReview, cloweek: screenCloWeek, summary: screenSummary,
+  'admin-dashboard': screenAdminDashboard, 'admin-coursestatus': screenAdminCourseStatus,
+  'admin-plosetup': screenAdminPloSetup, 'admin-sar': screenAdminSar,
+  'admin-accesslog': screenAdminAccessLog, 'admin-approve': screenAdminApprove
+};
+function render(){
+  document.getElementById('content').innerHTML = (SCREENS[S.screen] || screenSignup)();
+}
+setRole('instructor');
+</script>
+</body>
+</html>
