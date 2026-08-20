@@ -1,6 +1,6 @@
 # Test Plan: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)
 
-แตกมาจาก Acceptance Criteria ใน [[../../01-requirements/02-plan/product-backlog|product-backlog]] (AB-01 ถึง AB-23) อ้างอิงกฎทางธุรกิจ #1–#5 และ User Roles ใน [[../../01-requirements/01-spec/requirement-align|requirement-align]] และยึด entity/state จริงตาม [[../../02-design/02-technical/align-technical-design|align-technical-design]] (`ai_match_result`, `syllabus_gap_result`, `clo_coverage_summary` ฯลฯ) รวมถึงชื่อ state ฝั่ง UI (Draft/Confirmed) ตาม `DESIGN.md`
+แตกมาจาก Acceptance Criteria ใน [[../../01-requirements/02-plan/product-backlog|product-backlog]] (AB-01 ถึง AB-27) อ้างอิงกฎทางธุรกิจ #1–#6 และ User Roles ใน [[../../01-requirements/01-spec/requirement-align|requirement-align]] และยึด entity/state จริงตาม [[../../02-design/02-technical/align-technical-design|align-technical-design]] (`ai_match_result`, `syllabus_gap_result`, `clo_coverage_summary`, `user.account_status` ฯลฯ) รวมถึงชื่อ state ฝั่ง UI (Draft/Confirmed) ตาม `DESIGN.md`
 
 นี่คือ **Test Plan ฉบับแรก** ของโปรเจกต์ (ยังไม่มีการทดสอบจริงเกิดขึ้น เพราะยังไม่มีแอปพลิเคชันจริง — เอกสารนี้เตรียมพร้อมไว้ล่วงหน้าให้ทีมพัฒนาใช้อ้างอิงทันทีที่มีระบบให้ทดสอบ)
 
@@ -9,13 +9,14 @@
 ## 1. ขอบเขตการทดสอบ (Scope)
 
 ### In Scope
-- Test case เชิงฟังก์ชัน (functional) ครอบคลุม Acceptance Criteria ของ **User Story ทั้ง 23 เรื่อง (AB-01–AB-23)** ใน Epic E1–E5
+- Test case เชิงฟังก์ชัน (functional) ครอบคลุม Acceptance Criteria ของ **User Story ทั้ง 27 เรื่อง (AB-01–AB-27)** ใน Epic E1–E6
 - Test case ปฏิเสธ/ละเมิดกฎทางธุรกิจ (negative/rejection) สำหรับกฎที่เป็นเงื่อนไขบังคับ โดยเฉพาะ:
   - ผูก CLO–PLO ก่อนบันทึกการสอน (BR#1) และห้ามผูกข้ามกลุ่มหลักสูตร 2565↔2570
   - แจ้งเตือน CLO ที่ไม่มีหลักฐาน (BR#2)
   - AI เป็นค่าตั้งต้น ต้องยืนยันก่อนเสมอ / ห้ามบันทึกผล AI (match, %, ความถี่, gap) ทันทีโดยไม่ผ่านการยืนยัน (BR#3)
   - เอกสารส่งออกอ้างอิงเฉพาะหลักฐานจริง (BR#4)
   - จำกัดสิทธิ์เข้าถึงหลักฐาน/รายงานตาม PDPA (BR#5)
+  - บัญชีที่สมัครเองต้องผ่านการอนุมัติจากผู้บริหารหลักสูตรก่อนเข้าถึงฟีเจอร์ใดๆของระบบ — บัญชี "รออนุมัติ"/"ถูกปฏิเสธ" ต้องถูกปิดกั้นทุก request ไม่ใช่แค่ตอน login (BR#6, E6)
 - การแยกข้อมูล/สิทธิ์ตามกลุ่มหลักสูตร 2565/2570 ในทุกจุดที่ปรากฏ (cross-cutting ทุก Epic)
 - สถานะ Draft vs Confirmed ต้องแยกกันถูกต้องตาม `DESIGN.md` (UX Rule 4.1) ทุกจุดที่แสดงผลจาก AI
 
@@ -39,6 +40,8 @@
 | `U-PA-2570` | ผู้บริหารหลักสูตร (Program Administrator) | `program_admin_curriculum_scope = [2570]` เท่านั้น |
 
 **หมายเหตุ**: ไม่มี test role สำหรับ QA เพราะ QA ไม่ authenticate กับระบบ (ดู Out of Scope หัวข้อ 1)
+
+**หมายเหตุ**: ทุกบัญชีข้างต้น (`U-INSTR-A`, `U-INSTR-B`, `U-PA-2565`, `U-PA-2570`) สมมติว่ามี `account_status = 'approved'` อยู่แล้วเป็นค่าตั้งต้น (E1–E5 ทุก test case ในเอกสารนี้ตั้งอยู่บนสมมติฐานนี้) — บัญชีที่อยู่ในสถานะ `pending`/`rejected` (`U-PENDING`, `U-REJECTED`) และผู้สมัครใหม่ (`U-NEWREG`) เป็น test role เฉพาะของ Epic E6 เท่านั้น กำหนดไว้ใน [[e6-user-registration-approval|e6-user-registration-approval]]
 
 ---
 
@@ -118,6 +121,7 @@
 | E3 | AI ประมวลผลจับคู่ CLO/PLO + gap analysis | AB-08, AB-09, AB-10, AB-20, AB-21, AB-22 | [[e3-ai-matching-gap-analysis\|e3-ai-matching-gap-analysis]] |
 | E4 | แดชบอร์ดและแจ้งเตือนความสอดคล้อง | AB-11, AB-12, AB-13, AB-14, AB-23 | [[e4-dashboard-alerts\|e4-dashboard-alerts]] |
 | E5 | ออกเอกสารหลักฐาน (Word Export) | AB-15, AB-16, AB-17, AB-18 | [[e5-word-export\|e5-word-export]] |
+| E6 | สมัครและอนุมัติบัญชีผู้ใช้ (User Registration & Approval) | AB-24, AB-25, AB-26, AB-27 | [[e6-user-registration-approval\|e6-user-registration-approval]] |
 
 ---
 
@@ -130,7 +134,8 @@
 | E3 | 30 | 12 | 5 | 10 | 3 |
 | E4 | 19 | 8 | 5 | 6 | 0 |
 | E5 | 16 | 6 | 2 | 7 | 1 |
-| **รวม** | **106** | **42** | **21** | **37** | **6** |
+| E6 | 23 | 9 | 4 | 8 | 2 |
+| **รวม** | **129** | **51** | **25** | **45** | **8** |
 
 (ตัวเลขนับตามจริงจากตารางในแต่ละไฟล์ย่อย — นับ 1 แถว = 1 test case)
 
@@ -157,6 +162,15 @@
 
 ### 6.4 AB-18 (toggle รวม/ไม่รวม Area of Improvement) — ความเชื่อมั่นต่ำ (ไฟล์ e5)
 Story นี้เป็นข้อสรุปที่ backlog-analyst อนุมานเพิ่มเติม ไม่ได้ระบุตรงในสเปคต้นฉบับ — เขียน test case ตาม AC ที่มีอยู่ในปัจจุบันได้ปกติ (เพราะ AC ชัดเจนพอ) แต่ **ทั้งฟีเจอร์นี้ควรได้รับการยืนยันจากผู้ใช้ก่อนพัฒนาจริง** ว่าต้องการหรือไม่ — ไม่ใช่คำถามเชิงทดสอบแต่เป็นคำถามเชิงความจำเป็นของฟีเจอร์
+
+### 6.5 ฟิลด์ฟอร์มสมัครสมาชิก (self-service registration) — กระทบ AB-24 (ไฟล์ e6)
+AB-24 AC ระบุตรงๆว่า "รายละเอียดฟิลด์ข้อมูลที่ต้องกรอกในแบบฟอร์มยังไม่ได้ระบุชัดเจนในสเปค ต้องยืนยันเพิ่มเติมก่อนพัฒนาจริง" — `align-technical-design.md` §2.12 เสนอชุดฟิลด์ `name, email, department, password` โดยอ้างอิงต้นแบบ `M-SignUp.dc.html` ที่ทำไว้แล้ว แต่ระบุชัดว่าเป็น**ข้อเสนอ ไม่ใช่ข้อกำหนดที่ยืนยันแล้ว** (เช่น อาจต้องใช้ SSO/รหัสพนักงานของมหาวิทยาลัยแทนอีเมล+รหัสผ่านจริง) — test case ที่ตรวจ validation รายฟิลด์ (จำเป็น/รูปแบบ) เขียนเป็น placeholder ไว้ใน `e6-user-registration-approval.md` (TC-AB24-04) เท่านั้น
+
+### 6.6 `rejection_reason` บังคับกรอกหรือไม่ — กระทบ AB-26/AB-27 (ไฟล์ e6)
+`align-technical-design.md` §2.12 เพิ่มฟิลด์ `rejection_reason` เป็นข้อเสนอ (nullable) แต่ AB-26 AC ระบุเพียงว่าต้องบันทึก "ผู้อนุมัติ, เวลาที่ดำเนินการ" เท่านั้น ไม่ได้กำหนดว่าต้องบังคับกรอกเหตุผลตอนปฏิเสธหรือไม่ — เขียนเป็น placeholder ไว้ใน `e6-user-registration-approval.md` (TC-AB27-05)
+
+### 6.7 วิธีสร้างบัญชี `program_admin` ชุดแรก — กระทบ E6 โดยรวม (ไม่ใช่ story เดียว)
+`align-technical-design.md` §2.12 ระบุว่า E6 (`POST /auth/register`) สร้างได้เฉพาะบัญชี `role = 'instructor'` เท่านั้น สเปคไม่ได้ระบุว่าบัญชี `program_admin` ชุดแรกถูกสร้างขึ้นอย่างไร (เช่น seed ข้อมูลเริ่มต้นตอน deploy หรือมีกลไกอื่นนอกเอกสารนี้) — ไม่กระทบการเขียน test case ของ `e6-user-registration-approval.md` โดยตรง (ใช้ `U-PA-2565`/`U-PA-2570` เป็นบัญชีที่มีอยู่แล้วตามข้อสมมติของ Test Plan) แต่เป็นคำถามที่ต้องตอบก่อนติดตั้งระบบจริง
 
 ---
 
