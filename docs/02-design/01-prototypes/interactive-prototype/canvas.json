@@ -1,44 +1,300 @@
 {
-  "pages": [
-    { "id": "page-1", "name": "Desktop" },
-    { "id": "page-2", "name": "Mobile" }
-  ],
   "artboards": [
-    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1180, "h": 800, "title": "1. แดชบอร์ด" },
-    { "file": "MyCourses.dc.html", "x": 1240, "y": 0, "w": 1180, "h": 800, "title": "2. รายวิชาของฉัน" },
-    { "file": "CourseManage.dc.html", "x": 2480, "y": 0, "w": 1180, "h": 800, "title": "3-4. จัดการรายวิชา (CLO/PLO · Syllabus)" },
-    { "file": "TeachingRecordEntry.dc.html", "x": 3720, "y": 0, "w": 1180, "h": 800, "title": "5. บันทึกการสอน" },
-    { "file": "AIReviewPanel.dc.html", "x": 4960, "y": 0, "w": 1180, "h": 800, "title": "6. ตรวจสอบผล AI" },
-    { "file": "CloWeekMap.dc.html", "x": 6200, "y": 0, "w": 1180, "h": 800, "title": "7. CLO × สัปดาห์" },
-    { "file": "CourseSummary.dc.html", "x": 7440, "y": 0, "w": 1180, "h": 820, "title": "8. สรุปรายวิชา" },
-    { "file": "WordExportPanel.dc.html", "x": 8680, "y": 0, "w": 700, "h": 700, "title": "9. ออกเอกสาร Word" },
-
-    { "file": "AdminDashboard.dc.html", "x": 0, "y": 940, "w": 1180, "h": 820, "title": "ผู้บริหารหลักสูตร 1 — แดชบอร์ดภาพรวมหลักสูตร" },
-    { "file": "AdminCourseStatus.dc.html", "x": 1240, "y": 940, "w": 1180, "h": 800, "title": "ผู้บริหารหลักสูตร 2 — ภาพรวมรายวิชา" },
-    { "file": "AdminPloSetup.dc.html", "x": 2480, "y": 940, "w": 1180, "h": 800, "title": "ผู้บริหารหลักสูตร 3 — ตั้งค่าหลักสูตร/PLO" },
-    { "file": "AdminSarExport.dc.html", "x": 3720, "y": 940, "w": 1180, "h": 800, "title": "ผู้บริหารหลักสูตร 4 — เอกสาร SAR" },
-    { "file": "AdminAccessLog.dc.html", "x": 4960, "y": 940, "w": 1180, "h": 800, "title": "ผู้บริหารหลักสูตร 5 — ประวัติการเข้าถึงหลักฐาน" },
-
-    { "file": "M-Dashboard.dc.html", "x": 0, "y": 0, "w": 375, "h": 812, "page": "page-2", "title": "M1. แดชบอร์ด" },
-    { "file": "M-MyCourses.dc.html", "x": 415, "y": 0, "w": 375, "h": 812, "page": "page-2", "title": "M2. รายวิชาของฉัน" },
-    { "file": "M-CourseManage.dc.html", "x": 830, "y": 0, "w": 375, "h": 812, "page": "page-2", "title": "M3-4. จัดการรายวิชา" },
-    { "file": "M-TeachingRecordEntry.dc.html", "x": 1245, "y": 0, "w": 375, "h": 812, "page": "page-2", "title": "M5. บันทึกการสอน" },
-    { "file": "M-AIReviewPanel.dc.html", "x": 1660, "y": 0, "w": 375, "h": 812, "page": "page-2", "title": "M6. ตรวจสอบผล AI" },
-    { "file": "M-CloWeekMap.dc.html", "x": 2075, "y": 0, "w": 375, "h": 812, "page": "page-2", "title": "M7. CLO × สัปดาห์" },
-    { "file": "M-CourseSummary.dc.html", "x": 2490, "y": 0, "w": 375, "h": 812, "page": "page-2", "title": "M8. สรุปรายวิชา" },
-    { "file": "M-WordExportPanel.dc.html", "x": 2905, "y": 0, "w": 375, "h": 812, "page": "page-2", "title": "M9. ออกเอกสาร Word" },
-
-    { "file": "M-AdminDashboard.dc.html", "x": 0, "y": 940, "w": 375, "h": 812, "page": "page-2", "title": "M-ผู้บริหาร 1 — แดชบอร์ด" },
-    { "file": "M-AdminCourseStatus.dc.html", "x": 415, "y": 940, "w": 375, "h": 812, "page": "page-2", "title": "M-ผู้บริหาร 2 — ภาพรวมรายวิชา" },
-    { "file": "M-AdminPloSetup.dc.html", "x": 830, "y": 940, "w": 375, "h": 812, "page": "page-2", "title": "M-ผู้บริหาร 3 — ตั้งค่าหลักสูตร/PLO" },
-    { "file": "M-AdminSarExport.dc.html", "x": 1245, "y": 940, "w": 375, "h": 812, "page": "page-2", "title": "M-ผู้บริหาร 4 — SAR" },
-    { "file": "M-AdminAccessLog.dc.html", "x": 1660, "y": 940, "w": 375, "h": 812, "page": "page-2", "title": "M-ผู้บริหาร 5 — Access Log" }
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1180,
+      "h": 800,
+      "title": "1. แดชบอร์ด"
+    },
+    {
+      "file": "MyCourses.dc.html",
+      "x": 1240,
+      "y": 0,
+      "w": 1180,
+      "h": 800,
+      "title": "2. รายวิชาของฉัน"
+    },
+    {
+      "file": "CourseManage.dc.html",
+      "x": 2480,
+      "y": 0,
+      "w": 1180,
+      "h": 800,
+      "title": "3-4. จัดการรายวิชา (CLO/PLO · Syllabus)"
+    },
+    {
+      "file": "TeachingRecordEntry.dc.html",
+      "x": 3720,
+      "y": 0,
+      "w": 1180,
+      "h": 800,
+      "title": "5. บันทึกการสอน"
+    },
+    {
+      "file": "AIReviewPanel.dc.html",
+      "x": 4960,
+      "y": 0,
+      "w": 1180,
+      "h": 800,
+      "title": "6. ตรวจสอบผล AI"
+    },
+    {
+      "file": "CloWeekMap.dc.html",
+      "x": 6200,
+      "y": 0,
+      "w": 1180,
+      "h": 800,
+      "title": "7. CLO × สัปดาห์"
+    },
+    {
+      "file": "CourseSummary.dc.html",
+      "x": 7440,
+      "y": 0,
+      "w": 1180,
+      "h": 820,
+      "title": "8. สรุปรายวิชา"
+    },
+    {
+      "file": "WordExportPanel.dc.html",
+      "x": 8680,
+      "y": 0,
+      "w": 700,
+      "h": 700,
+      "title": "9. ออกเอกสาร Word"
+    },
+    {
+      "file": "AdminDashboard.dc.html",
+      "x": 0,
+      "y": 940,
+      "w": 1180,
+      "h": 820,
+      "title": "ผู้บริหารหลักสูตร 1 — แดชบอร์ดภาพรวมหลักสูตร"
+    },
+    {
+      "file": "AdminCourseStatus.dc.html",
+      "x": 1240,
+      "y": 940,
+      "w": 1180,
+      "h": 800,
+      "title": "ผู้บริหารหลักสูตร 2 — ภาพรวมรายวิชา"
+    },
+    {
+      "file": "AdminPloSetup.dc.html",
+      "x": 2480,
+      "y": 940,
+      "w": 1180,
+      "h": 800,
+      "title": "ผู้บริหารหลักสูตร 3 — ตั้งค่าหลักสูตร/PLO"
+    },
+    {
+      "file": "AdminSarExport.dc.html",
+      "x": 3720,
+      "y": 940,
+      "w": 1180,
+      "h": 800,
+      "title": "ผู้บริหารหลักสูตร 4 — เอกสาร SAR"
+    },
+    {
+      "file": "AdminAccessLog.dc.html",
+      "x": 4960,
+      "y": 940,
+      "w": 1180,
+      "h": 800,
+      "title": "ผู้บริหารหลักสูตร 5 — ประวัติการเข้าถึงหลักฐาน"
+    },
+    {
+      "file": "M-Dashboard.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M1. แดชบอร์ด"
+    },
+    {
+      "file": "M-MyCourses.dc.html",
+      "x": 415,
+      "y": 0,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M2. รายวิชาของฉัน"
+    },
+    {
+      "file": "M-CourseManage.dc.html",
+      "x": 830,
+      "y": 0,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M3-4. จัดการรายวิชา"
+    },
+    {
+      "file": "M-TeachingRecordEntry.dc.html",
+      "x": 1245,
+      "y": 0,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M5. บันทึกการสอน"
+    },
+    {
+      "file": "M-AIReviewPanel.dc.html",
+      "x": 1660,
+      "y": 0,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M6. ตรวจสอบผล AI"
+    },
+    {
+      "file": "M-CloWeekMap.dc.html",
+      "x": 2075,
+      "y": 0,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M7. CLO × สัปดาห์"
+    },
+    {
+      "file": "M-CourseSummary.dc.html",
+      "x": 2490,
+      "y": 0,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M8. สรุปรายวิชา"
+    },
+    {
+      "file": "M-WordExportPanel.dc.html",
+      "x": 2905,
+      "y": 0,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M9. ออกเอกสาร Word"
+    },
+    {
+      "file": "M-AdminDashboard.dc.html",
+      "x": 0,
+      "y": 940,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M-ผู้บริหาร 1 — แดชบอร์ด"
+    },
+    {
+      "file": "M-AdminCourseStatus.dc.html",
+      "x": 415,
+      "y": 940,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M-ผู้บริหาร 2 — ภาพรวมรายวิชา"
+    },
+    {
+      "file": "M-AdminPloSetup.dc.html",
+      "x": 830,
+      "y": 940,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M-ผู้บริหาร 3 — ตั้งค่าหลักสูตร/PLO"
+    },
+    {
+      "file": "M-AdminSarExport.dc.html",
+      "x": 1245,
+      "y": 940,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M-ผู้บริหาร 4 — SAR"
+    },
+    {
+      "file": "M-AdminAccessLog.dc.html",
+      "x": 1660,
+      "y": 940,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M-ผู้บริหาร 5 — Access Log"
+    },
+    {
+      "file": "M-AdminApproveAccounts.dc.html",
+      "x": 2075,
+      "y": 940,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M-ผู้บริหาร 6 — อนุมัติบัญชีผู้ใช้"
+    },
+    {
+      "file": "M-SignUp.dc.html",
+      "x": 3320,
+      "y": 0,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M10. สมัครสมาชิก"
+    },
+    {
+      "file": "M-PendingApproval.dc.html",
+      "x": 3735,
+      "y": 0,
+      "w": 375,
+      "h": 812,
+      "page": "page-2",
+      "title": "M11. สถานะบัญชี (รออนุมัติ/อนุมัติ/ปฏิเสธ)"
+    }
   ],
   "annotations": [
-    { "id": "flow-note-instructor", "x": 0, "y": -160, "w": 900, "text": "ALIGN — Instructor flow (clickable prototype, full 9 screens)\nแดชบอร์ด → รายวิชาของฉัน (เพิ่มวิชาได้จริง) → จัดการรายวิชา (เพิ่ม CLO, ผูก/ถอด PLO, เพิ่ม/แก้ไขหัวข้อ syllabus) → บันทึกการสอน (กรอกหัวข้อ/แนบหลักฐาน) → ตรวจสอบผล AI (แก้ไข/ปฏิเสธ/ยืนยัน Draft→Confirmed) → CLO × สัปดาห์ (คลิกช่องบันทึกจำนวนชิ้นงาน) → สรุปรายวิชา → ออกเอกสาร Word", "page": "page-1" },
-    { "id": "flow-note-admin", "x": 0, "y": 780, "w": 900, "text": "ALIGN — Program Administrator flow (full 5 screens)\nแดชบอร์ดภาพรวมหลักสูตร (มีตัวเลือกสาธิต program_admin_curriculum_scope) → ภาพรวมรายวิชา → ตั้งค่าหลักสูตร/PLO → เอกสาร SAR → ประวัติการเข้าถึงหลักฐาน (กรองได้จริง ไม่แสดงชื่อไฟล์)\n\nอ้างอิง DESIGN.md tokens/components ทั้งหมด — ไม่มีการเชื่อมนำทางข้าม artboard จริง (แต่ละหน้าคือ state สาธิตแยกกัน)", "page": "page-1" },
-    { "id": "mobile-note-instructor", "x": 0, "y": -160, "w": 1100, "text": "ALIGN — Mobile Instructor flow (375px, bottom tab bar)\nเดียวกับเวอร์ชัน Desktop ทุกจุดของ interaction แต่จัดวางใหม่สำหรับหน้าจอมือถือ: Side Navigation → bottom tab bar, ตาราง CLO×สัปดาห์ → การ์ดพับได้ + แถบสัปดาห์เลื่อนแนวนอน, modal ออกเอกสาร Word → เต็มหน้าจอ", "page": "page-2" },
-    { "id": "mobile-note-admin", "x": 0, "y": 780, "w": 1100, "text": "ALIGN — Mobile Program Administrator flow (375px)\nbottom tab bar 5 ปุ่มตามเมนู Side Navigation เดิม, ตาราง Evidence Access Log → การ์ดเรียงต่อกัน (ไม่แสดงชื่อไฟล์ เช่นเดียวกับเดสก์ท็อป)", "page": "page-2" }
+    {
+      "id": "flow-note-instructor",
+      "x": 0,
+      "y": -160,
+      "w": 900,
+      "text": "ALIGN — Instructor flow (clickable prototype, full 9 screens)\nแดชบอร์ด → รายวิชาของฉัน (เพิ่มวิชาได้จริง) → จัดการรายวิชา (เพิ่ม CLO, ผูก/ถอด PLO, เพิ่ม/แก้ไขหัวข้อ syllabus) → บันทึกการสอน (กรอกหัวข้อ/แนบหลักฐาน) → ตรวจสอบผล AI (แก้ไข/ปฏิเสธ/ยืนยัน Draft→Confirmed) → CLO × สัปดาห์ (คลิกช่องบันทึกจำนวนชิ้นงาน) → สรุปรายวิชา → ออกเอกสาร Word",
+      "page": "page-1"
+    },
+    {
+      "id": "flow-note-admin",
+      "x": 0,
+      "y": 780,
+      "w": 900,
+      "text": "ALIGN — Program Administrator flow (full 5 screens)\nแดชบอร์ดภาพรวมหลักสูตร (มีตัวเลือกสาธิต program_admin_curriculum_scope) → ภาพรวมรายวิชา → ตั้งค่าหลักสูตร/PLO → เอกสาร SAR → ประวัติการเข้าถึงหลักฐาน (กรองได้จริง ไม่แสดงชื่อไฟล์)\n\nอ้างอิง DESIGN.md tokens/components ทั้งหมด — ไม่มีการเชื่อมนำทางข้าม artboard จริง (แต่ละหน้าคือ state สาธิตแยกกัน)",
+      "page": "page-1"
+    },
+    {
+      "id": "mobile-note-instructor",
+      "x": 0,
+      "y": -160,
+      "w": 1100,
+      "text": "ALIGN — Mobile Instructor flow (375px, bottom tab bar)\nเดียวกับเวอร์ชัน Desktop ทุกจุดของ interaction แต่จัดวางใหม่สำหรับหน้าจอมือถือ: Side Navigation → bottom tab bar, ตาราง CLO×สัปดาห์ → การ์ดพับได้ + แถบสัปดาห์เลื่อนแนวนอน, modal ออกเอกสาร Word → เต็มหน้าจอ\n\nM10-M11 (ใหม่ตาม E6/AB-24/AB-25/AB-27): สมัครสมาชิกด้วยตนเอง (กรอกฟอร์มได้จริง มี validation) → ส่งคำขอแล้วเข้าสถานะรออนุมัติ, และหน้าเกตสถานะบัญชี (สลับดูได้ทั้ง 3 สถานะ รออนุมัติ/อนุมัติแล้ว/ถูกปฏิเสธ ผ่าน tweak ด้านบน artboard) ที่ล็อกฟีเจอร์อื่นทั้งหมดจนกว่าจะอนุมัติ — ฟิลด์ในฟอร์มสมัคร (ชื่อ, อีเมล, สังกัด, รหัสผ่าน) เป็นข้อเสนอ ยังไม่ได้กำหนดในสเปคต้นฉบับ",
+      "page": "page-2"
+    },
+    {
+      "id": "mobile-note-admin",
+      "x": 0,
+      "y": 780,
+      "w": 1100,
+      "text": "ALIGN — Mobile Program Administrator flow (375px)\nbottom tab bar 6 ปุ่ม (เพิ่มแท็บ \"บัญชี\" ใหม่ทุกหน้าตาม E6), ตาราง Evidence Access Log → การ์ดเรียงต่อกัน (ไม่แสดงชื่อไฟล์ เช่นเดียวกับเดสก์ท็อป)\n\nM-ผู้บริหาร 6 (ใหม่ตาม AB-26): รายการคำขอสมัครที่รออนุมัติ กดอนุมัติ/ปฏิเสธได้จริง ย้ายไปช่อง \"ดำเนินการแล้ว\" พร้อมชื่อผู้อนุมัติและเวลา (audit trail) — มองเห็นได้เฉพาะบทบาทผู้บริหารหลักสูตรตามสเปค",
+      "page": "page-2"
+    }
   ],
-  "launch": { "view": "canvas", "page": "page-2" }
+  "launch": {
+    "view": "canvas",
+    "page": "page-2"
+  },
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Desktop"
+    },
+    {
+      "id": "page-2",
+      "name": "Mobile"
+    }
+  ]
 }

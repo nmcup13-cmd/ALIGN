@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-base:#F6F2EA; --bg-surface:#FDFBF7; --bg-sunken:#EFE9DD;
+  --border-default:#E2D9C8; --border-strong:#C9BBA0;
+  --text-primary:#2B2620; --text-secondary:#6B6255; --text-disabled:#B3AA9A;
+  --green:#5B6E4F; --green-tint:#E8ECE2;
+  --draft:#B8863C; --draft-tint:#F3E6CE;
+  --gap:#A65D45; --gap-tint:#F5E3DC;
+}
+*{box-sizing:border-box;} html,body{margin:0;}
+body{background:var(--bg-sunken);color:var(--text-primary);font-family:'IBM Plex Sans Thai Looped','Sarabun',system-ui,sans-serif;font-size:15px;line-height:22px;display:flex;justify-content:center;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.m-shell{width:375px;min-height:812px;background:var(--bg-base);display:flex;flex-direction:column;}
+.m-header{height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--bg-surface);border-bottom:1px solid var(--border-default);}
+.h1{font-size:19px;line-height:25px;font-weight:600;margin:0;}
+.h2{font-size:14px;line-height:19px;font-weight:500;margin:0;}
+.admin-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:999px;background:var(--green-tint);color:var(--green);}
+.m-content{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;}
+.caption{font-size:11px;line-height:15px;}
+.text-secondary{color:var(--text-secondary);}
+.req-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;}
+.req-card.handled{opacity:.7;}
+.name-row{display:flex;align-items:center;justify-content:space-between;}
+.actions{display:flex;gap:8px;margin-top:4px;}
+.m-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;border-radius:4px;padding:9px 10px;min-height:40px;}
+.m-btn-approve{background:var(--green);color:var(--bg-surface);}
+.m-btn-reject{background:transparent;color:var(--gap);border:1.5px solid var(--gap);}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:999px;}
+.badge-draft{border:1.5px dashed var(--draft);color:var(--draft);background:var(--draft-tint);}
+.badge-confirmed{border:1.5px solid var(--green);color:var(--green);background:var(--green-tint);}
+.badge-gap{border:1.5px solid var(--gap);color:var(--gap);background:var(--gap-tint);}
+.section-label{font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.03em;}
+.m-tabbar{flex-shrink:0;min-height:58px;background:var(--bg-surface);border-top:1px solid var(--border-default);display:flex;}
+.m-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:9px;color:var(--text-secondary);min-height:44px;}
+.m-tab.active{color:var(--green);}
+</style>
+</helmet>
+
+<div class="m-shell">
+  <div class="m-header">
+    <div class="h1">อนุมัติบัญชีผู้ใช้</div>
+    <div class="admin-badge">Admin only</div>
+  </div>
+
+  <div class="m-content">
+    <div class="caption text-secondary">Map: AB-26 — มองเห็นได้เฉพาะผู้บริหารหลักสูตร</div>
+
+    <div class="section-label">รออนุมัติ ({{pendingCount}})</div>
+    <sc-if value="{{noPending}}" hint-placeholder-val="{{false}}">
+      <div class="caption text-secondary">ไม่มีคำขอที่รออนุมัติ</div>
+    </sc-if>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <sc-for list="{{pending}}" as="r" hint-placeholder-count="2">
+        <div class="req-card">
+          <div class="name-row">
+            <span class="h2">{{r.name}}</span>
+            <span class="badge badge-draft">รออนุมัติ</span>
+          </div>
+          <div class="caption text-secondary">{{r.email}}</div>
+          <div class="caption text-secondary">{{r.dept}}</div>
+          <div class="actions">
+            <button class="m-btn m-btn-approve" onClick="{{r.approve}}">อนุมัติ</button>
+            <button class="m-btn m-btn-reject" onClick="{{r.reject}}">ปฏิเสธ</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{hasHandled}}" hint-placeholder-val="{{true}}">
+      <div class="section-label" style="margin-top:6px;">ดำเนินการแล้ว</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <sc-for list="{{handled}}" as="h" hint-placeholder-count="1">
+          <div class="req-card handled">
+            <div class="name-row">
+              <span class="h2">{{h.name}}</span>
+              <span class="badge {{h.badgeClass}}">{{h.statusLabel}}</span>
+            </div>
+            <div class="caption text-secondary">{{h.email}}</div>
+            <div class="caption text-secondary">โดย ผศ.ดร. สุพจน์ ประสานงาน · {{h.at}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </div>
+
+  <div class="m-tabbar">
+    <div class="m-tab">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+      <span>หลักสูตร</span>
+    </div>
+    <div class="m-tab">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3M10 7h10M4 12h3M10 12h10M4 17h3M10 17h10"/></svg>
+      <span>รายวิชา</span>
+    </div>
+    <div class="m-tab">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2"/></svg>
+      <span>ตั้งค่า</span>
+    </div>
+    <div class="m-tab">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 12v6M9.5 15.5 12 18l2.5-2.5"/></svg>
+      <span>SAR</span>
+    </div>
+    <div class="m-tab">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/></svg>
+      <span>Log</span>
+    </div>
+    <div class="m-tab active">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/><path d="M4.5 19c0-3 3.5-5 7-5s7 2 7 5"/><path d="M15.5 10.5l1.5 1.5 3-3"/></svg>
+      <span>บัญชี</span>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      pending: [
+        { id: 1, name: 'อ.กมลชนก พรหมมา', email: 'kamonchanok.p@university.ac.th', dept: 'ภาควิชาวิทยาการคอมพิวเตอร์' },
+        { id: 2, name: 'อ.ธีรภัทร บุญเลิศ', email: 'teerapat.b@university.ac.th', dept: 'ภาควิชาเทคโนโลยีสารสนเทศ' }
+      ],
+      handled: [
+        { id: 3, name: 'อ.ปวีณา ศรีสวัสดิ์', email: 'paveena.s@university.ac.th', status: 'approved', at: '18 ส.ค. 69' }
+      ]
+    };
+  }
+  renderVals() {
+    const now = '20 ส.ค. 69';
+    const decide = (id, status) => {
+      const item = this.state.pending.find((p) => p.id === id);
+      if (!item) return;
+      this.setState({
+        pending: this.state.pending.filter((p) => p.id !== id),
+        handled: [{ id: item.id, name: item.name, email: item.email, status, at: now }, ...this.state.handled]
+      });
+    };
+    const pending = this.state.pending.map((r) => ({
+      ...r,
+      approve: () => decide(r.id, 'approved'),
+      reject: () => decide(r.id, 'rejected')
+    }));
+    const handled = this.state.handled.map((h) => ({
+      ...h,
+      statusLabel: h.status === 'approved' ? 'อนุมัติแล้ว' : 'ถูกปฏิเสธ',
+      badgeClass: h.status === 'approved' ? 'badge-confirmed' : 'badge-gap'
+    }));
+    return {
+      pending, handled,
+      pendingCount: pending.length,
+      noPending: pending.length === 0,
+      hasHandled: handled.length > 0
+    };
+  }
+}
+</script>
+</body>
+</html>
