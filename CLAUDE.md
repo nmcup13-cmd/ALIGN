@@ -64,6 +64,7 @@ Key conventions:
 |---|---|---|
 | `requirement-to-backlog` | `backlog-analyst` | แตก `01-spec/requirement-align.md` เป็น/อัปเดต Product Backlog ใน `02-plan/` |
 | `requirement-to-prototype` | `prototype-designer` | ออกแบบ/อัปเดต Screens, User Flow, User Journey ใน `02-design/01-prototypes/` (ต้องอ่าน `DESIGN.md` ก่อนเสมอ) |
+| `backlog-to-technical-design` | `technical-designer` | ออกแบบ/อัปเดต schema, API, กลไกบังคับใช้กฎทางธุรกิจ ใน `02-design/02-technical/` |
 | `backlog-to-test-plan` | `test-designer` | แตก Acceptance Criteria เป็น Test Case + ประกอบ Test Plan ใน `03-testing/01-test-plan/` |
 | `audit-align-docs` | `backlog-auditor` (read-only) | ตรวจสอบเอกสารทั้งหมดว่าสอดคล้อง/เป็นปัจจุบันหรือไม่ (terminology drift, traceability gap, contradiction, orphaned link) — รายงานเท่านั้น ไม่แก้ไขเอง ต้องให้ผู้ใช้ตัดสินใจก่อนส่งต่อไปแก้ |
 | `check-prototype-updates` | `prototype-sync-checker` (read-only) → `prototype-designer` | เช็คว่า prototype ตกรุ่นจาก `DESIGN.md`/backlog หรือไม่ ถ้าเป็นแค่ token/role/entity เปลี่ยนชื่อ จะส่งต่อให้ `prototype-designer` แก้อัตโนมัติ ถ้าเป็น story ใหม่ที่ต้องออกแบบเพิ่มจะถามผู้ใช้ก่อน |
