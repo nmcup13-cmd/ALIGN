@@ -159,13 +159,7 @@
 </div>
 
 <div class="modal-backdrop" id="exportModal">
-  <div class="sheet">
-    <div class="row between"><div class="h2">ออกเอกสาร Word — 127121 การรู้เท่าทันสื่อดิจิทัล <span class="chip chip-2565" style="margin-left:4px;">2565</span></div><button onclick="closeExport()" style="font-size:18px;">×</button></div>
-    <div class="body-sm text-secondary">CLO/PLO ที่ยืนยันแล้ว 2 ข้อ (CLO2, CLO3) · ความสอดคล้องรวม 50% · หลักฐานอ้างอิง: EV-001.pdf, EV-002.docx</div>
-    <div class="body-sm text-secondary">รวมส่วน Area of Improvement เสมอ</div>
-    <button class="btn btn-primary" onclick="doExport()">ดาวน์โหลดเอกสาร Word</button>
-    <div class="caption text-secondary">เอกสารอ้างอิงเฉพาะข้อมูลและหลักฐานที่ยืนยันแล้วในระบบเท่านั้น</div>
-  </div>
+  <div class="sheet" id="exportSheet"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -177,11 +171,18 @@ const S = {
   accountStatus: 'none',      // none -> pending -> approved | rejected
   screen: 'signup',
   signup: { name:'', email:'', pw:'', pw2:'', touched:false },
-  review: { clo1Confirmed:false },
   pendingAccounts: [
     { id:1, name:'อ.กมลชนก พรหมมา', email:'kamonchanok.p@university.ac.th' }
   ],
-  handledAccounts: []
+  handledAccounts: [],
+  currentCourseId: '127121',
+  newCourse: null,      // {name, cur} while adding a course
+  newClo: null,         // {desc, plo:[]} while adding a CLO
+  newSyllabus: null,    // {week, topic} while adding a syllabus row
+  newRecord: null,      // draft teaching-record form
+  editingMatch: null,   // id of the AI match currently being %-edited
+  adminPloTab: '2565',
+  newPlo: { '2565': null, '2570': null }
 };
 
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
@@ -201,7 +202,19 @@ function setRole(role){
 }
 
 function goto(screen){ S.screen = screen; render(); window.scrollTo(0,0); }
-function openExport(){ document.getElementById('exportModal').classList.add('open'); }
+function openExport(){
+  const c = course();
+  const confirmed = c.matches.filter(m=>m.state==='confirmed');
+  const cloCodes = [...new Set(confirmed.map(m=>m.cloCode))];
+  document.getElementById('exportSheet').innerHTML = `
+    <div class="row between"><div class="h2">ออกเอกสาร Word — ${c.name} <span class="chip chip-${c.cur}" style="margin-left:4px;">${c.cur}</span></div><button onclick="closeExport()" style="font-size:18px;">×</button></div>
+    <div class="body-sm text-secondary">CLO/PLO ที่ยืนยันแล้ว ${cloCodes.length} ข้อ (${cloCodes.join(', ')||'ไม่มี'}) · ความสอดคล้องรวม ${coveragePct(c)}%</div>
+    <div class="body-sm text-secondary">รวมส่วน Area of Improvement เสมอ</div>
+    <button class="btn btn-primary" onclick="doExport()">ดาวน์โหลดเอกสาร Word</button>
+    <div class="caption text-secondary">เอกสารอ้างอิงเฉพาะข้อมูลและหลักฐานที่ยืนยันแล้วในระบบเท่านั้น</div>
+  `;
+  document.getElementById('exportModal').classList.add('open');
+}
 function closeExport(){ document.getElementById('exportModal').classList.remove('open'); }
 function doExport(){ closeExport(); toast('ดาวน์โหลดเอกสาร Word แล้ว'); }
 
@@ -277,150 +290,355 @@ function screenPending(){
 }
 
 /* ---------------- SCREENS: instructor ---------------- */
-const COURSES = [
-  { id:'127121', name:'การรู้เท่าทันสื่อดิจิทัล', cur:'2565', pct:50, ready:true },
-  { id:'127311', name:'ระเบียบวิธีวิจัย', cur:'2565', pct:100, ready:true },
-  { id:'70127211', name:'การบริหารจัดการแพลตฟอร์มโซเชียลมีเดียและอัลกอริทึมศึกษา', cur:'2570', pct:0, ready:false }
+const PLO = {
+  '2565': [
+    {code:'PLO1',desc:'ผู้เรียนสามารถใช้ภาษาในการสื่อสารได้อย่างมีประสิทธิภาพ'},
+    {code:'PLO2',desc:'ผู้เรียนสามารถใช้เทคโนโลยีการสื่อสารดิจิทัลอย่างรู้เท่าทันทั้งในฐานะผู้รับสารและผู้ส่งสารได้'},
+    {code:'PLO3',desc:'ผู้เรียนสามารถจัดการชีวิตตนเองอย่างมีคุณธรรมและยึดมั่นในจริยธรรมของวิชาชีพ'},
+    {code:'PLO4',desc:'ผู้เรียนสามารถทำงานร่วมกับผู้อื่นและแสดงออกถึงคุณลักษณะความเป็นพลเมืองที่มีคุณค่าต่อชุมชน สังคมไทยและสังคมโลก'},
+    {code:'PLO5',desc:'ผู้เรียนสามารถแสดงออกซึ่งทักษะการเรียนรู้ตลอดชีวิต'},
+    {code:'PLO6',desc:'ผู้เรียนสามารถออกแบบ และผลิตนวัตกรรมทางวิชาชีพด้านการสื่อสารด้วยกระบวนการคิดเชิงออกแบบอย่างสร้างสรรค์ได้'},
+    {code:'PLO7',desc:'ผู้เรียนสามารถทำงานร่วมกับผู้อื่นอย่างเข้าใจและยอมรับความแตกต่างของผู้คนในสังคม และเคารพความคิดเห็นของผู้อื่น'},
+    {code:'PLO8',desc:'ผู้เรียนสามารถสืบค้น วิเคราะห์ วิจัย ประเมินข้อมูลข่าวสารและประยุกต์ไปใช้ได้ในการสร้างสรรค์เนื้อหาและผลิตสื่ออย่างเหมาะสมตามลักษณะของงาน'},
+    {code:'PLO9',desc:'ผู้เรียนสามารถเป็นผู้ประกอบการสื่อที่สามารถบริหารจัดการการสร้างเนื้อหาและผลิตสื่อและเผยแพร่ได้'}
+  ],
+  '2570': [
+    {code:'PLO1',desc:'ใช้หลักการและทฤษฎีด้านการสื่อสารและสื่อใหม่ เป็นฐานคิดในการสร้างสรรค์เนื้อหาและออกแบบการสื่อสารระดับวิชาชีพได้อย่างถูกต้อง'},
+    {code:'PLO2',desc:'ออกแบบเนื้อหาสื่อใหม่ได้อย่างสร้างสรรค์และเป็นระบบ โดยคำนึงถึงบริบทของกลุ่มเป้าหมายที่หลากหลาย บนพื้นฐานของการรู้เท่าทันสื่อ วิจารณญาณ และจรรยาบรรณวิชาชีพ'},
+    {code:'PLO3',desc:'ผลิตชิ้นงานสื่อใหม่โดยประยุกต์ใช้เทคโนโลยีดิจิทัลและปัญญาประดิษฐ์ อย่างชาญฉลาด และเท่าทันต่อการเปลี่ยนแปลงของอุตสาหกรรมสื่อ'},
+    {code:'PLO4',desc:'สื่อสารผ่านสื่อใหม่โดยใช้ข้อมูลและการคิดวิเคราะห์ เพื่อให้เข้าถึงกลุ่มเป้าหมายได้อย่างตรงจุดและเกิดผลลัพธ์ที่วัดได้'},
+    {code:'PLO5',desc:'บริหารจัดการสื่อใหม่เพื่อสร้างคุณค่าเชิงเศรษฐกิจและผลกระทบเชิงบวกต่อชุมชนและสังคม อย่างมีวิจารณญาณและความรับผิดชอบ'},
+    {code:'PLO6',desc:'ปฏิบัติงานร่วมกับผู้อื่นได้อย่างมีภาวะผู้นำ มีทักษะมนุษยสัมพันธ์ (Soft Skills) และพัฒนาตนเองอย่างต่อเนื่องเพื่อรับมือกับการเปลี่ยนแปลงในวิชาชีพสื่อได้อย่างมั่นใจ'}
+  ]
+};
+S.courses = [
+  { id:'127121', name:'การรู้เท่าทันสื่อดิจิทัล', cur:'2565',
+    clos: [
+      {code:'CLO1', desc:'วิเคราะห์และประเมินความน่าเชื่อถือของข้อมูลข่าวสารดิจิทัลได้', plo:['PLO1']},
+      {code:'CLO2', desc:'อธิบายกลไกการทำงานของอัลกอริทึมสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสารได้', plo:['PLO2']},
+      {code:'CLO3', desc:'ประยุกต์ใช้เครื่องมือตรวจสอบข้อเท็จจริง (Fact-checking) กับเนื้อหาสื่อดิจิทัลได้', plo:['PLO2','PLO3']},
+      {code:'CLO4', desc:'วิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมผู้รับสารและสังคมได้', plo:['PLO4']}
+    ],
+    syllabus: [
+      {week:1, topic:'แนะนำแนวคิดการรู้เท่าทันสื่อดิจิทัลและระบบนิเวศสื่อออนไลน์'},
+      {week:5, topic:'กลไกอัลกอริทึมของสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสาร'},
+      {week:10, topic:'เครื่องมือและเทคนิคการตรวจสอบข้อเท็จจริง (Fact-checking)'},
+      {week:14, topic:'การวิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมและสังคม'}
+    ],
+    matches: [
+      {id:1, cloCode:'CLO2', week:5, topic:'กลไกอัลกอริทึมของสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสาร', pct:100, state:'confirmed'},
+      {id:2, cloCode:'CLO3', week:10, topic:'เครื่องมือและเทคนิคการตรวจสอบข้อเท็จจริง (Fact-checking)', pct:100, state:'confirmed'},
+      {id:3, cloCode:'CLO1', week:12, topic:'Workshop เสริม: การตรวจสอบข่าวปลอมด้วยเครื่องมือ AI', pct:40, state:'draft'}
+    ] },
+  { id:'127311', name:'ระเบียบวิธีวิจัย', cur:'2565',
+    clos: [
+      {code:'CLO1', desc:'ออกแบบระเบียบวิธีวิจัยที่เหมาะสมกับปัญหาการวิจัยด้านการสื่อสารได้', plo:['PLO8']},
+      {code:'CLO2', desc:'วิเคราะห์และสรุปผลข้อมูลวิจัยเชิงปริมาณ/คุณภาพได้อย่างถูกต้อง', plo:['PLO8']}
+    ],
+    syllabus: [ {week:1, topic:'แนะนำกระบวนการวิจัย'}, {week:8, topic:'การวิเคราะห์ข้อมูล'} ],
+    matches: [
+      {id:4, cloCode:'CLO1', week:1, topic:'แนะนำกระบวนการวิจัย', pct:100, state:'confirmed'},
+      {id:5, cloCode:'CLO2', week:8, topic:'การวิเคราะห์ข้อมูล', pct:100, state:'confirmed'}
+    ] },
+  { id:'70127211', name:'การบริหารจัดการแพลตฟอร์มโซเชียลมีเดียและอัลกอริทึมศึกษา', cur:'2570', clos:[], syllabus:[], matches:[] }
 ];
 function chip(cur){ return `<span class="chip chip-${cur}">${cur}</span>`; }
+function course(){ return S.courses.find(c=>c.id===S.currentCourseId); }
+function coveragePct(c){
+  if(!c.clos.length) return 0;
+  const confirmedSet = new Set(c.matches.filter(m=>m.state==='confirmed').map(m=>m.cloCode));
+  return Math.round(confirmedSet.size / c.clos.length * 100);
+}
+function courseReady(c){ return c.clos.length > 0; }
+function computeGap(c){
+  const recordWeeks = new Set(c.matches.map(m=>m.week));
+  const syllabusWeeks = new Set(c.syllabus.map(s=>s.week));
+  return {
+    missing: c.syllabus.filter(s=>!recordWeeks.has(s.week)),
+    extra: c.matches.filter(m=>!syllabusWeeks.has(m.week))
+  };
+}
 
 function screenDashboard(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('dashboard');
+  const totalClos = S.courses.reduce((n,c)=>n+c.clos.length,0);
+  const confirmedClos = S.courses.reduce((n,c)=>n+new Set(c.matches.filter(m=>m.state==='confirmed').map(m=>m.cloCode)).size,0);
+  const overallPct = totalClos ? Math.round(confirmedClos/totalClos*100) : 0;
+  let gapInfo = null;
+  for(const c of S.courses){
+    const missing = c.clos.find(cl=>!c.matches.some(m=>m.cloCode===cl.code && m.state==='confirmed'));
+    if(missing){ gapInfo = {c, cl:missing}; break; }
+  }
   return `
     <div><div class="h1">สวัสดี, สมชาย</div><div class="caption text-secondary">ภาพรวมความสอดคล้อง CLO/PLO ภาคการศึกษานี้</div></div>
-    <div class="card"><div class="display">50%</div><div class="caption text-secondary">ความสอดคล้องรวม (ยืนยันแล้วเท่านั้น) · CLO 2/4 ข้อ ของ 127121 การรู้เท่าทันสื่อดิจิทัล</div></div>
+    <div class="card"><div class="display">${overallPct}%</div><div class="caption text-secondary">ความสอดคล้องรวม (ยืนยันแล้วเท่านั้น) · CLO ${confirmedClos}/${totalClos} ข้อ ทุกวิชา</div></div>
     <div class="stack">
       <div class="h2">รายวิชาที่สอน</div>
-      ${COURSES.map(c=>`
-        <div class="card tap stack" onclick="goto('summary')">
+      ${S.courses.map(c=>{ const pct = coveragePct(c); const ready = courseReady(c); return `
+        <div class="card tap stack" onclick="S.currentCourseId='${c.id}';goto('summary')">
           <div class="row between">${chip(c.cur)}<span class="h2" style="flex:1;">${c.name}</span></div>
-          <div class="row"><div class="bar" style="flex:1;"><span style="width:${c.pct}%"></span></div><span class="body-sm mono">${c.pct}%</span></div>
-          <span class="badge ${c.ready?'badge-confirmed':'badge-draft'}" style="align-self:flex-start;">${c.ready?'พร้อมบันทึกการสอน':'ยังตั้งค่าไม่ครบ'}</span>
-        </div>`).join('')}
+          <div class="row"><div class="bar" style="flex:1;"><span style="width:${pct}%"></span></div><span class="body-sm mono">${pct}%</span></div>
+          <span class="badge ${ready?'badge-confirmed':'badge-draft'}" style="align-self:flex-start;">${ready?'พร้อมบันทึกการสอน':'ยังตั้งค่าไม่ครบ'}</span>
+        </div>`;}).join('')}
     </div>
-    <div class="gapbanner"><span class="dot"></span><div class="body-sm" style="flex:1;"><b>CLO4</b> (การรู้เท่าทันสื่อดิจิทัล ${chip('2565')}) — ยังไม่มีข้อมูลการสอนรองรับ</div></div>
-    <button class="btn btn-ghost" onclick="goto('record')">บันทึกการสอน</button>
+    ${gapInfo ? `<div class="gapbanner"><span class="dot"></span><div class="body-sm" style="flex:1;"><b>${gapInfo.cl.code}</b> (${gapInfo.c.name} ${chip(gapInfo.c.cur)}) — ยังไม่มีข้อมูลการสอนรองรับ</div></div>` : ''}
+    <button class="btn btn-ghost" onclick="S.currentCourseId='${S.courses[0].id}';goto('record')">บันทึกการสอน</button>
   `;
 }
 function screenCourses(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
+  const adding = S.newCourse;
   return `
     <div class="row between"><div class="h1">รายวิชาของฉัน</div></div>
-    <button class="btn btn-ghost btn-auto btn-sm" style="align-self:flex-start;">+ เพิ่มรายวิชา</button>
+    ${adding ? `
+      <div class="card stack">
+        <div class="field"><label>ชื่อวิชา</label><input type="text" value="${adding.name}" placeholder="เช่น การเขียนเพื่อสื่อสารมวลชน" oninput="S.newCourse.name=this.value"></div>
+        <div class="field"><label>กลุ่มหลักสูตร</label>
+          <div class="row" style="gap:14px;">
+            <label class="row" style="gap:5px;"><input type="radio" name="newcur" ${adding.cur==='2565'?'checked':''} onchange="S.newCourse.cur='2565'"> 2565</label>
+            <label class="row" style="gap:5px;"><input type="radio" name="newcur" ${adding.cur==='2570'?'checked':''} onchange="S.newCourse.cur='2570'"> 2570</label>
+          </div>
+        </div>
+        <div class="row" style="gap:8px;">
+          <button class="btn btn-primary btn-sm btn-auto" onclick="saveCourse()">บันทึก</button>
+          <button class="btn btn-ghost btn-sm btn-auto" onclick="S.newCourse=null;render()">ยกเลิก</button>
+        </div>
+      </div>` : `<button class="btn btn-ghost btn-auto btn-sm" style="align-self:flex-start;" onclick="S.newCourse={name:'',cur:'2565'};render()">+ เพิ่มรายวิชา</button>`}
     <div class="stack">
-      ${COURSES.map(c=>`
-        <div class="card tap row between" onclick="goto('cloplo')">
+      ${S.courses.map(c=>`
+        <div class="card tap row between" onclick="S.currentCourseId='${c.id}';goto('cloplo')">
           <div class="stack" style="gap:4px;">${chip(c.cur)}<span class="h2">${c.name}</span></div>
-          <span class="badge ${c.ready?'badge-confirmed':'badge-draft'}">${c.ready?'พร้อม':'ไม่ครบ'}</span>
+          <span class="badge ${courseReady(c)?'badge-confirmed':'badge-draft'}">${courseReady(c)?'พร้อม':'ไม่ครบ'}</span>
         </div>`).join('')}
     </div>
   `;
 }
+function saveCourse(){
+  const n = S.newCourse;
+  if(!n.name.trim()){ toast('กรุณากรอกชื่อวิชา'); return; }
+  S.courses.push({ id:'C'+Date.now(), name:n.name.trim(), cur:n.cur, clos:[], syllabus:[], matches:[] });
+  S.newCourse = null;
+  toast('เพิ่มรายวิชาแล้ว');
+  render();
+}
 function screenCloPlo(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
-  const clos = [
-    { code:'CLO1', desc:'วิเคราะห์และประเมินความน่าเชื่อถือของข้อมูลข่าวสารดิจิทัลได้', plo:['PLO1'] },
-    { code:'CLO2', desc:'อธิบายกลไกการทำงานของอัลกอริทึมสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสารได้', plo:['PLO2'] },
-    { code:'CLO3', desc:'ประยุกต์ใช้เครื่องมือตรวจสอบข้อเท็จจริง (Fact-checking) กับเนื้อหาสื่อดิจิทัลได้', plo:['PLO2','PLO3'] },
-    { code:'CLO4', desc:'วิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมผู้รับสารและสังคมได้', plo:['PLO4'] }
-  ];
+  const c = course();
+  const adding = S.newClo;
+  const plos = PLO[c.cur];
   return `
-    <div class="h1">127121 การรู้เท่าทันสื่อดิจิทัล ${chip('2565')}</div>
+    <div class="h1">${c.name} ${chip(c.cur)}</div>
     <div class="row" style="border-bottom:1px solid var(--border-default);">
       <button class="btn-text" style="color:var(--text-primary);font-weight:600;border-bottom:2px solid var(--green);border-radius:0;padding-bottom:8px;">CLO &amp; PLO</button>
       <button class="btn-text" onclick="goto('syllabus')" style="padding-bottom:8px;">Course Syllabus</button>
     </div>
+    ${c.clos.length===0 ? '<div class="card body-sm text-secondary">ยังไม่มี CLO — ต้องเพิ่ม CLO และผูก PLO อย่างน้อย 1 ข้อก่อนจึงบันทึกการสอนได้ (กฎทางธุรกิจ #1)</div>' : `
     <div class="stack">
-      ${clos.map(c=>`<div class="card stack" style="gap:6px;"><div class="row"><span class="mono chip" style="background:var(--bg-sunken);color:var(--text-primary);">${c.code}</span><span class="body-sm">${c.desc}</span></div><div class="row">${c.plo.map(p=>`<span class="mono chip" style="background:var(--green-tint);color:var(--green-dark);">${p}</span>`).join('')}</div></div>`).join('')}
-    </div>
-    <button class="btn btn-ghost btn-auto btn-sm" style="align-self:flex-start;">+ เพิ่ม CLO</button>
+      ${c.clos.map(cl=>`<div class="card stack" style="gap:6px;"><div class="row"><span class="mono chip" style="background:var(--bg-sunken);color:var(--text-primary);">${cl.code}</span><span class="body-sm">${cl.desc}</span></div><div class="row">${cl.plo.map(p=>`<span class="mono chip" style="background:var(--green-tint);color:var(--green-dark);">${p}</span>`).join('')}</div></div>`).join('')}
+    </div>`}
+    ${adding ? `
+      <div class="card stack">
+        <div class="field"><label>คำอธิบาย CLO (จะได้รหัส CLO${c.clos.length+1})</label><textarea style="min-height:70px;font-family:inherit;font-size:14px;color:var(--text-primary);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:6px;padding:11px 12px;" oninput="S.newClo.desc=this.value">${adding.desc}</textarea></div>
+        <div class="field"><label>ผูกกับ PLO (แตะเพื่อเลือกได้มากกว่า 1 ข้อ)</label>
+          <div class="row" style="flex-wrap:wrap;gap:6px;">
+            ${plos.map(p=>`<span class="chip" style="cursor:pointer;background:${adding.plo.includes(p.code)?'var(--green)':'var(--bg-sunken)'};color:${adding.plo.includes(p.code)?'var(--on-green)':'var(--text-secondary)'};" onclick="toggleNewCloPlo('${p.code}')">${p.code}</span>`).join('')}
+          </div>
+        </div>
+        <div class="row" style="gap:8px;">
+          <button class="btn btn-primary btn-sm btn-auto" onclick="saveClo()">บันทึก CLO</button>
+          <button class="btn btn-ghost btn-sm btn-auto" onclick="S.newClo=null;render()">ยกเลิก</button>
+        </div>
+      </div>` : `<button class="btn btn-ghost btn-auto btn-sm" style="align-self:flex-start;" onclick="S.newClo={desc:'',plo:[]};render()">+ เพิ่ม CLO</button>`}
   `;
+}
+function toggleNewCloPlo(code){
+  const i = S.newClo.plo.indexOf(code);
+  if(i>=0) S.newClo.plo.splice(i,1); else S.newClo.plo.push(code);
+  render();
+}
+function saveClo(){
+  const n = S.newClo;
+  if(!n.desc.trim()){ toast('กรุณากรอกคำอธิบาย CLO'); return; }
+  if(n.plo.length===0){ toast('ต้องผูกกับ PLO อย่างน้อย 1 ข้อ (กฎทางธุรกิจ #1)'); return; }
+  const c = course();
+  c.clos.push({ code:'CLO'+(c.clos.length+1), desc:n.desc.trim(), plo:[...n.plo] });
+  S.newClo = null;
+  toast('เพิ่ม CLO แล้ว');
+  render();
 }
 function screenSyllabus(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
-  const rows = [[1,'แนะนำแนวคิดการรู้เท่าทันสื่อดิจิทัลและระบบนิเวศสื่อออนไลน์'],[5,'กลไกอัลกอริทึมของสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสาร'],[10,'เครื่องมือและเทคนิคการตรวจสอบข้อเท็จจริง (Fact-checking)'],[14,'การวิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมและสังคม']];
+  const c = course();
+  const adding = S.newSyllabus;
   return `
-    <div class="h1">127121 การรู้เท่าทันสื่อดิจิทัล ${chip('2565')}</div>
+    <div class="h1">${c.name} ${chip(c.cur)}</div>
     <div class="row" style="border-bottom:1px solid var(--border-default);">
       <button class="btn-text" onclick="goto('cloplo')" style="padding-bottom:8px;">CLO &amp; PLO</button>
       <button class="btn-text" style="color:var(--text-primary);font-weight:600;border-bottom:2px solid var(--green);border-radius:0;padding-bottom:8px;">Course Syllabus</button>
     </div>
+    ${c.syllabus.length===0 ? '<div class="card body-sm text-secondary">ยังไม่มีหัวข้อ syllabus</div>' : `
     <div class="stack">
-      ${rows.map(([w,t])=>`<div class="card row between"><span class="mono body-sm">week ${w}</span><span class="body-sm" style="flex:1;margin:0 10px;">${t}</span></div>`).join('')}
-    </div>
+      ${c.syllabus.map((r,i)=>`<div class="card row between"><span class="mono body-sm">week ${r.week}</span><span class="body-sm" style="flex:1;margin:0 10px;">${r.topic}</span><button onclick="removeSyllabusRow(${i})" style="color:var(--gap);font-size:16px;">×</button></div>`).join('')}
+    </div>`}
+    ${adding ? `
+      <div class="card stack">
+        <div class="row" style="gap:8px;align-items:flex-start;">
+          <div class="field" style="max-width:90px;"><label>สัปดาห์</label><input type="number" min="1" max="16" value="${adding.week}" oninput="S.newSyllabus.week=this.value"></div>
+          <div class="field" style="flex:1;"><label>หัวข้อ</label><input type="text" value="${adding.topic}" oninput="S.newSyllabus.topic=this.value"></div>
+        </div>
+        <div class="row" style="gap:8px;">
+          <button class="btn btn-primary btn-sm btn-auto" onclick="saveSyllabusRow()">บันทึก</button>
+          <button class="btn btn-ghost btn-sm btn-auto" onclick="S.newSyllabus=null;render()">ยกเลิก</button>
+        </div>
+      </div>` : `<button class="btn btn-ghost btn-auto btn-sm" style="align-self:flex-start;" onclick="S.newSyllabus={week:1,topic:''};render()">+ เพิ่มหัวข้อ</button>`}
     <div class="caption text-secondary">แก้ไขล่าสุดโดย อ.สมชาย ใจดี</div>
   `;
 }
+function removeSyllabusRow(i){ course().syllabus.splice(i,1); render(); }
+function saveSyllabusRow(){
+  const n = S.newSyllabus;
+  if(!n.topic.trim()){ toast('กรุณากรอกหัวข้อ'); return; }
+  const c = course();
+  c.syllabus.push({ week: parseInt(n.week)||1, topic: n.topic.trim() });
+  c.syllabus.sort((a,b)=>a.week-b.week);
+  S.newSyllabus = null;
+  toast('เพิ่มหัวข้อ syllabus แล้ว');
+  render();
+}
 function screenRecord(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
+  const c = course();
+  if(c.clos.length===0){
+    return `
+      <div class="h1">บันทึกการสอน</div>
+      <div class="card body-sm text-secondary">${c.name} ยังไม่มี CLO ที่ผูก PLO — ต้องตั้งค่า CLO/PLO ให้ครบก่อนจึงบันทึกการสอนได้ (กฎทางธุรกิจ #1)</div>
+      <button class="btn btn-ghost" onclick="goto('cloplo')">ไปตั้งค่า CLO/PLO</button>
+    `;
+  }
+  if(!S.newRecord) S.newRecord = { cloCode:c.clos[0].code, week:1, topic:'', date:new Date().toISOString().slice(0,10), evidence:[], evName:'' };
+  const r = S.newRecord;
   return `
     <div class="h1">บันทึกการสอน</div>
+    <div class="caption text-secondary">${c.name} ${chip(c.cur)}</div>
     <div class="stack">
-      <div class="field"><label>รายวิชา</label><input type="text" value="127121 การรู้เท่าทันสื่อดิจิทัล (2565)" disabled></div>
-      <div class="field"><label>สัปดาห์ที่สอน</label><input type="text" value="12" class="mono" style="max-width:80px;"></div>
-      <div class="field"><label>หัวข้อการสอน</label><input type="text" value="Workshop เสริม: การตรวจสอบข่าวปลอมด้วยเครื่องมือ AI"></div>
-      <div class="field"><label>วันที่สอนจริง</label><input type="date" value="2026-08-20"></div>
+      <div class="field"><label>CLO ที่เกี่ยวข้อง</label>
+        <select style="font-size:14px;color:var(--text-primary);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:6px;padding:11px 12px;" onchange="S.newRecord.cloCode=this.value">
+          ${c.clos.map(cl=>`<option value="${cl.code}" ${r.cloCode===cl.code?'selected':''}>${cl.code} — ${cl.desc.slice(0,36)}${cl.desc.length>36?'…':''}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>สัปดาห์ที่สอน</label><input type="number" min="1" max="16" value="${r.week}" class="mono" style="max-width:90px;" oninput="S.newRecord.week=this.value"></div>
+      <div class="field"><label>หัวข้อการสอน</label><input type="text" value="${r.topic}" placeholder="เช่น Workshop ตรวจสอบข่าวปลอม" oninput="S.newRecord.topic=this.value"></div>
+      <div class="field"><label>วันที่สอนจริง</label><input type="date" value="${r.date}" oninput="S.newRecord.date=this.value"></div>
       <div class="field"><label>หลักฐาน/ชิ้นงาน</label>
-        <div class="card row between" style="padding:10px 12px;"><span class="body-sm">ภาพกิจกรรม_Workshop_ตรวจสอบข่าวปลอม.jpg</span><span>×</span></div>
+        ${r.evidence.map((f,i)=>`<div class="card row between" style="padding:10px 12px;"><span class="body-sm">${f}</span><button onclick="removeEvidence(${i})" style="color:var(--gap);font-size:16px;">×</button></div>`).join('')}
+        <div class="row" style="gap:8px;">
+          <input type="text" value="${r.evName||''}" placeholder="ชื่อไฟล์ เช่น ภาพกิจกรรม.jpg" style="flex:1;" oninput="S.newRecord.evName=this.value">
+          <button class="btn btn-ghost btn-sm btn-auto" onclick="addEvidence()">แนบ</button>
+        </div>
       </div>
     </div>
-    <button class="btn btn-primary" onclick="goto('review')">บันทึกและให้ AI ประมวลผล</button>
+    <button class="btn btn-primary" onclick="submitRecord()">บันทึกและให้ AI ประมวลผล</button>
   `;
+}
+function addEvidence(){
+  const r = S.newRecord;
+  if(!r.evName || !r.evName.trim()){ toast('กรุณากรอกชื่อไฟล์'); return; }
+  r.evidence.push(r.evName.trim());
+  r.evName = '';
+  render();
+}
+function removeEvidence(i){ S.newRecord.evidence.splice(i,1); render(); }
+function submitRecord(){
+  const c = course();
+  const r = S.newRecord;
+  if(!r.topic.trim()){ toast('กรุณากรอกหัวข้อการสอน'); return; }
+  const pct = 35 + Math.round(Math.random()*35);
+  c.matches.push({ id: Date.now(), cloCode: r.cloCode, week: parseInt(r.week)||1, topic: r.topic.trim(), pct, state:'draft' });
+  S.newRecord = null;
+  toast('บันทึกแล้ว — ส่งให้ AI ประมวลผล');
+  goto('review');
 }
 function screenReview(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
-  const clo1Confirmed = S.review.clo1Confirmed;
+  const c = course();
+  const drafts = c.matches.filter(m=>m.state==='draft');
+  const confirmed = c.matches.filter(m=>m.state==='confirmed');
+  const gap = computeGap(c);
   return `
-    <div><div class="h1">ตรวจสอบผล AI</div><div class="caption text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล ${chip('2565')} — ต้องยืนยันก่อนถือเป็นข้อมูลจริง</div></div>
+    <div><div class="h1">ตรวจสอบผล AI</div><div class="caption text-secondary">${c.name} ${chip(c.cur)} — ต้องยืนยันก่อนถือเป็นข้อมูลจริง</div></div>
     <div class="h2">ผลจับคู่ CLO/PLO</div>
-    <div class="card stack" style="border:1.5px solid var(--green);background:var(--bg-surface);">
-      <div class="row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO3</span><span class="badge badge-confirmed">ยืนยันแล้ว</span></div>
-      <div class="body-sm">จาก "เครื่องมือและเทคนิคการตรวจสอบข้อเท็จจริง (Fact-checking)" (week 10)</div>
-    </div>
-    <div class="card stack" style="border:1.5px solid var(--green);background:var(--bg-surface);">
-      <div class="row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO2</span><span class="badge badge-confirmed">ยืนยันแล้ว</span></div>
-      <div class="body-sm">จาก "กลไกอัลกอริทึมของสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสาร" (week 5)</div>
-    </div>
-    <div class="card stack" style="border:1.5px ${clo1Confirmed?'solid var(--green)':'dashed var(--draft)'};background:${clo1Confirmed?'var(--bg-surface)':'var(--draft-tint)'};">
-      <div class="row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO1</span><span class="badge ${clo1Confirmed?'badge-confirmed':'badge-draft'}">${clo1Confirmed?'ยืนยันแล้ว':'ผลจาก AI — ยังไม่ยืนยัน'}</span></div>
-      <div class="body-sm">จาก "Workshop เสริม: การตรวจสอบข่าวปลอมด้วยเครื่องมือ AI" (week 12)</div>
-      <div class="row"><div class="bar" style="width:100px;"><span style="width:40%;background:${clo1Confirmed?'var(--green)':'var(--draft)'};"></span></div><span class="body-sm mono">40%</span><span class="caption text-secondary">ความมั่นใจของ AI</span></div>
-      ${clo1Confirmed ? '' : `<div class="row" style="gap:8px;"><button class="btn btn-primary btn-sm btn-auto" onclick="S.review.clo1Confirmed=true;render();toast('ยืนยันผลจับคู่ CLO1 แล้ว')">ยืนยัน</button><button class="btn btn-ghost btn-sm btn-auto">แก้ไข</button><button class="btn btn-ghost btn-sm btn-auto">ปฏิเสธ</button></div>`}
-    </div>
+    ${confirmed.length===0 && drafts.length===0 ? '<div class="card body-sm text-secondary">ยังไม่มีบันทึกการสอน</div>' : ''}
+    ${confirmed.map(m=>`
+      <div class="card stack" style="border:1.5px solid var(--green);background:var(--bg-surface);">
+        <div class="row between"><span class="mono chip" style="background:var(--bg-sunken);">${m.cloCode}</span><span class="badge badge-confirmed">ยืนยันแล้ว</span></div>
+        <div class="body-sm">จาก "${m.topic}" (week ${m.week}) · ${m.pct}%</div>
+      </div>`).join('')}
+    ${drafts.map(m=>`
+      <div class="card stack" style="border:1.5px dashed var(--draft);background:var(--draft-tint);">
+        <div class="row between"><span class="mono chip" style="background:var(--bg-sunken);">${m.cloCode}</span><span class="badge badge-draft">ผลจาก AI — ยังไม่ยืนยัน</span></div>
+        <div class="body-sm">จาก "${m.topic}" (week ${m.week})</div>
+        <div class="row"><div class="bar" style="width:100px;"><span style="width:${m.pct}%;background:var(--draft);"></span></div>${S.editingMatch===m.id ? `<input type="number" min="0" max="100" value="${m.pct}" class="mono" style="max-width:70px;" oninput="updateMatchPct(${m.id},this.value)">` : `<span class="body-sm mono">${m.pct}%</span>`}<span class="caption text-secondary">ความมั่นใจของ AI</span></div>
+        <div class="row" style="gap:8px;">
+          <button class="btn btn-primary btn-sm btn-auto" onclick="decideMatch(${m.id},'confirmed')">ยืนยัน</button>
+          <button class="btn btn-ghost btn-sm btn-auto" onclick="toggleEditMatch(${m.id})">${S.editingMatch===m.id?'เสร็จแล้ว':'แก้ไข'}</button>
+          <button class="btn btn-ghost btn-sm btn-auto" onclick="decideMatch(${m.id},'rejected')">ปฏิเสธ</button>
+        </div>
+      </div>`).join('')}
     <div class="h2">Gap เทียบ Course Syllabus</div>
     <div class="card stack" style="border:1.5px dashed var(--draft);background:var(--draft-tint);">
       <div class="row between"><span class="body-sm">หัวข้อที่ยังไม่พบการสอนรองรับ</span><span class="badge badge-draft">ยังไม่ยืนยัน</span></div>
-      <div class="body-sm">week 1 — แนะนำแนวคิดการรู้เท่าทันสื่อดิจิทัล · week 14 — การวิเคราะห์ผลกระทบของสื่อดิจิทัล</div>
+      <div class="body-sm">${gap.missing.length ? gap.missing.map(g=>`week ${g.week} — ${g.topic}`).join(' · ') : 'ไม่มี — สอนครบตามแผนแล้ว'}</div>
     </div>
     <button class="btn btn-ghost" onclick="goto('cloweek')">ไปแผนที่ CLO × สัปดาห์</button>
   `;
 }
+function toggleEditMatch(id){ S.editingMatch = S.editingMatch===id ? null : id; render(); }
+function updateMatchPct(id, val){
+  const m = course().matches.find(x=>x.id===id);
+  if(m) m.pct = Math.max(0, Math.min(100, parseInt(val)||0));
+}
+function decideMatch(id, state){
+  const m = course().matches.find(x=>x.id===id);
+  if(!m) return;
+  m.state = state;
+  S.editingMatch = null;
+  toast(state==='confirmed' ? `ยืนยันผล ${m.cloCode} แล้ว` : `ปฏิเสธผล ${m.cloCode} แล้ว`);
+  render();
+}
 function screenCloWeek(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('cloweek');
+  const c = course();
   const weeks = Array.from({length:15},(_,i)=>i+1);
-  const hits = { 'CLO1':[12], 'CLO2':[5], 'CLO3':[10], 'CLO4':[] };
+  const hits = {};
+  c.clos.forEach(cl=>hits[cl.code]=[]);
+  c.matches.filter(m=>m.state==='confirmed').forEach(m=>{ if(hits[m.cloCode]) hits[m.cloCode].push(m.week); });
   return `
     <div class="row between"><div class="h1">CLO × สัปดาห์</div></div>
-    <div class="caption text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล ${chip('2565')}</div>
+    <div class="caption text-secondary">${c.name} ${chip(c.cur)}</div>
+    ${c.clos.length===0 ? '<div class="card body-sm text-secondary">ยังไม่มี CLO</div>' : `
     <div class="gridwrap"><table class="grid"><thead><tr><th>CLO</th>${weeks.map(w=>`<th>${w}</th>`).join('')}</tr></thead><tbody>
       ${Object.entries(hits).map(([clo,hw])=>`<tr><td class="mono" style="text-align:left;">${clo}</td>${weeks.map(w=>`<td class="${hw.includes(w)?'hit':'empty'}">${hw.includes(w)?'1':'–'}</td>`).join('')}</tr>`).join('')}
-    </tbody></table></div>
+    </tbody></table></div>`}
+    <div class="caption text-secondary">คำนวณจากผลจับคู่ CLO/PLO ที่ยืนยันแล้วเท่านั้น (ไม่รวม draft)</div>
     <button class="btn btn-ghost" onclick="goto('summary')">ไปสรุปรายวิชา</button>
   `;
 }
 function screenSummary(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('dashboard');
+  const c = course();
+  const pct = coveragePct(c);
+  const draftCount = c.matches.filter(m=>m.state==='draft').length;
+  const gapClos = c.clos.filter(cl=>!c.matches.some(m=>m.cloCode===cl.code && m.state==='confirmed'));
   return `
-    <div class="row between"><div class="h1">สรุปรายวิชา</div><div class="display" style="font-size:22px;">50%</div></div>
-    <div class="caption text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล ${chip('2565')}</div>
-    <div class="gapbanner" style="background:var(--draft-tint);border-color:var(--draft);"><span class="dot" style="background:var(--draft);"></span><div class="body-sm" style="flex:1;">มีผลจาก AI ที่ยังไม่ยืนยัน 1 รายการ <button class="btn-text" onclick="goto('review')" style="display:inline;">ไปตรวจสอบ</button></div></div>
+    <div class="row between"><div class="h1">สรุปรายวิชา</div><div class="display" style="font-size:22px;">${pct}%</div></div>
+    <div class="caption text-secondary">${c.name} ${chip(c.cur)}</div>
+    ${draftCount>0 ? `<div class="gapbanner" style="background:var(--draft-tint);border-color:var(--draft);"><span class="dot" style="background:var(--draft);"></span><div class="body-sm" style="flex:1;">มีผลจาก AI ที่ยังไม่ยืนยัน ${draftCount} รายการ <button class="btn-text" onclick="goto('review')" style="display:inline;">ไปตรวจสอบ</button></div></div>` : ''}
+    ${c.clos.length===0 ? '<div class="card body-sm text-secondary">ยังไม่มี CLO</div>' : `
     <div class="stack">
-      <div class="card row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO2</span><span class="body-sm" style="flex:1;margin:0 8px;">แมทช์แล้ว 100%</span></div>
-      <div class="card row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO3</span><span class="body-sm" style="flex:1;margin:0 8px;">แมทช์แล้ว 100%</span></div>
-      <div class="card row between" style="border-style:dashed;border-color:var(--gap);"><span class="mono chip" style="background:var(--bg-sunken);">CLO4</span><span class="badge badge-gap">ยังไม่มีหลักฐาน</span></div>
-    </div>
+      ${c.clos.map(cl=>{ const m = c.matches.find(x=>x.cloCode===cl.code && x.state==='confirmed'); return `<div class="card row between" ${m?'':'style="border-style:dashed;border-color:var(--gap);"'}><span class="mono chip" style="background:var(--bg-sunken);">${cl.code}</span><span class="body-sm" style="flex:1;margin:0 8px;">${m?`แมทช์แล้ว ${m.pct}%`:''}</span>${m?'':'<span class="badge badge-gap">ยังไม่มีหลักฐาน</span>'}</div>`; }).join('')}
+    </div>`}
     <div class="h2">Area of Improvement</div>
-    <div class="card body-sm">CLO4 ยังมีหลักฐานรองรับน้อย — พิจารณาเพิ่มกิจกรรม/ชิ้นงานที่เชื่อมโยงกับหัวข้อนี้ในรอบถัดไป</div>
+    <div class="card body-sm">${gapClos.length ? gapClos.map(cl=>`${cl.code} ยังมีหลักฐานรองรับน้อย — พิจารณาเพิ่มกิจกรรม/ชิ้นงานที่เชื่อมโยงกับหัวข้อนี้ในรอบถัดไป`).join(' ') : 'ทุก CLO มีหลักฐานยืนยันครบแล้ว'}</div>
     <button class="btn btn-primary" onclick="openExport()">ออกเอกสาร Word</button>
   `;
 }
@@ -428,55 +646,71 @@ function screenSummary(){
 /* ---------------- SCREENS: admin ---------------- */
 function screenAdminDashboard(){
   document.getElementById('tabbar').innerHTML = tabbarAdmin('admin-dashboard');
+  const list = S.courses.filter(c=>c.cur==='2565');
+  const pcts = list.map(coveragePct);
+  const avg = pcts.length ? Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length) : 0;
   return `
     <div class="h1">แดชบอร์ดภาพรวมหลักสูตร</div>
-    <div class="card"><div class="display">50%</div><div class="caption text-secondary">ความสอดคล้องเฉลี่ย · หลักสูตร 2565</div></div>
+    <div class="card"><div class="display">${avg}%</div><div class="caption text-secondary">ความสอดคล้องเฉลี่ย · หลักสูตร 2565</div></div>
     <div class="h2">รายวิชาในกลุ่ม 2565</div>
     <div class="stack">
-      <div class="card row between"><span class="body-sm" style="flex:1;">127121 การรู้เท่าทันสื่อดิจิทัล</span><div class="bar" style="width:60px;"><span style="width:50%"></span></div><span class="body-sm mono">50%</span></div>
-      <div class="card row between"><span class="body-sm" style="flex:1;">127311 ระเบียบวิธีวิจัย</span><div class="bar" style="width:60px;"><span style="width:100%"></span></div><span class="body-sm mono">100%</span></div>
+      ${list.map(c=>{ const p=coveragePct(c); return `<div class="card row between"><span class="body-sm" style="flex:1;">${c.name}</span><div class="bar" style="width:60px;"><span style="width:${p}%"></span></div><span class="body-sm mono">${p}%</span></div>`; }).join('')}
     </div>
   `;
 }
 function screenAdminCourseStatus(){
   document.getElementById('tabbar').innerHTML = tabbarAdmin('admin-coursestatus');
+  const list = S.courses.filter(c=>c.cur==='2565');
+  const readyCount = list.filter(courseReady).length;
   return `
     <div class="h1">ภาพรวมรายวิชา</div>
-    <div class="card"><div class="h2">3/4</div><div class="caption text-secondary">วิชาพร้อมใช้งานในกลุ่ม 2565</div></div>
+    <div class="card"><div class="h2">${readyCount}/${list.length}</div><div class="caption text-secondary">วิชาพร้อมใช้งานในกลุ่ม 2565</div></div>
     <div class="stack">
-      <div class="card row between">${chip('2565')}<span class="body-sm" style="flex:1;margin-left:8px;">127121 การรู้เท่าทันสื่อดิจิทัล</span><span class="badge badge-confirmed">พร้อม</span></div>
-      <div class="card row between">${chip('2565')}<span class="body-sm" style="flex:1;margin-left:8px;">125212 จิตวิทยาเพื่อการสื่อสาร</span><span class="badge badge-draft">ไม่ครบ</span></div>
+      ${list.map(c=>`<div class="card row between">${chip(c.cur)}<span class="body-sm" style="flex:1;margin-left:8px;">${c.name}</span><span class="badge ${courseReady(c)?'badge-confirmed':'badge-draft'}">${courseReady(c)?'พร้อม':'ไม่ครบ'}</span></div>`).join('')}
     </div>
   `;
 }
 function screenAdminPloSetup(){
   document.getElementById('tabbar').innerHTML = tabbarAdmin('admin-plosetup');
+  const tab = S.adminPloTab;
+  const list = PLO[tab];
+  const adding = S.newPlo[tab];
   return `
     <div class="h1">ตั้งค่าหลักสูตร/PLO</div>
     <div class="row" style="border-bottom:1px solid var(--border-default);">
-      <button class="btn-text" style="color:var(--cur-2565);font-weight:600;border-bottom:2px solid var(--cur-2565);border-radius:0;padding-bottom:8px;">หลักสูตร 2565</button>
-      <button class="btn-text" style="padding-bottom:8px;">หลักสูตร 2570</button>
+      <button class="btn-text" style="color:var(--cur-2565);${tab==='2565'?'font-weight:600;border-bottom:2px solid var(--cur-2565);':''}border-radius:0;padding-bottom:8px;" onclick="S.adminPloTab='2565';render()">หลักสูตร 2565</button>
+      <button class="btn-text" style="color:var(--cur-2570);${tab==='2570'?'font-weight:600;border-bottom:2px solid var(--cur-2570);':''}padding-bottom:8px;" onclick="S.adminPloTab='2570';render()">หลักสูตร 2570</button>
     </div>
     <div class="stack">
-      <div class="card body-sm"><span class="mono">PLO1</span> — ผู้เรียนสามารถใช้ภาษาในการสื่อสารได้อย่างมีประสิทธิภาพ</div>
-      <div class="card body-sm"><span class="mono">PLO2</span> — ผู้เรียนสามารถใช้เทคโนโลยีการสื่อสารดิจิทัลอย่างรู้เท่าทันทั้งในฐานะผู้รับสารและผู้ส่งสารได้</div>
-      <div class="card body-sm"><span class="mono">PLO3</span> — ผู้เรียนสามารถจัดการชีวิตตนเองอย่างมีคุณธรรมและยึดมั่นในจริยธรรมของวิชาชีพ</div>
-      <div class="card body-sm"><span class="mono">PLO4</span> — ผู้เรียนสามารถทำงานร่วมกับผู้อื่นและแสดงออกถึงคุณลักษณะความเป็นพลเมืองที่มีคุณค่าต่อชุมชน สังคมไทยและสังคมโลก</div>
-      <div class="card body-sm"><span class="mono">PLO5</span> — ผู้เรียนสามารถแสดงออกซึ่งทักษะการเรียนรู้ตลอดชีวิต</div>
-      <div class="card body-sm"><span class="mono">PLO6</span> — ผู้เรียนสามารถออกแบบ และผลิตนวัตกรรมทางวิชาชีพด้านการสื่อสารด้วยกระบวนการคิดเชิงออกแบบอย่างสร้างสรรค์ได้</div>
-      <div class="card body-sm"><span class="mono">PLO7</span> — ผู้เรียนสามารถทำงานร่วมกับผู้อื่นอย่างเข้าใจและยอมรับความแตกต่างของผู้คนในสังคม และเคารพความคิดเห็นของผู้อื่น</div>
-      <div class="card body-sm"><span class="mono">PLO8</span> — ผู้เรียนสามารถสืบค้น วิเคราะห์ วิจัย ประเมินข้อมูลข่าวสารและประยุกต์ไปใช้ได้ในการสร้างสรรค์เนื้อหาและผลิตสื่ออย่างเหมาะสมตามลักษณะของงาน</div>
-      <div class="card body-sm"><span class="mono">PLO9</span> — ผู้เรียนสามารถเป็นผู้ประกอบการสื่อที่สามารถบริหารจัดการการสร้างเนื้อหาและผลิตสื่อและเผยแพร่ได้</div>
+      ${list.map((p,i)=>`<div class="card row between"><span class="body-sm" style="flex:1;"><span class="mono">${p.code}</span> — ${p.desc}</span><button onclick="removePlo('${tab}',${i})" style="color:var(--gap);font-size:16px;">×</button></div>`).join('')}
     </div>
+    ${adding!==null ? `
+      <div class="card stack">
+        <div class="field"><label>คำอธิบาย PLO ใหม่ (จะได้รหัส PLO${list.length+1})</label><textarea style="min-height:60px;font-family:inherit;font-size:14px;color:var(--text-primary);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:6px;padding:11px 12px;" oninput="S.newPlo['${tab}']=this.value">${adding}</textarea></div>
+        <div class="row" style="gap:8px;">
+          <button class="btn btn-primary btn-sm btn-auto" onclick="savePlo('${tab}')">บันทึก</button>
+          <button class="btn btn-ghost btn-sm btn-auto" onclick="S.newPlo['${tab}']=null;render()">ยกเลิก</button>
+        </div>
+      </div>` : `<button class="btn btn-ghost btn-auto btn-sm" style="align-self:flex-start;" onclick="S.newPlo['${tab}']='';render()">+ เพิ่ม PLO</button>`}
   `;
+}
+function removePlo(tab, i){ PLO[tab].splice(i,1); render(); }
+function savePlo(tab){
+  const desc = (S.newPlo[tab]||'').trim();
+  if(!desc){ toast('กรุณากรอกคำอธิบาย PLO'); return; }
+  PLO[tab].push({ code:'PLO'+(PLO[tab].length+1), desc });
+  S.newPlo[tab] = null;
+  toast('เพิ่ม PLO แล้ว');
+  render();
 }
 function screenAdminSar(){
   document.getElementById('tabbar').innerHTML = tabbarAdmin('admin-sar');
+  const list = S.courses.filter(c=>c.cur==='2565');
   return `
     <div class="h1">เอกสาร SAR</div>
     <div class="caption text-secondary">QA ไม่มีสิทธิ์เข้าระบบ ALIGN โดยตรง — ดาวน์โหลดแล้วส่งต่อภายนอกระบบ</div>
     <div class="stack">
-      <div class="card row between">${chip('2565')}<span class="body-sm" style="flex:1;margin-left:8px;">127121 การรู้เท่าทันสื่อดิจิทัล</span><button class="btn btn-ghost btn-sm btn-auto">ดาวน์โหลด</button></div>
+      ${list.map(c=>`<div class="card row between">${chip(c.cur)}<span class="body-sm" style="flex:1;margin-left:8px;">${c.name}</span><button class="btn btn-ghost btn-sm btn-auto" onclick="toast('ดาวน์โหลดเอกสาร SAR ของ ${c.name} แล้ว')">ดาวน์โหลด</button></div>`).join('')}
     </div>
   `;
 }
