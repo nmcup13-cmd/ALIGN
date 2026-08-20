@@ -167,7 +167,7 @@
 
 <div class="modal-backdrop" id="exportModal">
   <div class="sheet">
-    <div class="row between"><div class="h2">ออกเอกสาร Word — COS101 <span class="chip chip-2565" style="margin-left:4px;">2565</span></div><button onclick="closeExport()" style="font-size:18px;">×</button></div>
+    <div class="row between"><div class="h2">ออกเอกสาร Word — 127121 การรู้เท่าทันสื่อดิจิทัล <span class="chip chip-2565" style="margin-left:4px;">2565</span></div><button onclick="closeExport()" style="font-size:18px;">×</button></div>
     <div class="body-sm text-secondary">CLO/PLO ที่ยืนยันแล้ว 2 ข้อ (CLO2, CLO3) · ความสอดคล้องรวม 50% · หลักฐานอ้างอิง: EV-001.pdf, EV-002.docx</div>
     <div class="row" style="gap:10px;"><span class="switch"><input type="checkbox" id="aoiToggle" checked><span class="track"></span><span class="thumb"></span></span><span class="body-sm">รวมส่วน Area of Improvement</span></div>
     <button class="btn btn-primary" onclick="doExport()">ดาวน์โหลดเอกสาร Word</button>
@@ -286,9 +286,9 @@ function screenPending(){
 
 /* ---------------- SCREENS: instructor ---------------- */
 const COURSES = [
-  { id:'COS101', name:'หลักการเขียนโปรแกรม', cur:'2565', pct:50, ready:true },
-  { id:'COS201', name:'ฐานข้อมูล', cur:'2565', pct:100, ready:true },
-  { id:'COS301', name:'การพัฒนาเว็บสมัยใหม่', cur:'2570', pct:0, ready:false }
+  { id:'127121', name:'การรู้เท่าทันสื่อดิจิทัล', cur:'2565', pct:50, ready:true },
+  { id:'127311', name:'ระเบียบวิธีวิจัย', cur:'2565', pct:100, ready:true },
+  { id:'70127211', name:'การบริหารจัดการแพลตฟอร์มโซเชียลมีเดียและอัลกอริทึมศึกษา', cur:'2570', pct:0, ready:false }
 ];
 function chip(cur){ return `<span class="chip chip-${cur}">${cur}</span>`; }
 
@@ -296,7 +296,7 @@ function screenDashboard(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('dashboard');
   return `
     <div><div class="h1">สวัสดี, สมชาย</div><div class="caption text-secondary">ภาพรวมความสอดคล้อง CLO/PLO ภาคการศึกษานี้</div></div>
-    <div class="card"><div class="display">50%</div><div class="caption text-secondary">ความสอดคล้องรวม (ยืนยันแล้วเท่านั้น) · CLO 2/4 ข้อ ของ COS101</div></div>
+    <div class="card"><div class="display">50%</div><div class="caption text-secondary">ความสอดคล้องรวม (ยืนยันแล้วเท่านั้น) · CLO 2/4 ข้อ ของ 127121 การรู้เท่าทันสื่อดิจิทัล</div></div>
     <div class="stack">
       <div class="h2">รายวิชาที่สอน</div>
       ${COURSES.map(c=>`
@@ -306,7 +306,7 @@ function screenDashboard(){
           <span class="badge ${c.ready?'badge-confirmed':'badge-draft'}" style="align-self:flex-start;">${c.ready?'พร้อมบันทึกการสอน':'ยังตั้งค่าไม่ครบ'}</span>
         </div>`).join('')}
     </div>
-    <div class="gapbanner"><span class="dot"></span><div class="body-sm" style="flex:1;"><b>CLO4</b> (COS101 ${chip('2565')}) — ยังไม่มีข้อมูลการสอนรองรับ</div></div>
+    <div class="gapbanner"><span class="dot"></span><div class="body-sm" style="flex:1;"><b>CLO4</b> (การรู้เท่าทันสื่อดิจิทัล ${chip('2565')}) — ยังไม่มีข้อมูลการสอนรองรับ</div></div>
     <button class="btn btn-ghost" onclick="goto('record')">บันทึกการสอน</button>
   `;
 }
@@ -327,13 +327,13 @@ function screenCourses(){
 function screenCloPlo(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
   const clos = [
-    { code:'CLO1', desc:'อธิบายหลักการเขียนโปรแกรมเชิงโครงสร้างได้', plo:['PLO1565-1'] },
-    { code:'CLO2', desc:'ออกแบบและเขียนโปรแกรมเชิงวัตถุ (OOP) เบื้องต้นได้', plo:['PLO1565-2'] },
-    { code:'CLO3', desc:'เลือกใช้โครงสร้างข้อมูลพื้นฐานได้อย่างเหมาะสม', plo:['PLO1565-2','PLO1565-3'] },
-    { code:'CLO4', desc:'จัดการข้อผิดพลาดของโปรแกรม (Exception Handling) ได้', plo:['PLO1565-4'] }
+    { code:'CLO1', desc:'วิเคราะห์และประเมินความน่าเชื่อถือของข้อมูลข่าวสารดิจิทัลได้', plo:['PLO1'] },
+    { code:'CLO2', desc:'อธิบายกลไกการทำงานของอัลกอริทึมสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสารได้', plo:['PLO2'] },
+    { code:'CLO3', desc:'ประยุกต์ใช้เครื่องมือตรวจสอบข้อเท็จจริง (Fact-checking) กับเนื้อหาสื่อดิจิทัลได้', plo:['PLO2','PLO3'] },
+    { code:'CLO4', desc:'วิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมผู้รับสารและสังคมได้', plo:['PLO4'] }
   ];
   return `
-    <div class="h1">COS101 ${chip('2565')}</div>
+    <div class="h1">127121 การรู้เท่าทันสื่อดิจิทัล ${chip('2565')}</div>
     <div class="row" style="border-bottom:1px solid var(--border-default);">
       <button class="btn-text" style="color:var(--text-primary);font-weight:600;border-bottom:2px solid var(--green);border-radius:0;padding-bottom:8px;">CLO &amp; PLO</button>
       <button class="btn-text" onclick="goto('syllabus')" style="padding-bottom:8px;">Course Syllabus</button>
@@ -346,9 +346,9 @@ function screenCloPlo(){
 }
 function screenSyllabus(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
-  const rows = [[1,'แนะนำภาษา Python และเครื่องมือพัฒนา'],[5,'การเขียนโปรแกรมเชิงวัตถุ (OOP) เบื้องต้น'],[10,'โครงสร้างข้อมูล Stack และ Queue'],[14,'การจัดการข้อผิดพลาด (Exception Handling)']];
+  const rows = [[1,'แนะนำแนวคิดการรู้เท่าทันสื่อดิจิทัลและระบบนิเวศสื่อออนไลน์'],[5,'กลไกอัลกอริทึมของสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสาร'],[10,'เครื่องมือและเทคนิคการตรวจสอบข้อเท็จจริง (Fact-checking)'],[14,'การวิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมและสังคม']];
   return `
-    <div class="h1">COS101 ${chip('2565')}</div>
+    <div class="h1">127121 การรู้เท่าทันสื่อดิจิทัล ${chip('2565')}</div>
     <div class="row" style="border-bottom:1px solid var(--border-default);">
       <button class="btn-text" onclick="goto('cloplo')" style="padding-bottom:8px;">CLO &amp; PLO</button>
       <button class="btn-text" style="color:var(--text-primary);font-weight:600;border-bottom:2px solid var(--green);border-radius:0;padding-bottom:8px;">Course Syllabus</button>
@@ -364,12 +364,12 @@ function screenRecord(){
   return `
     <div class="h1">บันทึกการสอน</div>
     <div class="stack">
-      <div class="field"><label>รายวิชา</label><input type="text" value="COS101 · หลักการเขียนโปรแกรม (2565)" disabled></div>
+      <div class="field"><label>รายวิชา</label><input type="text" value="127121 การรู้เท่าทันสื่อดิจิทัล (2565)" disabled></div>
       <div class="field"><label>สัปดาห์ที่สอน</label><input type="text" value="12" class="mono" style="max-width:80px;"></div>
-      <div class="field"><label>หัวข้อการสอน</label><input type="text" value="Workshop เสริม: Git และ GitHub Workflow"></div>
+      <div class="field"><label>หัวข้อการสอน</label><input type="text" value="Workshop เสริม: การตรวจสอบข่าวปลอมด้วยเครื่องมือ AI"></div>
       <div class="field"><label>วันที่สอนจริง</label><input type="date" value="2026-08-20"></div>
       <div class="field"><label>หลักฐาน/ชิ้นงาน</label>
-        <div class="card row between" style="padding:10px 12px;"><span class="body-sm">ภาพกิจกรรม_Git_Workshop.jpg</span><span>×</span></div>
+        <div class="card row between" style="padding:10px 12px;"><span class="body-sm">ภาพกิจกรรม_Workshop_ตรวจสอบข่าวปลอม.jpg</span><span>×</span></div>
       </div>
     </div>
     <button class="btn btn-primary" onclick="goto('review')">บันทึกและให้ AI ประมวลผล</button>
@@ -379,26 +379,26 @@ function screenReview(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('courses');
   const clo1Confirmed = S.review.clo1Confirmed;
   return `
-    <div><div class="h1">ตรวจสอบผล AI</div><div class="caption text-secondary">COS101 ${chip('2565')} — ต้องยืนยันก่อนถือเป็นข้อมูลจริง</div></div>
+    <div><div class="h1">ตรวจสอบผล AI</div><div class="caption text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล ${chip('2565')} — ต้องยืนยันก่อนถือเป็นข้อมูลจริง</div></div>
     <div class="h2">ผลจับคู่ CLO/PLO</div>
     <div class="card stack" style="border:1.5px solid var(--green);background:var(--bg-surface);">
       <div class="row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO3</span><span class="badge badge-confirmed">ยืนยันแล้ว</span></div>
-      <div class="body-sm">จาก "โครงสร้างข้อมูล Stack และ Queue" (week 10)</div>
+      <div class="body-sm">จาก "เครื่องมือและเทคนิคการตรวจสอบข้อเท็จจริง (Fact-checking)" (week 10)</div>
     </div>
     <div class="card stack" style="border:1.5px solid var(--green);background:var(--bg-surface);">
       <div class="row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO2</span><span class="badge badge-confirmed">ยืนยันแล้ว</span></div>
-      <div class="body-sm">จาก "การเขียนโปรแกรมเชิงวัตถุ (OOP) เบื้องต้น" (week 5)</div>
+      <div class="body-sm">จาก "กลไกอัลกอริทึมของสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสาร" (week 5)</div>
     </div>
     <div class="card stack" style="border:1.5px ${clo1Confirmed?'solid var(--green)':'dashed var(--draft)'};background:${clo1Confirmed?'var(--bg-surface)':'var(--draft-tint)'};">
       <div class="row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO1</span><span class="badge ${clo1Confirmed?'badge-confirmed':'badge-draft'}">${clo1Confirmed?'ยืนยันแล้ว':'ผลจาก AI — ยังไม่ยืนยัน'}</span></div>
-      <div class="body-sm">จาก "Workshop เสริม: Git และ GitHub Workflow" (week 12)</div>
+      <div class="body-sm">จาก "Workshop เสริม: การตรวจสอบข่าวปลอมด้วยเครื่องมือ AI" (week 12)</div>
       <div class="row"><div class="bar" style="width:100px;"><span style="width:40%;background:${clo1Confirmed?'var(--green)':'var(--draft)'};"></span></div><span class="body-sm mono">40%</span><span class="caption text-secondary">ความมั่นใจของ AI</span></div>
       ${clo1Confirmed ? '' : `<div class="row" style="gap:8px;"><button class="btn btn-primary btn-sm btn-auto" onclick="S.review.clo1Confirmed=true;render();toast('ยืนยันผลจับคู่ CLO1 แล้ว')">ยืนยัน</button><button class="btn btn-ghost btn-sm btn-auto">แก้ไข</button><button class="btn btn-ghost btn-sm btn-auto">ปฏิเสธ</button></div>`}
     </div>
     <div class="h2">Gap เทียบ Course Syllabus</div>
     <div class="card stack" style="border:1.5px dashed var(--draft);background:var(--draft-tint);">
       <div class="row between"><span class="body-sm">หัวข้อที่ยังไม่พบการสอนรองรับ</span><span class="badge badge-draft">ยังไม่ยืนยัน</span></div>
-      <div class="body-sm">week 1 — แนะนำภาษา Python · week 14 — Exception Handling</div>
+      <div class="body-sm">week 1 — แนะนำแนวคิดการรู้เท่าทันสื่อดิจิทัล · week 14 — การวิเคราะห์ผลกระทบของสื่อดิจิทัล</div>
     </div>
     <button class="btn btn-ghost" onclick="goto('cloweek')">ไปแผนที่ CLO × สัปดาห์</button>
   `;
@@ -409,7 +409,7 @@ function screenCloWeek(){
   const hits = { 'CLO1':[12], 'CLO2':[5], 'CLO3':[10], 'CLO4':[] };
   return `
     <div class="row between"><div class="h1">CLO × สัปดาห์</div></div>
-    <div class="caption text-secondary">COS101 ${chip('2565')}</div>
+    <div class="caption text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล ${chip('2565')}</div>
     <div class="gridwrap"><table class="grid"><thead><tr><th>CLO</th>${weeks.map(w=>`<th>${w}</th>`).join('')}</tr></thead><tbody>
       ${Object.entries(hits).map(([clo,hw])=>`<tr><td class="mono" style="text-align:left;">${clo}</td>${weeks.map(w=>`<td class="${hw.includes(w)?'hit':'empty'}">${hw.includes(w)?'1':'–'}</td>`).join('')}</tr>`).join('')}
     </tbody></table></div>
@@ -420,7 +420,7 @@ function screenSummary(){
   document.getElementById('tabbar').innerHTML = tabbarInstructor('dashboard');
   return `
     <div class="row between"><div class="h1">สรุปรายวิชา</div><div class="display" style="font-size:22px;">50%</div></div>
-    <div class="caption text-secondary">COS101 ${chip('2565')}</div>
+    <div class="caption text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล ${chip('2565')}</div>
     <div class="gapbanner" style="background:var(--draft-tint);border-color:var(--draft);"><span class="dot" style="background:var(--draft);"></span><div class="body-sm" style="flex:1;">มีผลจาก AI ที่ยังไม่ยืนยัน 1 รายการ <button class="btn-text" onclick="goto('review')" style="display:inline;">ไปตรวจสอบ</button></div></div>
     <div class="stack">
       <div class="card row between"><span class="mono chip" style="background:var(--bg-sunken);">CLO2</span><span class="body-sm" style="flex:1;margin:0 8px;">แมทช์แล้ว 100%</span></div>
@@ -441,8 +441,8 @@ function screenAdminDashboard(){
     <div class="card"><div class="display">50%</div><div class="caption text-secondary">ความสอดคล้องเฉลี่ย · หลักสูตร 2565</div></div>
     <div class="h2">รายวิชาในกลุ่ม 2565</div>
     <div class="stack">
-      <div class="card row between"><span class="body-sm" style="flex:1;">COS101</span><div class="bar" style="width:60px;"><span style="width:50%"></span></div><span class="body-sm mono">50%</span></div>
-      <div class="card row between"><span class="body-sm" style="flex:1;">COS201</span><div class="bar" style="width:60px;"><span style="width:100%"></span></div><span class="body-sm mono">100%</span></div>
+      <div class="card row between"><span class="body-sm" style="flex:1;">127121 การรู้เท่าทันสื่อดิจิทัล</span><div class="bar" style="width:60px;"><span style="width:50%"></span></div><span class="body-sm mono">50%</span></div>
+      <div class="card row between"><span class="body-sm" style="flex:1;">127311 ระเบียบวิธีวิจัย</span><div class="bar" style="width:60px;"><span style="width:100%"></span></div><span class="body-sm mono">100%</span></div>
     </div>
   `;
 }
@@ -452,8 +452,8 @@ function screenAdminCourseStatus(){
     <div class="h1">ภาพรวมรายวิชา</div>
     <div class="card"><div class="h2">3/4</div><div class="caption text-secondary">วิชาพร้อมใช้งานในกลุ่ม 2565</div></div>
     <div class="stack">
-      <div class="card row between">${chip('2565')}<span class="body-sm" style="flex:1;margin-left:8px;">COS101</span><span class="badge badge-confirmed">พร้อม</span></div>
-      <div class="card row between">${chip('2565')}<span class="body-sm" style="flex:1;margin-left:8px;">COS102</span><span class="badge badge-draft">ไม่ครบ</span></div>
+      <div class="card row between">${chip('2565')}<span class="body-sm" style="flex:1;margin-left:8px;">127121 การรู้เท่าทันสื่อดิจิทัล</span><span class="badge badge-confirmed">พร้อม</span></div>
+      <div class="card row between">${chip('2565')}<span class="body-sm" style="flex:1;margin-left:8px;">125212 จิตวิทยาเพื่อการสื่อสาร</span><span class="badge badge-draft">ไม่ครบ</span></div>
     </div>
   `;
 }
@@ -466,8 +466,15 @@ function screenAdminPloSetup(){
       <button class="btn-text" style="padding-bottom:8px;">หลักสูตร 2570</button>
     </div>
     <div class="stack">
-      <div class="card body-sm"><span class="mono">PLO1565-1</span> — ประยุกต์ใช้หลักการเขียนโปรแกรมพื้นฐานในการแก้ปัญหาได้</div>
-      <div class="card body-sm"><span class="mono">PLO1565-2</span> — ออกแบบซอฟต์แวร์ตามแนวคิดเชิงวัตถุได้</div>
+      <div class="card body-sm"><span class="mono">PLO1</span> — ผู้เรียนสามารถใช้ภาษาในการสื่อสารได้อย่างมีประสิทธิภาพ</div>
+      <div class="card body-sm"><span class="mono">PLO2</span> — ผู้เรียนสามารถใช้เทคโนโลยีการสื่อสารดิจิทัลอย่างรู้เท่าทันทั้งในฐานะผู้รับสารและผู้ส่งสารได้</div>
+      <div class="card body-sm"><span class="mono">PLO3</span> — ผู้เรียนสามารถจัดการชีวิตตนเองอย่างมีคุณธรรมและยึดมั่นในจริยธรรมของวิชาชีพ</div>
+      <div class="card body-sm"><span class="mono">PLO4</span> — ผู้เรียนสามารถทำงานร่วมกับผู้อื่นและแสดงออกถึงคุณลักษณะความเป็นพลเมืองที่มีคุณค่าต่อชุมชน สังคมไทยและสังคมโลก</div>
+      <div class="card body-sm"><span class="mono">PLO5</span> — ผู้เรียนสามารถแสดงออกซึ่งทักษะการเรียนรู้ตลอดชีวิต</div>
+      <div class="card body-sm"><span class="mono">PLO6</span> — ผู้เรียนสามารถออกแบบ และผลิตนวัตกรรมทางวิชาชีพด้านการสื่อสารด้วยกระบวนการคิดเชิงออกแบบอย่างสร้างสรรค์ได้</div>
+      <div class="card body-sm"><span class="mono">PLO7</span> — ผู้เรียนสามารถทำงานร่วมกับผู้อื่นอย่างเข้าใจและยอมรับความแตกต่างของผู้คนในสังคม และเคารพความคิดเห็นของผู้อื่น</div>
+      <div class="card body-sm"><span class="mono">PLO8</span> — ผู้เรียนสามารถสืบค้น วิเคราะห์ วิจัย ประเมินข้อมูลข่าวสารและประยุกต์ไปใช้ได้ในการสร้างสรรค์เนื้อหาและผลิตสื่ออย่างเหมาะสมตามลักษณะของงาน</div>
+      <div class="card body-sm"><span class="mono">PLO9</span> — ผู้เรียนสามารถเป็นผู้ประกอบการสื่อที่สามารถบริหารจัดการการสร้างเนื้อหาและผลิตสื่อและเผยแพร่ได้</div>
     </div>
   `;
 }
@@ -477,7 +484,7 @@ function screenAdminSar(){
     <div class="h1">เอกสาร SAR</div>
     <div class="caption text-secondary">QA ไม่มีสิทธิ์เข้าระบบ ALIGN โดยตรง — ดาวน์โหลดแล้วส่งต่อภายนอกระบบ</div>
     <div class="stack">
-      <div class="card row between">${chip('2565')}<span class="body-sm" style="flex:1;margin-left:8px;">COS101</span><button class="btn btn-ghost btn-sm btn-auto">ดาวน์โหลด</button></div>
+      <div class="card row between">${chip('2565')}<span class="body-sm" style="flex:1;margin-left:8px;">127121 การรู้เท่าทันสื่อดิจิทัล</span><button class="btn btn-ghost btn-sm btn-auto">ดาวน์โหลด</button></div>
     </div>
   `;
 }
@@ -486,8 +493,8 @@ function screenAdminAccessLog(){
   return `
     <div class="h1">ประวัติการเข้าถึงหลักฐาน</div>
     <div class="stack">
-      <div class="card body-sm"><span class="mono caption">2026-08-18 09:12</span><br>อ.สมชาย ใจดี (Instructor) — ดู — COS101 ${chip('2565')}</div>
-      <div class="card body-sm"><span class="mono caption">2026-08-17 14:05</span><br>ผู้บริหารหลักสูตร — ดาวน์โหลด — COS101 ${chip('2565')}</div>
+      <div class="card body-sm"><span class="mono caption">2026-08-18 09:12</span><br>อ.สมชาย ใจดี (Instructor) — ดู — 127121 การรู้เท่าทันสื่อดิจิทัล ${chip('2565')}</div>
+      <div class="card body-sm"><span class="mono caption">2026-08-17 14:05</span><br>ผู้บริหารหลักสูตร — ดาวน์โหลด — 127121 การรู้เท่าทันสื่อดิจิทัล ${chip('2565')}</div>
     </div>
     <div class="caption text-secondary">ไม่แสดงชื่อไฟล์ในตาราง log นี้ตามข้อกำหนด PDPA</div>
   `;

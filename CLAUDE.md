@@ -41,7 +41,7 @@ Key conventions:
 
 รายละเอียดฉบับเต็มอยู่ใน [[docs/01-requirements/01-spec/requirement-align|requirement-align]] — ให้ถือเป็น source of truth เมื่อออกแบบหรือเขียนเอกสารต่อยอด
 
-**ข้อมูล PLO/รายวิชาจริง** ของทั้งสองหลักสูตร (สาขา New Media Communication) อยู่ที่ [[docs/01-requirements/01-spec/plo-course-master-data|plo-course-master-data]] — เมื่อออกแบบ/เขียนตัวอย่างที่เกี่ยวกับ PLO, CLO, หรือรายชื่อวิชา ให้ใช้ข้อมูลจากไฟล์นี้แทนการสมมติชื่อวิชา/PLO ขึ้นมาเอง (ตัวอย่างเดิมในเอกสาร prototype เช่น "COS101 หลักการเขียนโปรแกรม" เป็นข้อมูลสมมติที่สร้างไว้ก่อนมีข้อมูลจริงนี้ ยังไม่ได้ปรับให้ตรงกัน)
+**ข้อมูล PLO/รายวิชาจริง** ของทั้งสองหลักสูตร (สาขา New Media Communication) อยู่ที่ [[docs/01-requirements/01-spec/plo-course-master-data|plo-course-master-data]] — เมื่อออกแบบ/เขียนตัวอย่างที่เกี่ยวกับ PLO, CLO, หรือรายชื่อวิชา ให้ใช้ข้อมูลจากไฟล์นี้แทนการสมมติชื่อวิชา/PLO ขึ้นมาเอง (เอกสาร prototype ข้อความ และ `align-connected-mobile-prototype.html` ปรับให้ใช้ข้อมูลจริงนี้แล้ว โดยมีวิชาหลักคือ 127121 การรู้เท่าทันสื่อดิจิทัล, 127311 ระเบียบวิธีวิจัย, 70127211 การบริหารจัดการแพลตฟอร์มโซเชียลมีเดียและอัลกอริทึมศึกษา — ต้นแบบ Design Canvas ที่ `docs/02-design/01-prototypes/interactive-prototype/*.dc.html` ยังใช้ข้อมูลสมมติเดิมอยู่ ต้องอัปเดตผ่าน `design` skill)
 
 ## Conditions & requirements when working on ALIGN
 
