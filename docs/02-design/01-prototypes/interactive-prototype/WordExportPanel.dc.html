@@ -37,9 +37,6 @@ input{font-family:inherit;}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:500;border-radius:4px;padding:10px 16px;line-height:20px;}
 .btn-primary{background:var(--green);color:var(--bg-surface);}
 .btn-primary:hover{background:var(--green-dark);}
-.toggle-track{width:40px;height:22px;border-radius:11px;background:var(--border-default);position:relative;flex-shrink:0;}
-.toggle-track.on{background:var(--green);}
-.toggle-thumb{width:18px;height:18px;border-radius:50%;background:var(--bg-surface);position:absolute;top:2px;transition:left 0.15s;}
 </style>
 </helmet>
 
@@ -53,16 +50,7 @@ input{font-family:inherit;}
     <div class="preview-row"><span>CLO/PLO ที่ยืนยันแล้ว</span><span class="text-secondary">3 ข้อ</span></div>
     <div class="preview-row"><span>% ความสอดคล้อง</span><span class="text-secondary">59%</span></div>
     <div class="preview-row"><span>ไฟล์หลักฐานที่อ้างอิง</span><span class="text-secondary">6 ไฟล์</span></div>
-    <sc-if value="{{includeAoi}}" hint-placeholder-val="{{true}}">
-      <div class="preview-row"><span>Area of Improvement</span><span class="text-secondary">รวมอยู่ในเอกสาร</span></div>
-    </sc-if>
-  </div>
-
-  <div style="display:flex;align-items:center;justify-content:space-between;">
-    <span class="h3">รวมส่วน Area of Improvement</span>
-    <button class="toggle-track {{toggleClass}}" onClick="{{onToggleAoi}}">
-      <span class="toggle-thumb" style="left:{{thumbLeft}};"></span>
-    </button>
+    <div class="preview-row"><span>Area of Improvement</span><span class="text-secondary">รวมอยู่ในเอกสาร</span></div>
   </div>
 
   <sc-if value="{{stateIdle}}" hint-placeholder-val="{{true}}">
@@ -86,18 +74,14 @@ input{font-family:inherit;}
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { includeAoi: true, status: 'idle', doneAt: '' };
+    this.state = { status: 'idle', doneAt: '' };
   }
   renderVals() {
     return {
-      includeAoi: this.state.includeAoi,
-      toggleClass: this.state.includeAoi ? 'on' : '',
-      thumbLeft: this.state.includeAoi ? '20px' : '2px',
       stateIdle: this.state.status === 'idle',
       stateGenerating: this.state.status === 'generating',
       stateDone: this.state.status === 'done',
       doneAt: this.state.doneAt,
-      onToggleAoi: () => this.setState({ includeAoi: !this.state.includeAoi }),
       onDownload: () => {
         this.setState({ status: 'generating' });
         setTimeout(() => {

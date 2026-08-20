@@ -1,6 +1,6 @@
 # Test Plan: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)
 
-แตกมาจาก Acceptance Criteria ใน [[../../01-requirements/02-plan/product-backlog|product-backlog]] (AB-01 ถึง AB-27) อ้างอิงกฎทางธุรกิจ #1–#6 และ User Roles ใน [[../../01-requirements/01-spec/requirement-align|requirement-align]] และยึด entity/state จริงตาม [[../../02-design/02-technical/align-technical-design|align-technical-design]] (`ai_match_result`, `syllabus_gap_result`, `clo_coverage_summary`, `user.account_status` ฯลฯ) รวมถึงชื่อ state ฝั่ง UI (Draft/Confirmed) ตาม `DESIGN.md`
+แตกมาจาก Acceptance Criteria ใน [[../../01-requirements/02-plan/product-backlog|product-backlog]] (AB-01 ถึง AB-27 **ไม่รวม AB-18** ที่ถูกตัดออกจากขอบเขตทั้งหมดแล้ว — ผู้ใช้ยืนยัน 2026-08-20 ว่าไม่ต้องการฟีเจอร์ toggle รวม/ไม่รวม Area of Improvement ดู [[../../00-archived/backlog-ab-18-area-of-improvement-toggle|00-archived/backlog-ab-18-area-of-improvement-toggle]]) อ้างอิงกฎทางธุรกิจ #1–#6 และ User Roles ใน [[../../01-requirements/01-spec/requirement-align|requirement-align]] และยึด entity/state จริงตาม [[../../02-design/02-technical/align-technical-design|align-technical-design]] (`ai_match_result`, `syllabus_gap_result`, `clo_coverage_summary`, `user.account_status` ฯลฯ) รวมถึงชื่อ state ฝั่ง UI (Draft/Confirmed) ตาม `DESIGN.md`
 
 นี่คือ **Test Plan ฉบับแรก** ของโปรเจกต์ (ยังไม่มีการทดสอบจริงเกิดขึ้น เพราะยังไม่มีแอปพลิเคชันจริง — เอกสารนี้เตรียมพร้อมไว้ล่วงหน้าให้ทีมพัฒนาใช้อ้างอิงทันทีที่มีระบบให้ทดสอบ)
 
@@ -9,7 +9,7 @@
 ## 1. ขอบเขตการทดสอบ (Scope)
 
 ### In Scope
-- Test case เชิงฟังก์ชัน (functional) ครอบคลุม Acceptance Criteria ของ **User Story ทั้ง 27 เรื่อง (AB-01–AB-27)** ใน Epic E1–E6
+- Test case เชิงฟังก์ชัน (functional) ครอบคลุม Acceptance Criteria ของ **User Story ทั้ง 26 เรื่อง (AB-01–AB-27 ไม่รวม AB-18)** ใน Epic E1–E6
 - Test case ปฏิเสธ/ละเมิดกฎทางธุรกิจ (negative/rejection) สำหรับกฎที่เป็นเงื่อนไขบังคับ โดยเฉพาะ:
   - ผูก CLO–PLO ก่อนบันทึกการสอน (BR#1) และห้ามผูกข้ามกลุ่มหลักสูตร 2565↔2570
   - แจ้งเตือน CLO ที่ไม่มีหลักฐาน (BR#2)
@@ -27,6 +27,7 @@
 - การทดสอบ formatting/binary ของไฟล์ .docx ที่สร้างจริง (เช่น layout, ฟอนต์) — ทดสอบเฉพาะ **เนื้อหา/ข้อมูลอ้างอิง** ที่ต้องปรากฏ/ห้ามปรากฏในเอกสารเท่านั้น
 - Visual regression / pixel-level UI testing เทียบ `DESIGN.md` — ใช้ `DESIGN.md` อ้างอิงชื่อ state/คำที่ต้องปรากฏ (เช่น badge "Draft"/"Confirmed") เท่านั้น ไม่ทดสอบสี/ระยะห่างจริง
 - รายละเอียดที่ยังเป็นคำถามเปิด (ดูหัวข้อ 6) — เขียนเป็น test case แบบ placeholder เท่านั้น ยังไม่ยืนยันผลลัพธ์ที่คาดหวังที่แน่นอน
+- **AB-18** (ตัวเลือกรวม/ไม่รวม Area of Improvement ตอน export) — ผู้ใช้ยืนยัน (2026-08-20) ว่าไม่ต้องการฟีเจอร์นี้ ถูกตัดออกจาก scope ทั้งหมด ไม่มี test case ใดทดสอบ toggle นี้อีก (test case เดิมถูกย้ายไปที่ [[../../00-archived/backlog-ab-18-area-of-improvement-toggle|00-archived/backlog-ab-18-area-of-improvement-toggle]]) — พฤติกรรมที่ถูกต้องคือเอกสาร Word export แสดง Area of Improvement เสมอ ตรวจสอบด้วย TC-AB16-06 ใน [[e5-word-export|e5-word-export]] แทน
 
 ---
 
@@ -120,7 +121,7 @@
 | E2 | บันทึกการสอนและแนบหลักฐาน | AB-05, AB-06, AB-07 | [[e2-teaching-record-evidence\|e2-teaching-record-evidence]] |
 | E3 | AI ประมวลผลจับคู่ CLO/PLO + gap analysis | AB-08, AB-09, AB-10, AB-20, AB-21, AB-22 | [[e3-ai-matching-gap-analysis\|e3-ai-matching-gap-analysis]] |
 | E4 | แดชบอร์ดและแจ้งเตือนความสอดคล้อง | AB-11, AB-12, AB-13, AB-14, AB-23 | [[e4-dashboard-alerts\|e4-dashboard-alerts]] |
-| E5 | ออกเอกสารหลักฐาน (Word Export) | AB-15, AB-16, AB-17, AB-18 | [[e5-word-export\|e5-word-export]] |
+| E5 | ออกเอกสารหลักฐาน (Word Export) | AB-15, AB-16, AB-17 | [[e5-word-export\|e5-word-export]] |
 | E6 | สมัครและอนุมัติบัญชีผู้ใช้ (User Registration & Approval) | AB-24, AB-25, AB-26, AB-27 | [[e6-user-registration-approval\|e6-user-registration-approval]] |
 
 ---
@@ -131,26 +132,31 @@
 |---|---|---|---|---|---|
 | E1 | 27 | 11 | 8 | 8 | 0 |
 | E2 | 16 | 6 | 3 | 7 | 0 |
-| E3 | 32 | 14 | 6 | 11 | 1 |
+| E3 | 32 | 15 | 6 | 11 | 0 |
 | E4 | 20 | 9 | 5 | 6 | 0 |
-| E5 | 17 | 7 | 3 | 7 | 0 |
+| E5 | 15 | 6 | 3 | 6 | 0 |
 | E6 | 25 | 12 | 4 | 9 | 0 |
-| **รวม** | **137** | **59** | **29** | **48** | **1** |
+| **รวม** | **135** | **59** | **29** | **47** | **0** |
 
 (ตัวเลขนับตามจริงจากตารางในแต่ละไฟล์ย่อย — นับ 1 แถว = 1 test case; TC-AB19-06 ใน E1 ที่มีประเภท "Accepted Risk" ถูกนับรวมในคอลัมน์ Edge case เพื่อให้ผลรวมของแต่ละแถวตรงกับจำนวน test case จริง)
 (อัปเดตหลังตอบคำถามเปิด §6.1: E3 TC-AB21-04/05 เปลี่ยนจาก placeholder เป็น Edge case/Happy path ที่ยืนยันแล้ว และเพิ่ม TC-AB11-05 ใหม่ใน E4)
-(อัปเดตหลังตอบคำถามเปิด §6.2/§6.3/§6.5/§6.6 — รอบนี้:
+(อัปเดตหลังตอบคำถามเปิด §6.2/§6.3/§6.5/§6.6 — รอบก่อน:
 - **E1**: แก้ไขยอดรวมจาก 25 เป็น 27 ให้ตรงกับไฟล์จริง (ก่อนหน้านี้ตารางนี้ยังไม่ถูกอัปเดตหลัง TC-AB19-05/06 เปลี่ยนจาก placeholder เป็น test case ยืนยันแล้ว และเพิ่ม TC-AB19-07/08 ใหม่ ในรอบแก้ §6.2 ก่อนหน้า)
 - **E3**: เพิ่ม TC-AB22-07 (Happy path), TC-AB22-08 (Rejection) ยืนยัน §6.2 ว่า gap analysis ใช้ `syllabus.content` เท่านั้น ไม่อ่านไฟล์ `origin_file_ref` — TC-AB22-06 ยังเป็น placeholder แต่แคบลงเหลือเฉพาะคำถามเรื่อง algorithm จับคู่คำพ้องความหมาย (ดู §6.2)
 - **E5**: TC-AB16-04 เปลี่ยนจาก placeholder เป็น Happy path ยืนยันแล้ว (§6.3 — ไม่มี "3 ระดับ") และเพิ่ม TC-AB16-05 ใหม่
-- **E6**: TC-AB24-04 เปลี่ยนจาก placeholder เป็น Rejection ยืนยันแล้ว (§6.5), เพิ่ม TC-AB24-06 ใหม่, TC-AB27-05 เปลี่ยนจาก placeholder เป็น Happy path ยืนยันแล้ว (§6.6), เพิ่ม TC-AB27-06 ใหม่ — placeholder ของ E6 หมดแล้วทั้งคู่
-- Placeholder ที่เหลือในเอกสารทั้งหมดตอนนี้มีเพียง **1 รายการ**: TC-AB22-06 (คำถามเปิด §6.2 ส่วนย่อยเรื่อง algorithm จับคู่ข้อความ) — §6.4 และ §6.7 ไม่ใช่คำถามเชิง test case จึงไม่มี placeholder ผูกอยู่)
+- **E6**: TC-AB24-04 เปลี่ยนจาก placeholder เป็น Rejection ยืนยันแล้ว (§6.5), เพิ่ม TC-AB24-06 ใหม่, TC-AB27-05 เปลี่ยนจาก placeholder เป็น Happy path ยืนยันแล้ว (§6.6), เพิ่ม TC-AB27-06 ใหม่ — placeholder ของ E6 หมดแล้วทั้งคู่)
+(อัปเดตล่าสุด 2026-08-20 หลังตอบคำถามเปิดที่เหลือ + AB-18 ถูกตัดออกจาก scope — รอบนี้:
+- **E3**: TC-AB22-06 เปลี่ยนจาก placeholder เป็น Happy path ยืนยันแล้ว (§6.2 — วิธีเทียบหัวข้อ syllabus ใช้ semantic similarity ไม่ใช่ exact string match) จำนวนรวม E3 ไม่เปลี่ยน (ยังเป็น 32) แต่ placeholder ลดจาก 1 เหลือ 0, happy path เพิ่มจาก 14 เป็น 15
+- **E5**: AB-18 ถูกตัดออกจาก scope ทั้งหมด — ย้าย TC-AB18-01/02/03 (เดิม 2 happy + 1 rejection) ไปที่ [[../../00-archived/backlog-ab-18-area-of-improvement-toggle|00-archived]] และเพิ่ม TC-AB16-06 ใหม่ (Happy path) ยืนยันว่า export แสดง Area of Improvement เสมอ ไม่มี option ให้ซ่อน — จำนวนรวม E5 ลดจาก 17 เป็น 15 (happy path 7→6, rejection 7→6, edge case คงที่ 3)
+- **รวมทั้งหมด**: ลดจาก 137 เหลือ **135 test case** และ **placeholder เหลือ 0 รายการ — ปิดคำถามเปิดครบทุกข้อแล้ว** (ดูหัวข้อ 6))
 
 ---
 
 ## 6. หมายเหตุ — คำถามเปิดที่ต้องตอบก่อน implement/ทดสอบจริง
 
-เอกสารนี้ **ไม่สมมติคำตอบ** ให้คำถามต่อไปนี้ตามกฎการทำงาน — Test case ที่เกี่ยวข้องถูกทำเป็น placeholder และ tag `[PLACEHOLDER — รอคำตอบ]` ไว้ในไฟล์ย่อย:
+เอกสารนี้ **ไม่สมมติคำตอบ** ให้คำถามต่อไปนี้ตามกฎการทำงาน — Test case ที่เกี่ยวข้องถูกทำเป็น placeholder และ tag `[PLACEHOLDER — รอคำตอบ]` ไว้ในไฟล์ย่อย
+
+> **สถานะล่าสุด (2026-08-20): ปิดคำถามเปิดครบทุกข้อแล้ว** — คำถามทั้งหมด §6.1–§6.7 ด้านล่างได้รับคำตอบยืนยันจากผู้ใช้แล้วทุกข้อ (§6.4 ปิดในลักษณะ "ตัดฟีเจอร์ออกจาก scope" ไม่ใช่ตอบคำถามเดิมตรงๆ) ไม่มี test case ใดในเอกสารนี้หรือไฟล์ย่อยที่ยังเป็น `[PLACEHOLDER — รอคำตอบ]` อีกต่อไป (ยืนยันจำนวน placeholder = 0 ในตาราง §5)
 
 ### 6.1 [แก้ไขแล้ว] "ความถี่ที่แมทช์" (match frequency) — เดิมกระทบ AB-21, AB-11 (ไฟล์ e3, e4)
 **คำตอบยืนยันจากผู้ใช้**:
@@ -168,7 +174,7 @@ TC-AB21-04 และ TC-AB21-05 ใน [[e3-ai-matching-gap-analysis|e3-ai-match
 
 ยึดตาม `align-technical-design.md` §2.6 (field `content`/`origin_file_ref`) และ §3 E1 (`PUT /courses/{id}/syllabus` กับ `POST /courses/{id}/syllabus/upload` เป็น 2 endpoint แยกกัน) — Test case ที่ยืนยันแล้วอยู่ใน [[e1-clo-plo-syllabus-setup|e1-clo-plo-syllabus-setup]] (TC-AB19-05, 07, 08) และ [[e3-ai-matching-gap-analysis|e3-ai-matching-gap-analysis]] (TC-AB22-07, TC-AB22-08 — ใหม่)
 
-**หมายเหตุ — คำถามย่อยที่ยังเปิดอยู่ (แคบลงจากเดิม ไม่ใช่คำถามเดียวกับข้างต้นแล้ว)**: แม้โครงสร้างข้อมูลยืนยันแล้วว่าเป็น structured per-week แต่ตัวข้อความในฟิลด์ `topic`/`detail` ของแต่ละสัปดาห์ยังเป็น**ข้อความอิสระ (free text)** — จึงยังไม่มีคำตอบว่าอัลกอริทึมที่ใช้เทียบหัวข้อ (exact string / fuzzy matching / semantic matching) จะถือว่าข้อความที่เป็นคำพ้องความหมายกัน (เช่น "OOP เบื้องต้น" กับ "Object-Oriented Programming เบื้องต้น") "ตรงกัน" หรือไม่ — ดู test case placeholder ที่แคบลงแล้ว TC-AB22-06 ใน [[e3-ai-matching-gap-analysis|e3-ai-matching-gap-analysis]]
+**หมายเหตุ — คำถามย่อย [แก้ไขแล้ว, 2026-08-20]**: คำถามที่ว่าอัลกอริทึมที่ใช้เทียบหัวข้อ `topic`/`detail` ของแต่ละสัปดาห์ (ซึ่งเป็นข้อความอิสระ/free text) จะถือว่าข้อความที่เป็นคำพ้องความหมายกัน (เช่น "OOP เบื้องต้น" กับ "Object-Oriented Programming เบื้องต้น") "ตรงกัน" หรือไม่ — **คำตอบยืนยันจากผู้ใช้**: ใช้วิธี**เทียบความหมายร่วม (semantic similarity) ไม่ใช่ exact string match** เป็นหลักการเดียวกับการจับคู่ CLO/PLO (align-technical-design §4.1) ยึดตาม `align-technical-design.md` §4.3 ที่ปรับไว้แล้ว (ตัวอย่าง: "การตรวจสอบข้อเท็จจริงในสื่อดิจิทัล" กับ "Fact-checking เนื้อหาออนไลน์" ต้องนับว่า "ตรงกัน") TC-AB22-06 ใน [[e3-ai-matching-gap-analysis|e3-ai-matching-gap-analysis]] จึงไม่ใช่ placeholder อีกต่อไป เขียนเป็น test case ยืนยันแล้ว
 
 ### 6.2b [แก้ไขแล้ว] Course Syllabus Versioning — เดิมเป็นความขัดแย้งระหว่าง `align-technical-design.md` กับ `task-breakdown.md`
 **ตัดสินใจแล้ว**: เก็บแบบ **update-in-place ไม่มี version history** (Accepted Risk — ดู `align-technical-design.md` §2.6 และ §4.3) — `task-breakdown.md` T-067 ปรับให้ตรงกับการตัดสินใจนี้แล้ว TC-AB19-06 ใน `e1-clo-plo-syllabus-setup.md` จึงไม่ใช่ placeholder อีกต่อไป เขียนเป็น test case ยืนยันพฤติกรรม accepted-risk แทน
@@ -178,8 +184,10 @@ TC-AB21-04 และ TC-AB21-05 ใน [[e3-ai-matching-gap-analysis|e3-ai-match
 
 TC-AB16-04 ใน [[e5-word-export|e5-word-export]] จึงไม่ใช่ placeholder อีกต่อไป เขียนเป็น test case ยืนยันแล้วว่าส่วนนี้แสดงเป็นความเรียงข้อความเดียว ไม่มี label ระดับ/หมวดหมู่ปรากฏในเอกสาร และเพิ่ม TC-AB16-05 ใหม่ (ตรวจว่าไม่ถูกเติมข้อความลอยๆให้ครบตามจำนวน/ระดับที่ตายตัว เมื่อพบประเด็นจริงเพียงประเด็นเดียว)
 
-### 6.4 AB-18 (toggle รวม/ไม่รวม Area of Improvement) — ความเชื่อมั่นต่ำ (ไฟล์ e5)
-Story นี้เป็นข้อสรุปที่ backlog-analyst อนุมานเพิ่มเติม ไม่ได้ระบุตรงในสเปคต้นฉบับ — เขียน test case ตาม AC ที่มีอยู่ในปัจจุบันได้ปกติ (เพราะ AC ชัดเจนพอ) แต่ **ทั้งฟีเจอร์นี้ควรได้รับการยืนยันจากผู้ใช้ก่อนพัฒนาจริง** ว่าต้องการหรือไม่ — ไม่ใช่คำถามเชิงทดสอบแต่เป็นคำถามเชิงความจำเป็นของฟีเจอร์
+### 6.4 [ปิด — AB-18 ถูกตัดออกจาก scope, 2026-08-20] AB-18 (toggle รวม/ไม่รวม Area of Improvement) — ความเชื่อมั่นต่ำ (ไฟล์ e5)
+Story นี้เป็นข้อสรุปที่ backlog-analyst อนุมานเพิ่มเติม ไม่ได้ระบุตรงในสเปคต้นฉบับ เดิมเขียน test case ตาม AC ที่มีอยู่ได้ปกติ แต่ระบุว่า **ทั้งฟีเจอร์นี้ควรได้รับการยืนยันจากผู้ใช้ก่อนพัฒนาจริง**
+
+**คำตอบยืนยันจากผู้ใช้ (2026-08-20)**: **ไม่ต้องการฟีเจอร์นี้** — AB-18 ถูกตัดออกจาก product-backlog.md ทั้งหมด (เนื้อหาเดิมย้ายไปที่ [[../../00-archived/backlog-ab-18-area-of-improvement-toggle|00-archived/backlog-ab-18-area-of-improvement-toggle]]) พฤติกรรมที่ถูกต้องคือเอกสาร Word export **แสดง Area of Improvement เสมอ ไม่มี toggle/parameter ให้เลือกซ่อน** (`align-technical-design.md` §3 E5 ปรับไว้แล้ว) Test case TC-AB18-01/02/03 ใน [[e5-word-export|e5-word-export]] ถูกย้ายไปยังไฟล์ archive เดียวกัน และแทนที่ด้วย TC-AB16-06 (ยืนยันพฤติกรรม "แสดงเสมอ") คำถามนี้จึงปิดแล้ว ไม่ใช่คำถามเปิดที่ต้องตอบก่อน implement อีกต่อไป
 
 ### 6.5 [แก้ไขแล้ว] ฟิลด์ฟอร์มสมัครสมาชิก (self-service registration) — กระทบ AB-24 (ไฟล์ e6)
 **คำตอบยืนยันจากผู้ใช้**: ฟอร์มสมัครสมาชิกมีเพียง **3 ฟิลด์: ชื่อ, อีเมล, รหัสผ่าน** เท่านั้น — **ไม่มีฟิลด์ "สังกัด/ภาควิชา"** เพราะระบบทั้งระบบให้บริการเฉพาะสาขา New Media Communication สาขาเดียว (การระบุสังกัดจึงไม่มีความหมาย) อาจารย์ต้องตั้งรหัสผ่านเอง ไม่ใช้ SSO
@@ -191,8 +199,12 @@ TC-AB24-04 ใน [[e6-user-registration-approval|e6-user-registration-approval]
 
 TC-AB27-05 ใน [[e6-user-registration-approval|e6-user-registration-approval]] จึงไม่ใช่ placeholder อีกต่อไป เขียนเป็น test case ยืนยันว่าปฏิเสธบัญชีโดยไม่กรอกเหตุผลต้องทำสำเร็จตามปกติ (ไม่ error/ไม่บังคับ) และเพิ่ม TC-AB27-06 ใหม่ (ปฏิเสธพร้อมระบุเหตุผล ก็ต้องทำสำเร็จเช่นกัน — พิสูจน์ว่า optional ทำงานได้ทั้งสองทาง)
 
-### 6.7 วิธีสร้างบัญชี `program_admin` ชุดแรก — กระทบ E6 โดยรวม (ไม่ใช่ story เดียว)
-`align-technical-design.md` §2.12 ระบุว่า E6 (`POST /auth/register`) สร้างได้เฉพาะบัญชี `role = 'instructor'` เท่านั้น สเปคไม่ได้ระบุว่าบัญชี `program_admin` ชุดแรกถูกสร้างขึ้นอย่างไร (เช่น seed ข้อมูลเริ่มต้นตอน deploy หรือมีกลไกอื่นนอกเอกสารนี้) — ไม่กระทบการเขียน test case ของ `e6-user-registration-approval.md` โดยตรง (ใช้ `U-PA-2565`/`U-PA-2570` เป็นบัญชีที่มีอยู่แล้วตามข้อสมมติของ Test Plan) แต่เป็นคำถามที่ต้องตอบก่อนติดตั้งระบบจริง
+### 6.7 [แก้ไขแล้ว] วิธีสร้างบัญชี `program_admin` ชุดแรก — กระทบ E6 โดยรวม (ไม่ใช่ story เดียว)
+`align-technical-design.md` §2.12 ระบุว่า E6 (`POST /auth/register`) สร้างได้เฉพาะบัญชี `role = 'instructor'` เท่านั้น เดิมสเปคไม่ได้ระบุว่าบัญชี `program_admin` ชุดแรกถูกสร้างขึ้นอย่างไร
+
+**คำตอบยืนยันจากผู้ใช้**: บัญชี `role = 'program_admin'` ชุดแรก (และบัญชีเพิ่มเติมในอนาคตถ้าต้องการ) สร้างผ่าน **seed script/ข้อมูลเริ่มต้นตอน deploy ระบบเท่านั้น** — **ไม่มี endpoint ใดในระบบ ALIGN ที่ให้สร้างบัญชีบทบาทนี้โดยตรง** (ไม่ใช่ผ่าน UI ในระบบ และไม่ใช่ผ่าน `POST /auth/register` ซึ่งสร้างได้แต่ `role = 'instructor'`) ยึดตาม `align-technical-design.md` §2.12 ที่ปรับไว้แล้ว
+
+คำตอบนี้ไม่กระทบการเขียน test case ของ `e6-user-registration-approval.md` โดยตรง (ใช้ `U-PA-2565`/`U-PA-2570` เป็นบัญชีที่มีอยู่แล้วตามข้อสมมติของ Test Plan §2 อยู่แล้ว — สอดคล้องกับคำตอบนี้พอดี เพราะบัญชีเหล่านี้ถือเป็นบัญชีที่ seed ไว้ล่วงหน้าตอน deploy) จึงไม่มี test case ใหม่ต้องเพิ่ม — เป็นเพียงคำถามเชิงกระบวนการ deploy ที่ไม่ใช่ AC/test case
 
 ---
 

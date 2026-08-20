@@ -12,7 +12,7 @@
 
 ## เอกสาร
 
-- [[align-app-screens|Prototype: หน้าจอแอป ALIGN — บทบาทอาจารย์ผู้สอน (Instructor)]] — 11 หน้าจอ ครอบคลุม AB-02, 03, 05, 06, 07, 08–13, 15, 16, 18–27
+- [[align-app-screens|Prototype: หน้าจอแอป ALIGN — บทบาทอาจารย์ผู้สอน (Instructor)]] — 11 หน้าจอ ครอบคลุม AB-02, 03, 05, 06, 07, 08–13, 15, 16, 19–27 (AB-18 ถูกตัดออกจาก scope แล้ว 2026-08-20)
 - [[align-program-admin-screens|Prototype: หน้าจอแอป ALIGN — บทบาทผู้บริหารหลักสูตร (Program Administrator)]] — 6 หน้าจอ ครอบคลุม AB-01, 04, 07, 14, 17, 26
 - [[align-navigation-flow|Prototype: User Flow / Navigation Flow — ALIGN (ทั้ง 2 บทบาท)]]
 - [[align-user-journey|Prototype: User Journey Map — ALIGN (ทั้ง 2 บทบาท)]]

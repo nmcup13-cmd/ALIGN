@@ -11,3 +11,4 @@
 ## เอกสาร
 
 - [[align-app-screens-pitch-deck-v1|[เก็บถาวร] Prototype: หน้าจอแอป ALIGN — เวอร์ชันแรกจาก Pitch Deck (ก่อน DESIGN.md)]] — แทนที่ด้วย [[../02-design/01-prototypes/align-app-screens|align-app-screens]] เวอร์ชันปัจจุบัน
+- [[backlog-ab-18-area-of-improvement-toggle|[เก็บถาวร] AB-18 — ตัวเลือกรวม/ไม่รวม Area of Improvement ตอน Export เอกสาร Word]] — ผู้ใช้ยืนยัน (2026-08-20) ว่าไม่ต้องการฟีเจอร์นี้ ตัดออกจาก [[../01-requirements/02-plan/product-backlog|product-backlog]]

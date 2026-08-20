@@ -196,7 +196,7 @@
 | user_id | PK | |
 | name / email | string | |
 | password_hash | string | รหัสผ่านที่ hash แล้ว (เช่น bcrypt) — **[ยืนยันแล้ว]** อาจารย์ตั้งรหัสผ่านเองตอนสมัครสมาชิกผ่าน E6 (`POST /auth/register`) |
-| role | enum('instructor','program_admin') | 2 บทบาทตามสเปค — `program_admin` คือผู้บริหารหลักสูตร (Program Administrator) อาจารย์ที่รับผิดชอบหลักสูตร ประสานหลักสูตร และจัดทำรายงานประเมินตนเอง (SAR) — บัญชีที่สมัครเองผ่าน E6 (`POST /auth/register`) ได้ `role = 'instructor'` เสมอ เพราะสเปค (E6) ระบุว่าเฉพาะอาจารย์ผู้สอนเท่านั้นที่สมัครใช้งานเองได้; สเปคไม่ได้ระบุวิธีสร้างบัญชี `program_admin` ไว้ (นอกขอบเขตของ E6) — ต้องยืนยันกับทีมพัฒนาว่าบัญชี `program_admin` ชุดแรกถูกสร้างอย่างไร (เช่น seed ข้อมูลเริ่มต้น/สร้างโดยผู้ดูแลระบบนอกเอกสารนี้) |
+| role | enum('instructor','program_admin') | 2 บทบาทตามสเปค — `program_admin` คือผู้บริหารหลักสูตร (Program Administrator) อาจารย์ที่รับผิดชอบหลักสูตร ประสานหลักสูตร และจัดทำรายงานประเมินตนเอง (SAR) — บัญชีที่สมัครเองผ่าน E6 (`POST /auth/register`) ได้ `role = 'instructor'` เสมอ เพราะสเปค (E6) ระบุว่าเฉพาะอาจารย์ผู้สอนเท่านั้นที่สมัครใช้งานเองได้ — **[ยืนยันแล้ว]** บัญชี `role = 'program_admin'` ชุดแรก (และบัญชีเพิ่มเติมในอนาคตถ้าต้องการ) สร้างผ่าน **seed script/ข้อมูลเริ่มต้นตอน deploy ระบบเท่านั้น** ไม่มี endpoint ใดในระบบ ALIGN ที่ให้สร้างบัญชีบทบาทนี้โดยตรง (ไม่ใช่ผ่าน UI ในระบบ และไม่ใช่ผ่าน `POST /auth/register` ซึ่งสร้างได้แต่ `role = 'instructor'` ตามที่ระบุข้างต้น) |
 | account_status | enum('pending','approved','rejected') | **ใหม่ตาม E6/กฎทางธุรกิจ #6** — สถานะบัญชี: `pending` = "รออนุมัติ" (ค่าเริ่มต้นทันทีที่สมัครสำเร็จผ่าน `POST /auth/register`, AB-24), `approved` = "อนุมัติแล้ว" (เข้าใช้งานฟีเจอร์อื่น E1–E5 ได้ตามสิทธิ์บทบาท, AB-26), `rejected` = "ถูกปฏิเสธ" (เข้าถึงข้อมูล/ฟีเจอร์ใดๆ ของระบบไม่ได้เช่นเดียวกับ `pending`, AB-25/AB-26) — ดูหมายเหตุบังคับใช้ด้านล่างตาราง |
 | approved_by | FK → user, nullable | ผู้บริหารหลักสูตร (`program_admin`) ที่กดอนุมัติ/ปฏิเสธบัญชีนี้ครั้งล่าสุด — ต้อง not-null เมื่อ `account_status != 'pending'` (audit trail ตาม AB-26) |
 | approved_at | datetime, nullable | เวลาที่อนุมัติ/ปฏิเสธครั้งล่าสุด — ต้อง not-null คู่กับ `approved_by` |
@@ -290,7 +290,7 @@ evidence 1──* evidence_access_log
 ### E5 — ออกเอกสาร Word
 | Method & Path | จุดประสงค์ | Request/Response สำคัญ |
 |---|---|---|
-| `POST /courses/{id}/export-word` | สร้างเอกสารสรุป CLO/PLO ของวิชา — อ่านเฉพาะ `ai_match_result.state = 'confirmed'`, `clo_coverage_summary` ที่ได้จากค่า confirmed, `syllabus_gap_result.state = 'confirmed'` (สำหรับส่วน Area of Improvement ตาม AB-16), และ evidence ที่แนบจริง | req: `{include_area_of_improvement: boolean}` (AB-18) → res: `{file_url}` หรือไฟล์ตรง |
+| `POST /courses/{id}/export-word` | สร้างเอกสารสรุป CLO/PLO ของวิชา — อ่านเฉพาะ `ai_match_result.state = 'confirmed'`, `clo_coverage_summary` ที่ได้จากค่า confirmed, `syllabus_gap_result.state = 'confirmed'` (สำหรับส่วน Area of Improvement ตาม AB-16), และ evidence ที่แนบจริง — **[ยืนยันแล้ว, AB-18 ถูกตัดออกจากขอบเขต]** เอกสารแสดงส่วน Area of Improvement เสมอ ไม่มี toggle/parameter ให้เลือกซ่อน | req: `{}` (ไม่มีพารามิเตอร์เลือกรวม/ไม่รวม Area of Improvement) → res: `{file_url}` หรือไฟล์ตรง |
 | `GET /export-jobs/{id}` | เช็คสถานะงานสร้างเอกสาร (ถ้าออกแบบเป็น async job) | res: `{status, download_url}` |
 | `GET /curricula/{year}/courses/{id}/export-word` (program_admin) | ผู้บริหารหลักสูตร (`program_admin`) ดาวน์โหลดเอกสารของวิชาที่ตนดูแลตาม scope เพื่อนำไปส่งต่อ QA ภายนอกระบบ | ตรวจ `program_admin_curriculum_scope` ก่อนตอบ (กฎ #5) |
 
@@ -344,11 +344,13 @@ evidence 1──* evidence_access_log
 - เนื้อหา course syllabus **เวอร์ชันปัจจุบัน** ของรายวิชานั้น (`syllabus.content` — update-in-place ไม่มี version history ดู Accepted Risk ที่ §2.6)
 - หัวข้อการสอนจริงทั้งหมดที่บันทึกไว้ของรายวิชานั้น (`teaching_record.topic` ทุกรายการ ณ เวลาที่ประมวลผล)
 
-**Output:**
-- `missing_topics` — หัวข้อใน syllabus ที่ยังไม่พบ `teaching_record` รองรับ
-- `extra_topics` — หัวข้อที่สอนจริงแต่ไม่มีใน syllabus (เนื้อหาที่เพิ่มนอกแผน)
+**วิธีเทียบหัวข้อ ([ยืนยันแล้ว]):** การเทียบ `syllabus.content` (หัวข้อรายสัปดาห์ที่วางแผนสอน) กับ `teaching_record.topic` (หัวข้อที่สอนจริง) ใช้วิธี**เทียบความหมาย/คำสำคัญร่วม (semantic similarity)** ไม่ใช่การเทียบ string ตรงตัวเป๊ะ (exact match) — เป็นหลักการเดียวกับที่ใช้ในงานจับคู่ CLO/PLO (4.1) เพราะถ้อยคำที่อาจารย์เขียนในแผน syllabus กับที่บันทึกการสอนจริงมักไม่ตรงกันคำต่อคำ เช่น หัวข้อ syllabus เขียนว่า "การตรวจสอบข้อเท็จจริงในสื่อดิจิทัล" กับหัวข้อที่สอนจริงเขียนว่า "Fact-checking เนื้อหาออนไลน์" ต้องถือว่า **"ตรงกัน"** (ไม่ใช่ missing/extra) แม้ถ้อยคำไม่เหมือนกัน — เทคนิคที่ใช้ (เช่น text embedding + similarity threshold) ไม่ผูกมัดในเอกสารนี้ เช่นเดียวกับ 4.1 (ดูข้อเสนอด้านล่าง)
 
-ผลลัพธ์ถูกเขียนเป็น `syllabus_gap_result` ที่ `state = 'draft'` เท่านั้น เช่นเดียวกับ 4.1 — ต้องรอ `POST /syllabus-gap-results/{id}/confirm` โดยอาจารย์ก่อนนำไปใช้ในแดชบอร์ด (AB-23) หรือเอกสาร Area of Improvement (AB-16)
+**Output:**
+- `missing_topics` — หัวข้อใน syllabus ที่ยังไม่พบ `teaching_record` ที่มีความหมายตรงกัน (ไม่ใช่แค่ไม่พบคำที่เขียนเหมือนกัน) รองรับ
+- `extra_topics` — หัวข้อที่สอนจริงแต่ไม่พบหัวข้อที่มีความหมายตรงกันใน syllabus (เนื้อหาที่เพิ่มนอกแผน)
+
+ผลลัพธ์ถูกเขียนเป็น `syllabus_gap_result` ที่ `state = 'draft'` เท่านั้น เช่นเดียวกับ 4.1 — ต้องรอ `POST /syllabus-gap-results/{id}/confirm` โดยอาจารย์ก่อนนำไปใช้ในแดชบอร์ด (AB-23) หรือเอกสาร Area of Improvement (AB-16) เพราะการเทียบแบบ semantic อาจจับคู่ผิดได้ จึงยังต้องผ่านการตรวจของอาจารย์ก่อนเสมอ (กฎ #3 ใน [[../../CLAUDE.md|CLAUDE.md]])
 
 **ข้อเสนอ — ยืนยันกับทีมพัฒนาก่อนเริ่มจริง:** รายละเอียดโมเดล AI ที่ใช้ทั้งงานจับคู่ CLO/PLO (4.1) และงานวิเคราะห์ gap (4.3) เช่น text embedding + similarity scoring, หรือเรียก LLM API ภายนอก ยังไม่ได้ระบุในสเปค เอกสารนี้จงใจอธิบายเฉพาะ contract (input/output/state) ไม่ผูกกับโมเดลใดโมเดลหนึ่ง เพื่อให้ทีมพัฒนาเลือกเทคนิคที่เหมาะสมได้อิสระ ขอเพียงคง constraint เรื่อง curriculum scope และ human-in-the-loop ไว้เสมอทั้งสองงาน
 

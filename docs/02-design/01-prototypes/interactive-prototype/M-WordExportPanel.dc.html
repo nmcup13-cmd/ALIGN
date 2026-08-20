@@ -36,9 +36,6 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .preview-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-default);font-size:13px;}
 .m-btn{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:500;border-radius:4px;padding:12px 14px;min-height:44px;}
 .m-btn-primary{background:var(--green);color:var(--bg-surface);}
-.toggle-track{width:40px;height:22px;border-radius:11px;background:var(--border-default);position:relative;flex-shrink:0;}
-.toggle-track.on{background:var(--green);}
-.toggle-thumb{width:18px;height:18px;border-radius:50%;background:var(--bg-surface);position:absolute;top:2px;transition:left 0.15s;}
 </style>
 </helmet>
 
@@ -49,22 +46,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   </div>
 
   <div class="m-content">
-    <div class="body-sm text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล · Map: AB-15, AB-16, AB-18</div>
+    <div class="body-sm text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล · Map: AB-15, AB-16</div>
 
     <div class="m-card" style="display:flex;flex-direction:column;gap:2px;">
       <div class="preview-row"><span>CLO/PLO ที่ยืนยันแล้ว</span><span class="text-secondary">3 ข้อ</span></div>
       <div class="preview-row"><span>% ความสอดคล้อง</span><span class="text-secondary">59%</span></div>
       <div class="preview-row"><span>ไฟล์หลักฐานที่อ้างอิง</span><span class="text-secondary">6 ไฟล์</span></div>
-      <sc-if value="{{includeAoi}}" hint-placeholder-val="{{true}}">
-        <div class="preview-row" style="border-bottom:none;"><span>Area of Improvement</span><span class="text-secondary">รวมอยู่ในเอกสาร</span></div>
-      </sc-if>
-    </div>
-
-    <div class="m-card" style="display:flex;align-items:center;justify-content:space-between;">
-      <span class="h3">รวมส่วน Area of Improvement</span>
-      <button class="toggle-track {{toggleClass}}" onClick="{{onToggleAoi}}">
-        <span class="toggle-thumb" style="left:{{thumbLeft}};"></span>
-      </button>
+      <div class="preview-row" style="border-bottom:none;"><span>Area of Improvement</span><span class="text-secondary">รวมอยู่ในเอกสาร</span></div>
     </div>
 
     <sc-if value="{{stateIdle}}" hint-placeholder-val="{{true}}">
@@ -89,18 +77,14 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { includeAoi: true, status: 'idle', doneAt: '' };
+    this.state = { status: 'idle', doneAt: '' };
   }
   renderVals() {
     return {
-      includeAoi: this.state.includeAoi,
-      toggleClass: this.state.includeAoi ? 'on' : '',
-      thumbLeft: this.state.includeAoi ? '20px' : '2px',
       stateIdle: this.state.status === 'idle',
       stateGenerating: this.state.status === 'generating',
       stateDone: this.state.status === 'done',
       doneAt: this.state.doneAt,
-      onToggleAoi: () => this.setState({ includeAoi: !this.state.includeAoi }),
       onDownload: () => {
         this.setState({ status: 'generating' });
         setTimeout(() => { this.setState({ status: 'done', doneAt: new Date().toLocaleString('th-TH') }); }, 900);

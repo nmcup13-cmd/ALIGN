@@ -158,7 +158,7 @@ grid ฐาน 8px:
 | **AI Review Panel** | panel ยืนยัน/แก้ไขผล AI (match%, ความถี่, gap analysis) ก่อนบันทึกจริง — ปุ่มหลักต้องเป็น "ยืนยัน" ไม่ใช่ auto-save, มีปุ่ม "แก้ไข" แยกชัดเจน |
 | **CLO × Week Grid** | ตารางความหนาแน่นสูง — ใช้ `space.sm` ภายในเซลล์แต่เว้น `space.lg` รอบตาราง เพื่อไม่ให้อึดอัด |
 | **Course/Row List Item** | รายวิชา + curriculum tag + สถานะความครบถ้วน CLO–PLO |
-| **Word Export Panel** | ปุ่ม export + toggle รวม/ไม่รวม Area of Improvement (AB-18) — แสดงเฉพาะข้อมูลที่ confirmed แล้วเท่านั้น |
+| **Word Export Panel** | ปุ่ม export — แสดง Area of Improvement เสมอ ไม่มี toggle ให้เลือกรวม/ไม่รวม (AB-18 ถูกตัดออกจาก scope แล้ว, ยืนยันโดยผู้ใช้ 2026-08-20) — แสดงเฉพาะข้อมูลที่ confirmed แล้วเท่านั้น |
 | **Empty State** | ใช้เมื่อยังไม่มีข้อมูล (เช่น ยังไม่ตั้งค่า CLO/PLO) — ข้อความชวนทำขั้นต่อไป ไม่ใช้โทนลบ/ผิดพลาด |
 
 ---
