@@ -183,10 +183,10 @@ const S = {
   role: 'instructor',
   accountStatus: 'none',      // none -> pending -> approved | rejected
   screen: 'signup',
-  signup: { name:'', email:'', dept:'', pw:'', pw2:'', touched:false },
+  signup: { name:'', email:'', pw:'', pw2:'', touched:false },
   review: { clo1Confirmed:false },
   pendingAccounts: [
-    { id:1, name:'อ.กมลชนก พรหมมา', email:'kamonchanok.p@university.ac.th', dept:'ภาควิชาวิทยาการคอมพิวเตอร์' }
+    { id:1, name:'อ.กมลชนก พรหมมา', email:'kamonchanok.p@university.ac.th' }
   ],
   handledAccounts: []
 };
@@ -239,7 +239,7 @@ function screenSignup(){
   const f = S.signup;
   const emailErr = f.touched && !/^\S+@\S+\.\S+$/.test(f.email);
   const pwMismatch = f.touched && f.pw2 && f.pw !== f.pw2;
-  const filled = f.name.trim() && f.email.trim() && f.dept.trim() && f.pw.length>=6 && f.pw2.length>=6;
+  const filled = f.name.trim() && f.email.trim() && f.pw.length>=6 && f.pw2.length>=6;
   const disable = !(filled && !emailErr && !pwMismatch);
   document.getElementById('tabbar').innerHTML = '';
   return `
@@ -247,7 +247,6 @@ function screenSignup(){
     <div class="stack">
       <div class="field"><label>ชื่อ-นามสกุล</label><input type="text" value="${f.name}" placeholder="เช่น นายสมชาย ใจดี" oninput="S.signup.name=this.value;render()"></div>
       <div class="field"><label>อีเมลสถาบัน</label><input type="text" class="${emailErr?'err':''}" value="${f.email}" placeholder="name@university.ac.th" oninput="S.signup.email=this.value;S.signup.touched=true;render()">${emailErr?'<span class="field-err">กรุณากรอกอีเมลสถาบันให้ถูกต้อง</span>':''}</div>
-      <div class="field"><label>สังกัด/ภาควิชา</label><input type="text" value="${f.dept}" placeholder="เช่น ภาควิชาวิทยาการคอมพิวเตอร์" oninput="S.signup.dept=this.value;render()"></div>
       <div class="field"><label>รหัสผ่าน</label><input type="password" value="${f.pw}" oninput="S.signup.pw=this.value;render()"></div>
       <div class="field"><label>ยืนยันรหัสผ่าน</label><input type="password" class="${pwMismatch?'err':''}" value="${f.pw2}" oninput="S.signup.pw2=this.value;S.signup.touched=true;render()">${pwMismatch?'<span class="field-err">รหัสผ่านไม่ตรงกัน</span>':''}</div>
     </div>
@@ -256,7 +255,7 @@ function screenSignup(){
 }
 function submitSignup(){
   S.accountStatus = 'pending';
-  S.pendingAccounts.push({ id: Date.now(), name: S.signup.name, email: S.signup.email, dept: S.signup.dept });
+  S.pendingAccounts.push({ id: Date.now(), name: S.signup.name, email: S.signup.email });
   document.getElementById('devStatus').textContent = 'รออนุมัติ';
   goto('pending');
 }
@@ -522,7 +521,6 @@ function screenAdminApprove(){
         <div class="card stack">
           <div class="row between"><span class="h2">${r.name}</span><span class="badge badge-draft">รออนุมัติ</span></div>
           <div class="caption text-secondary">${r.email}</div>
-          <div class="caption text-secondary">${r.dept}</div>
           <div class="row" style="gap:8px;"><button class="btn btn-primary btn-sm" style="background:var(--green);color:var(--on-green);" onclick="__decide(${r.id},'approved')">อนุมัติ</button><button class="btn btn-sm" style="border:1.5px solid var(--gap);color:var(--gap);" onclick="__decide(${r.id},'rejected')">ปฏิเสธ</button></div>
         </div>`).join('')}
     </div>

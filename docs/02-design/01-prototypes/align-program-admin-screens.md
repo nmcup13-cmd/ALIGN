@@ -144,7 +144,7 @@
 1. หัวข้อหน้า (`text.h1`) "อนุมัติบัญชีผู้ใช้" + badge เล็ก "Admin only" (พื้นหลัง `primary.green-tint`, ตัวอักษร `primary.green`) ย้ำ admin-only visibility ตาม AB-26 ให้เห็นชัดตั้งแต่หัวหน้า
 2. **Section "รออนุมัติ (N)"** (`text.h2` ตัวพิมพ์ใหญ่/label style): รายการการ์ดต่อบัญชีที่ยังเป็น `account_status = 'pending'` — แต่ละการ์ด (ใช้โครง Course/Row List Item ปรับสำหรับบัญชีผู้ใช้) แสดง:
    - ชื่อ-นามสกุล (`text.h3`) + **badge "รออนุมัติ"** (เส้นขอบ**ประ** สี `status.draft`, พื้นหลัง `status.draft-tint` — ตาม UX Rule 1 เพราะยังไม่ใช่ผลตัดสินใจสุดท้าย)
-   - อีเมลสถาบัน และสังกัด/ภาควิชา (`text.caption`, สี `text.secondary`)
+   - อีเมลสถาบัน (`text.caption`, สี `text.secondary`) — ไม่มีฟิลด์สังกัด/ภาควิชา เพราะระบบให้บริการเฉพาะสาขา New Media Communication สาขาเดียว
    - ปุ่มคู่ท้ายการ์ด: **"อนุมัติ"** (primary button, สี `primary.green`) และ **"ปฏิเสธ"** (outline button, เส้นขอบ+ตัวอักษรสี `status.gap`)
 3. **Section "ดำเนินการแล้ว"**: รายการบัญชีที่ `account_status` เปลี่ยนเป็น `approved` หรือ `rejected` แล้ว — การ์ดแบบ opacity ลดเล็กน้อย (สื่อว่าจบสถานะแล้ว ไม่ต้องทำอะไรต่อ) แสดง:
    - ชื่อ + **badge เส้นขอบ**ทึบ**เสมอ** (ไม่ใช่เส้นประ เพราะเป็นผลตัดสินใจสุดท้ายของผู้บริหารหลักสูตรแล้ว): "อนุมัติแล้ว" (สี `status.confirmed`) หรือ "ถูกปฏิเสธ" (สี `status.gap`)

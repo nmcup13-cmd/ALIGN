@@ -80,10 +80,6 @@ input.err{border-color:var(--gap);}
           <sc-if value="{{emailErr}}" hint-placeholder-val="{{false}}"><span class="field-err">กรุณากรอกอีเมลสถาบันให้ถูกต้อง</span></sc-if>
         </div>
         <div class="field">
-          <label>สังกัด/ภาควิชา</label>
-          <input type="text" value="{{dept}}" placeholder="เช่น ภาควิชาวิทยาการคอมพิวเตอร์" onInput="{{onDeptChange}}">
-        </div>
-        <div class="field">
           <label>รหัสผ่าน</label>
           <input type="password" value="{{pw}}" onInput="{{onPwChange}}">
         </div>
@@ -106,16 +102,16 @@ input.err{border-color:var(--gap);}
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { name: '', email: '', dept: '', pw: '', pw2: '', touched: false, submitted: false };
+    this.state = { name: '', email: '', pw: '', pw2: '', touched: false, submitted: false };
   }
   renderVals() {
     const s = this.state;
     const emailErr = s.touched && !/^\S+@\S+\.\S+$/.test(s.email);
     const pwMismatch = s.touched && s.pw2.length > 0 && s.pw !== s.pw2;
-    const filled = s.name.trim() && s.email.trim() && s.dept.trim() && s.pw.length >= 6 && s.pw2.length >= 6;
+    const filled = s.name.trim() && s.email.trim() && s.pw.length >= 6 && s.pw2.length >= 6;
     const disableSubmit = !(filled && !emailErr && !pwMismatch);
     return {
-      name: s.name, email: s.email, dept: s.dept, pw: s.pw, pw2: s.pw2,
+      name: s.name, email: s.email, pw: s.pw, pw2: s.pw2,
       submitted: s.submitted,
       emailErr, pwMismatch,
       emailCls: emailErr ? 'err' : '',
@@ -123,11 +119,10 @@ class Component extends DCLogic {
       disableSubmit,
       onNameChange: (e) => this.setState({ name: e.target.value }),
       onEmailChange: (e) => this.setState({ email: e.target.value, touched: true }),
-      onDeptChange: (e) => this.setState({ dept: e.target.value }),
       onPwChange: (e) => this.setState({ pw: e.target.value }),
       onPw2Change: (e) => this.setState({ pw2: e.target.value, touched: true }),
       onSubmit: () => { if (!disableSubmit) this.setState({ submitted: true }); },
-      onReset: () => this.setState({ name: '', email: '', dept: '', pw: '', pw2: '', touched: false, submitted: false })
+      onReset: () => this.setState({ name: '', email: '', pw: '', pw2: '', touched: false, submitted: false })
     };
   }
 }

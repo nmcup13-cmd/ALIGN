@@ -69,7 +69,6 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
             <span class="badge badge-draft">รออนุมัติ</span>
           </div>
           <div class="caption text-secondary">{{r.email}}</div>
-          <div class="caption text-secondary">{{r.dept}}</div>
           <div class="actions">
             <button class="m-btn m-btn-approve" onClick="{{r.approve}}">อนุมัติ</button>
             <button class="m-btn m-btn-reject" onClick="{{r.reject}}">ปฏิเสธ</button>
@@ -130,8 +129,8 @@ class Component extends DCLogic {
     super(props);
     this.state = {
       pending: [
-        { id: 1, name: 'อ.กมลชนก พรหมมา', email: 'kamonchanok.p@university.ac.th', dept: 'ภาควิชาวิทยาการคอมพิวเตอร์' },
-        { id: 2, name: 'อ.ธีรภัทร บุญเลิศ', email: 'teerapat.b@university.ac.th', dept: 'ภาควิชาเทคโนโลยีสารสนเทศ' }
+        { id: 1, name: 'อ.กมลชนก พรหมมา', email: 'kamonchanok.p@university.ac.th' },
+        { id: 2, name: 'อ.ธีรภัทร บุญเลิศ', email: 'teerapat.b@university.ac.th' }
       ],
       handled: [
         { id: 3, name: 'อ.ปวีณา ศรีสวัสดิ์', email: 'paveena.s@university.ac.th', status: 'approved', at: '18 ส.ค. 69' }

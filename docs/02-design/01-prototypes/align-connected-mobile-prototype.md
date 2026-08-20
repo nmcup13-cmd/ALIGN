@@ -20,7 +20,7 @@
 
 - ข้อมูลอยู่ใน memory ของหน้าเว็บเท่านั้น (ไม่มี backend จริง) — ปิด/เปิดหน้าใหม่แล้วข้อมูลรีเซ็ต
 - แถบ "สาธิต" สำหรับสลับบทบาทเป็นเครื่องมือทดสอบ ไม่ใช่ฟีเจอร์จริงของระบบ (ระบบจริงแต่ละบทบาทต้อง login คนละบัญชี)
-- ฟิลด์ฟอร์มสมัครสมาชิก (ชื่อ, อีเมล, สังกัด, รหัสผ่าน) เป็นข้อสมมติเดียวกับที่ระบุไว้ใน [[align-interactive-prototype|align-interactive-prototype]] — ยังไม่ยืนยัน
+- ฟิลด์ฟอร์มสมัครสมาชิก (ชื่อ, อีเมล, รหัสผ่าน) — **[ยืนยันแล้ว]** ไม่มีฟิลด์สังกัด/ภาควิชา เพราะระบบให้บริการเฉพาะสาขา New Media Communication สาขาเดียว
 
 ---
 ต่อยอด/เชื่อมโยง: [[align-app-screens|align-app-screens]] · [[align-program-admin-screens|align-program-admin-screens]] · [[align-interactive-prototype|align-interactive-prototype]] (ต้นแบบเชิงภาพแบบ canvas)
