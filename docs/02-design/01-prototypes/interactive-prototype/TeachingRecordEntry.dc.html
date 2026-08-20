@@ -1,0 +1,232 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-base:#F6F2EA; --bg-surface:#FDFBF7; --bg-sunken:#EFE9DD;
+  --border-default:#E2D9C8; --border-strong:#C9BBA0;
+  --text-primary:#2B2620; --text-secondary:#6B6255; --text-disabled:#B3AA9A;
+  --green:#5B6E4F; --green-dark:#46543D; --green-tint:#E8ECE2;
+  --draft:#B8863C; --draft-tint:#F3E6CE;
+  --gap:#A65D45; --gap-tint:#F5E3DC; --info:#6E7B8B;
+  --cur-2565:#A98F72; --cur-2565-tint:#F1E9DD;
+  --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;}
+body{background:var(--bg-base);color:var(--text-primary);font-family:'IBM Plex Sans Thai Looped','Sarabun',system-ui,sans-serif;font-size:16px;line-height:24px;}
+a{color:var(--green);text-decoration:none;} a:hover{color:var(--green-dark);}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.h1{font-size:24px;line-height:32px;font-weight:600;margin:0;}
+.h2{font-size:20px;line-height:28px;font-weight:500;margin:0;}
+.h3{font-size:16px;line-height:24px;font-weight:500;margin:0;}
+.body-sm{font-size:14px;line-height:20px;}
+.caption{font-size:12px;line-height:16px;}
+.text-secondary{color:var(--text-secondary);}
+.text-disabled{color:var(--text-disabled);}
+.app-header{height:64px;background:var(--bg-surface);border-bottom:1px solid var(--border-default);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;}
+.wordmark{font-size:20px;line-height:28px;font-weight:600;color:var(--green);}
+.role-badge{font-size:12px;line-height:16px;padding:2px 8px;border:1px solid var(--border-default);border-radius:4px;color:var(--text-secondary);}
+.side-nav{width:216px;background:var(--bg-base);border-right:1px solid var(--border-default);flex-shrink:0;padding:16px 8px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:4px;font-size:14px;line-height:20px;color:var(--text-primary);}
+.nav-item.active{background:var(--green-tint);color:var(--green);font-weight:500;}
+.nav-item svg{flex-shrink:0;}
+.content{flex:1;padding:32px;overflow:auto;}
+.card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;padding:24px;}
+.btn{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;border-radius:4px;padding:8px 16px;line-height:20px;}
+.btn-primary{background:var(--green);color:var(--bg-surface);}
+.btn-primary:hover{background:var(--green-dark);}
+.btn-primary.is-disabled{background:var(--text-disabled);}
+.btn-ghost{background:transparent;color:var(--text-primary);border:1px solid var(--border-default);}
+.btn-ghost:hover{border-color:var(--border-strong);}
+.btn-sm{padding:5px 10px;font-size:12px;line-height:16px;}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;}
+.chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;}
+.badge-confirmed{border:1.5px solid var(--green);color:var(--green);background:var(--bg-surface);}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:12px;line-height:16px;color:var(--text-secondary);}
+.field input[type=text], .field input[type=date], .field select{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:4px;padding:9px 10px;font-size:14px;color:var(--text-primary);}
+.field input:focus, .field select:focus{outline:none;border-color:var(--border-strong);}
+.evidence-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border-default);border-radius:4px;padding:8px 12px;background:var(--bg-surface);}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;height:100%;min-height:780px;">
+  <div class="app-header">
+    <div class="wordmark">ALIGN</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="body-sm">อ.ธนกร ใจดี</span>
+      <span class="role-badge">Instructor</span>
+    </div>
+  </div>
+  <div style="display:flex;flex:1;min-height:0;">
+    <div class="side-nav">
+      <div class="nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg>
+        <span>หน้าแรก</span>
+      </div>
+      <div class="nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H18a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6.5A1.5 1.5 0 0 1 5 18.5z"/><path d="M5 17.5C5 16.7 5.7 16 6.5 16H19"/></svg>
+        <span>รายวิชาของฉัน</span>
+      </div>
+      <div class="nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+        <span>แผนที่ CLO × สัปดาห์</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div style="display:flex;flex-direction:column;gap:24px;max-width:720px;">
+
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="h1">บันทึกการสอน</div>
+          <span class="chip chip-2570">2570</span>
+        </div>
+        <div class="body-sm text-secondary">ระบบฐานข้อมูล</div>
+        <div class="caption text-secondary">Map: AB-05, AB-06, AB-07</div>
+
+        <sc-if value="{{formVisible}}" hint-placeholder-val="{{true}}">
+          <div class="card" style="display:flex;flex-direction:column;gap:20px;">
+
+            <div style="display:flex;gap:16px;">
+              <div class="field">
+                <label>สัปดาห์ที่สอน</label>
+                <select value="{{week}}" onChange="{{onWeekChange}}">
+                  <sc-for list="{{weekOptions}}" as="w" hint-placeholder-count="16">
+                    <option value="{{w}}">สัปดาห์ที่ {{w}}</option>
+                  </sc-for>
+                </select>
+              </div>
+              <div class="field">
+                <label>วันที่สอนจริง</label>
+                <input type="date" value="{{taughtOn}}" max="{{today}}" onInput="{{onDateInput}}">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>หัวข้อการสอน</label>
+              <input type="text" placeholder="เช่น Normalization และ ER Diagram" value="{{topic}}" onInput="{{onTopicInput}}">
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div class="h3">หลักฐาน/ชิ้นงานแนบ</div>
+              <sc-if value="{{hasEvidence}}" hint-placeholder-val="{{true}}">
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <sc-for list="{{evidence}}" as="ev" hint-placeholder-count="2">
+                    <div class="evidence-row">
+                      <div style="display:flex;align-items:center;gap:8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15V6a3 3 0 0 1 6 0v9a5 5 0 0 1-10 0V8"/></svg>
+                        <span class="body-sm">{{ev.name}}</span>
+                        <sc-if value="{{ev.restricted}}" hint-placeholder-val="{{false}}">
+                          <span class="badge" style="border:1px solid var(--border-default);color:var(--text-secondary);">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                            จำกัดสิทธิ์ (PDPA)
+                          </span>
+                        </sc-if>
+                      </div>
+                      <button class="btn-ghost btn btn-sm" onClick="{{ev.remove}}">ลบ</button>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{noEvidence}}" hint-placeholder-val="{{false}}">
+                <div class="caption text-secondary">ยังไม่มีไฟล์แนบ — ลากไฟล์มาวางหรือเลือกไฟล์</div>
+              </sc-if>
+              <div style="display:flex;gap:10px;">
+                <input type="text" placeholder="ชื่อไฟล์ เช่น รูปกระดานคำสั่ง SQL.jpg" value="{{newFile}}" onInput="{{onFileInput}}" style="flex:1;">
+                <button class="btn btn-ghost btn-sm" onClick="{{onAttach}}">แนบไฟล์</button>
+              </div>
+            </div>
+
+            <button class="btn btn-primary {{submitDisabledClass}}" onClick="{{onSubmit}}">บันทึกและให้ AI ประมวลผล</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{submitted}}" hint-placeholder-val="{{false}}">
+          <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:8px;color:var(--green);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+              <span class="h3" style="color:var(--green);">บันทึกเรียบร้อย</span>
+            </div>
+            <div class="body-sm text-secondary">กำลังส่งให้ AI ประมวลผล — ผลจับคู่จะเป็นค่า Draft จนกว่าจะได้รับการยืนยัน (ดู artboard "ตรวจสอบผล AI" ถัดไปบนแคนวาสนี้)</div>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const today = new Date().toISOString().slice(0, 10);
+    this.state = {
+      week: 6,
+      taughtOn: today,
+      today,
+      topic: '',
+      newFile: '',
+      submitted: false,
+      evidence: [
+        { name: 'สไลด์บรรยาย Normalization.pdf', restricted: false },
+        { name: 'งานนักศึกษา - แบบฝึกหัด ER.pdf', restricted: true }
+      ]
+    };
+  }
+  renderVals() {
+    const canSubmit = this.state.topic.trim().length > 0 && this.state.evidence.length > 0;
+    const evidence = this.state.evidence.map((ev, i) => ({
+      name: ev.name,
+      restricted: ev.restricted,
+      remove: () => {
+        const next = this.state.evidence.slice();
+        next.splice(i, 1);
+        this.setState({ evidence: next });
+      }
+    }));
+    return {
+      week: this.state.week,
+      weekOptions: Array.from({ length: 16 }, (_, i) => i + 1),
+      taughtOn: this.state.taughtOn,
+      today: this.state.today,
+      topic: this.state.topic,
+      newFile: this.state.newFile,
+      evidence,
+      hasEvidence: this.state.evidence.length > 0,
+      noEvidence: this.state.evidence.length === 0,
+      submitted: this.state.submitted,
+      formVisible: !this.state.submitted,
+      submitDisabledClass: canSubmit ? '' : 'is-disabled',
+      onWeekChange: (e) => this.setState({ week: e.target.value }),
+      onDateInput: (e) => this.setState({ taughtOn: e.target.value }),
+      onTopicInput: (e) => this.setState({ topic: e.target.value }),
+      onFileInput: (e) => this.setState({ newFile: e.target.value }),
+      onAttach: () => {
+        const name = this.state.newFile.trim();
+        if (!name) return;
+        this.setState({ evidence: [...this.state.evidence, { name, restricted: false }], newFile: '' });
+      },
+      onSubmit: () => {
+        if (!canSubmit) return;
+        this.setState({ submitted: true });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

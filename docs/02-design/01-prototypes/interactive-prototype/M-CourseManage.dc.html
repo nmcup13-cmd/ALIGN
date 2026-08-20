@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-base:#F6F2EA; --bg-surface:#FDFBF7; --bg-sunken:#EFE9DD;
+  --border-default:#E2D9C8; --border-strong:#C9BBA0;
+  --text-primary:#2B2620; --text-secondary:#6B6255; --text-disabled:#B3AA9A;
+  --green:#5B6E4F; --green-dark:#46543D; --green-tint:#E8ECE2;
+  --gap:#A65D45; --gap-tint:#F5E3DC;
+  --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
+}
+*{box-sizing:border-box;} html,body{margin:0;}
+body{background:var(--bg-sunken);color:var(--text-primary);font-family:'IBM Plex Sans Thai Looped','Sarabun',system-ui,sans-serif;font-size:15px;line-height:22px;display:flex;justify-content:center;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input{font-family:inherit;font-size:14px;color:var(--text-primary);}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.m-shell{width:375px;min-height:812px;background:var(--bg-base);display:flex;flex-direction:column;}
+.m-header{height:52px;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 16px;background:var(--bg-surface);border-bottom:1px solid var(--border-default);}
+.back{display:flex;align-items:center;justify-content:center;width:32px;height:32px;}
+.m-content{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;}
+.m-tabbar{flex-shrink:0;min-height:60px;background:var(--bg-surface);border-top:1px solid var(--border-default);display:flex;}
+.m-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10.5px;color:var(--text-secondary);min-height:44px;}
+.m-tab.active{color:var(--green);}
+.m-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;padding:16px;}
+.h1{font-size:19px;line-height:25px;font-weight:600;margin:0;}
+.body-sm{font-size:13px;line-height:18px;}
+.caption{font-size:11px;line-height:15px;}
+.text-secondary{color:var(--text-secondary);}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;line-height:15px;padding:2px 7px;border-radius:4px;background:var(--cur-2570-tint);color:var(--cur-2570);}
+.tabrow{display:flex;background:var(--bg-sunken);border-radius:8px;padding:3px;gap:3px;}
+.tabbtn{flex:1;padding:9px;border-radius:6px;font-size:13px;color:var(--text-secondary);min-height:40px;}
+.tabbtn.active{background:var(--bg-surface);color:var(--text-primary);font-weight:500;}
+.m-btn{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:500;border-radius:4px;padding:10px 14px;min-height:44px;}
+.m-btn-primary{background:var(--green);color:var(--bg-surface);}
+.m-btn-ghost{background:transparent;color:var(--text-primary);border:1px solid var(--border-default);}
+.chip-toggle{border:1px solid var(--border-default);background:var(--bg-surface);font-size:12px;padding:6px 10px;border-radius:16px;min-height:32px;}
+.chip-toggle.on{background:var(--cur-2570-tint);color:var(--cur-2570);border-color:var(--cur-2570);}
+.field input[type=text]{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:4px;padding:11px 10px;font-size:14px;width:100%;min-height:44px;}
+.syl-card{border:1px solid var(--border-default);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;background:var(--bg-surface);}
+.syl-card input{background:var(--bg-sunken);border:1px solid var(--border-default);border-radius:4px;padding:8px;font-size:13px;width:100%;}
+</style>
+</helmet>
+
+<div class="m-shell">
+  <div class="m-header">
+    <div class="wordmark-sm" style="font-weight:600;color:var(--green);">ALIGN</div>
+    <div class="h1" style="flex:1;">จัดการรายวิชา</div>
+    <span class="chip">2570</span>
+  </div>
+
+  <div class="m-content">
+    <div class="caption text-secondary">ระบบฐานข้อมูล · Map: AB-02, AB-03, AB-19</div>
+
+    <div class="tabrow">
+      <button class="tabbtn {{tabCloClass}}" onClick="{{onTabClo}}">CLO &amp; PLO</button>
+      <button class="tabbtn {{tabSylClass}}" onClick="{{onTabSyl}}">Syllabus</button>
+    </div>
+
+    <sc-if value="{{showClo}}" hint-placeholder-val="{{true}}">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <sc-if value="{{showGapBanner}}" hint-placeholder-val="{{false}}">
+          <div class="m-card" style="border-color:var(--gap);background:var(--gap-tint);">
+            <span class="body-sm">ยังไม่มี CLO ที่ผูกกับ PLO — ต้องผูกอย่างน้อย 1 คู่ก่อนจึงบันทึกการสอนได้</span>
+          </div>
+        </sc-if>
+
+        <sc-for list="{{cloList}}" as="clo" hint-placeholder-count="3">
+          <div class="m-card" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="mono body-sm">{{clo.code}}</span>
+              <span class="body-sm">{{clo.desc}}</span>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <sc-for list="{{clo.ploChoices}}" as="p" hint-placeholder-count="4">
+                <button class="chip-toggle {{p.onClass}}" onClick="{{p.toggle}}">{{p.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+
+        <div class="field" style="display:flex;flex-direction:column;gap:8px;">
+          <input type="text" placeholder="คำอธิบาย CLO ใหม่" value="{{newClo}}" onInput="{{onNewCloInput}}">
+          <button class="m-btn m-btn-primary" onClick="{{onAddClo}}">เพิ่ม CLO</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{showSyl}}" hint-placeholder-val="{{false}}">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <sc-for list="{{sylRows}}" as="s" hint-placeholder-count="4">
+          <div class="syl-card">
+            <div style="display:flex;gap:8px;">
+              <input class="mono" style="width:60px;" type="text" value="{{s.week}}" onInput="{{s.onWeekInput}}">
+              <input style="flex:1;" type="text" value="{{s.topic}}" onInput="{{s.onTopicInput}}">
+            </div>
+            <input type="text" value="{{s.detail}}" onInput="{{s.onDetailInput}}">
+            <button class="m-btn m-btn-ghost" style="align-self:flex-end;padding:6px 10px;min-height:32px;font-size:12px;" onClick="{{s.remove}}">ลบ</button>
+          </div>
+        </sc-for>
+
+        <div class="field" style="display:flex;flex-direction:column;gap:8px;">
+          <input type="text" style="width:60px;" placeholder="สัปดาห์" value="{{newWeek}}" onInput="{{onNewWeekInput}}">
+          <input type="text" placeholder="หัวข้อ" value="{{newTopic}}" onInput="{{onNewTopicInput}}">
+          <input type="text" placeholder="รายละเอียด" value="{{newDetail}}" onInput="{{onNewDetailInput}}">
+          <button class="m-btn m-btn-primary" onClick="{{onAddSyl}}">เพิ่มหัวข้อ</button>
+        </div>
+        <div class="caption text-secondary">แก้ไขล่าสุดโดย อ.ธนกร ใจดี เมื่อ {{today}}</div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div class="m-tabbar">
+    <div class="m-tab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg>
+      <span>หน้าแรก</span>
+    </div>
+    <div class="m-tab active">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H18a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6.5A1.5 1.5 0 0 1 5 18.5z"/><path d="M5 17.5C5 16.7 5.7 16 6.5 16H19"/></svg>
+      <span>รายวิชา</span>
+    </div>
+    <div class="m-tab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+      <span>CLO×สัปดาห์</span>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tab: 'clo',
+      newClo: '', newWeek: '', newTopic: '', newDetail: '',
+      cloItems: [
+        { code: 'CLO1', desc: 'สามารถออกแบบ ER Diagram ได้ถูกต้อง', plos: ['PLO2', 'PLO4'] },
+        { code: 'CLO2', desc: 'สามารถเขียนคำสั่ง SQL ระดับกลางได้', plos: ['PLO3'] },
+        { code: 'CLO4', desc: 'สามารถออกแบบ normalization ได้', plos: ['PLO2'] }
+      ],
+      sylRows: [
+        { week: 1, topic: 'Introduction to Databases', detail: 'ความหมาย/องค์ประกอบ' },
+        { week: 4, topic: 'ER Modeling', detail: 'การออกแบบ ER' },
+        { week: 8, topic: 'Normalization', detail: '1NF–BCNF' },
+        { week: 11, topic: 'Transactions', detail: 'ACID, Concurrency' }
+      ]
+    };
+  }
+  renderVals() {
+    const today = new Date().toLocaleDateString('th-TH');
+    const cloList = this.state.cloItems.map((clo, ci) => ({
+      code: clo.code,
+      desc: clo.desc,
+      ploChoices: ['PLO1', 'PLO2', 'PLO3', 'PLO4'].map((p) => {
+        const on = clo.plos.includes(p);
+        return {
+          label: p,
+          onClass: on ? 'on' : '',
+          toggle: () => {
+            const next = this.state.cloItems.slice();
+            const plos = next[ci].plos.includes(p) ? next[ci].plos.filter((x) => x !== p) : [...next[ci].plos, p];
+            next[ci] = { ...next[ci], plos };
+            this.setState({ cloItems: next });
+          }
+        };
+      })
+    }));
+    const anyBound = this.state.cloItems.some((c) => c.plos.length > 0);
+    const sylRows = this.state.sylRows.slice().sort((a, b) => a.week - b.week).map((s) => {
+      const i = this.state.sylRows.indexOf(s);
+      const patch = (field) => (e) => {
+        const next = this.state.sylRows.slice();
+        const value = field === 'week' ? (Number(e.target.value) || 0) : e.target.value;
+        next[i] = { ...next[i], [field]: value };
+        this.setState({ sylRows: next });
+      };
+      return {
+        week: s.week, topic: s.topic, detail: s.detail,
+        onWeekInput: patch('week'), onTopicInput: patch('topic'), onDetailInput: patch('detail'),
+        remove: () => {
+          const next = this.state.sylRows.slice();
+          next.splice(i, 1);
+          this.setState({ sylRows: next });
+        }
+      };
+    });
+    return {
+      tabCloClass: this.state.tab === 'clo' ? 'active' : '',
+      tabSylClass: this.state.tab === 'syl' ? 'active' : '',
+      showClo: this.state.tab === 'clo',
+      showSyl: this.state.tab === 'syl',
+      showGapBanner: !anyBound,
+      cloList, sylRows, today,
+      newClo: this.state.newClo, newWeek: this.state.newWeek, newTopic: this.state.newTopic, newDetail: this.state.newDetail,
+      onTabClo: () => this.setState({ tab: 'clo' }),
+      onTabSyl: () => this.setState({ tab: 'syl' }),
+      onNewCloInput: (e) => this.setState({ newClo: e.target.value }),
+      onAddClo: () => {
+        const desc = this.state.newClo.trim();
+        if (!desc) return;
+        const maxNum = this.state.cloItems.reduce((max, c) => Math.max(max, Number(c.code.replace('CLO', '')) || 0), 0);
+        this.setState({ cloItems: [...this.state.cloItems, { code: 'CLO' + (maxNum + 1), desc, plos: [] }], newClo: '' });
+      },
+      onNewWeekInput: (e) => this.setState({ newWeek: e.target.value }),
+      onNewTopicInput: (e) => this.setState({ newTopic: e.target.value }),
+      onNewDetailInput: (e) => this.setState({ newDetail: e.target.value }),
+      onAddSyl: () => {
+        const topic = this.state.newTopic.trim();
+        const week = Number(this.state.newWeek) || 0;
+        if (!topic || !week) return;
+        this.setState({ sylRows: [...this.state.sylRows, { week, topic, detail: this.state.newDetail.trim() }], newWeek: '', newTopic: '', newDetail: '' });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

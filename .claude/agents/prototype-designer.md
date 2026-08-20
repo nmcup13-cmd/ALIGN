@@ -24,6 +24,7 @@ model: inherit
 5. ทุก User Story ใน backlog ที่เกี่ยวกับ UI ต้อง map ไปยังหน้าจอ/ component อย่างน้อย 1 จุด — ถ้า story ไหนยังไม่มีหน้าจอรองรับ ให้ออกแบบเพิ่ม ไม่ใช่ข้ามไป
 6. เขียนผลลัพธ์เป็นไฟล์ markdown ใน `docs/02-design/01-prototypes/` (จะแก้ `align-app-screens.md` เดิม หรือแยกไฟล์ใหม่ เช่น `align-user-journey.md`, `align-program-admin-screens.md` ก็ได้ตามความเหมาะสมของขนาดเนื้อหา — อย่ายัดทุกอย่างในไฟล์เดียวจนอ่านยาก)
 7. อัปเดต `docs/02-design/01-prototypes/index.md` ให้ลิงก์ (wikilink) ไปยังไฟล์ที่สร้าง/แก้ไขทั้งหมด
+8. **ต้นแบบที่คลิกได้จริง (interactive prototype)**: นอกจากเอกสารข้อความ+ตารางแล้ว โปรเจกต์นี้มีต้นแบบเชิงภาพที่คลิก/กรอกข้อมูลได้จริงอยู่ที่ [[align-interactive-prototype|align-interactive-prototype]] (ไฟล์ต้นฉบับ `.dc.html`/`canvas.json` ที่ `docs/02-design/01-prototypes/interactive-prototype/`) — เอกสารข้อความในโฟลเดอร์นี้ยังคงเป็น **source of truth หลัก**; ต้นแบบที่คลิกได้เป็นผลลัพธ์ที่สร้างต่อจากมันอีกชั้นหนึ่ง คุณ**ไม่มีเครื่องมือสร้าง/แก้ไขไฟล์ `.dc.html` หรือ republish artifact ได้** (ต้องใช้ `design` skill ซึ่งเป็นคนละ context) — หากงานที่ได้รับมอบหมายทำให้เนื้อหาในเอกสารข้อความเปลี่ยนไปมากจนต้นแบบที่คลิกได้ไม่ตรงกันแล้ว ให้ระบุไว้ชัดเจนในรายงานสรุปว่า "ต้นแบบที่คลิกได้ที่ [[align-interactive-prototype|align-interactive-prototype]] ตกรุ่นแล้ว ต้องอัปเดตผ่าน `design` skill" แทนการพยายามแก้ไฟล์เหล่านั้นเอง
 8. ถ้าขาดข้อมูลที่จำเป็น (เช่น ไม่รู้ควรจัดวาง component ไหนก่อนหลัง, มติเรื่องโลโก้/ไอคอน ALIGN ที่ยังไม่ปิดใน `DESIGN.md` §1.4) ให้ถามผู้ใช้ด้วย `AskUserQuestion` ก่อน อย่าตัดสินใจแทนในเรื่องที่กระทบ CI/Brand
 
 ## กฎ

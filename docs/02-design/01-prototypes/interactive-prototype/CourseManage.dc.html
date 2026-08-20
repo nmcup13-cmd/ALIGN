@@ -1,0 +1,298 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-base:#F6F2EA; --bg-surface:#FDFBF7; --bg-sunken:#EFE9DD;
+  --border-default:#E2D9C8; --border-strong:#C9BBA0;
+  --text-primary:#2B2620; --text-secondary:#6B6255; --text-disabled:#B3AA9A;
+  --green:#5B6E4F; --green-dark:#46543D; --green-tint:#E8ECE2;
+  --draft:#B8863C; --draft-tint:#F3E6CE;
+  --gap:#A65D45; --gap-tint:#F5E3DC; --info:#6E7B8B;
+  --cur-2565:#A98F72; --cur-2565-tint:#F1E9DD;
+  --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
+}
+*{box-sizing:border-box;} html,body{margin:0;}
+body{background:var(--bg-base);color:var(--text-primary);font-family:'IBM Plex Sans Thai Looped','Sarabun',system-ui,sans-serif;font-size:16px;line-height:24px;}
+a{color:var(--green);text-decoration:none;} a:hover{color:var(--green-dark);}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.h1{font-size:24px;line-height:32px;font-weight:600;margin:0;}
+.h2{font-size:20px;line-height:28px;font-weight:500;margin:0;}
+.h3{font-size:16px;line-height:24px;font-weight:500;margin:0;}
+.body-sm{font-size:14px;line-height:20px;}
+.caption{font-size:12px;line-height:16px;}
+.text-secondary{color:var(--text-secondary);}
+.text-disabled{color:var(--text-disabled);}
+.app-header{height:64px;background:var(--bg-surface);border-bottom:1px solid var(--border-default);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;}
+.wordmark{font-size:20px;line-height:28px;font-weight:600;color:var(--green);}
+.role-badge{font-size:12px;line-height:16px;padding:2px 8px;border:1px solid var(--border-default);border-radius:4px;color:var(--text-secondary);}
+.side-nav{width:216px;background:var(--bg-base);border-right:1px solid var(--border-default);flex-shrink:0;padding:16px 8px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:4px;font-size:14px;line-height:20px;color:var(--text-primary);}
+.nav-item.active{background:var(--green-tint);color:var(--green);font-weight:500;}
+.nav-item svg{flex-shrink:0;}
+.content{flex:1;padding:32px;overflow:auto;}
+.card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;padding:24px;}
+.btn{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;border-radius:4px;padding:8px 16px;line-height:20px;}
+.btn-primary{background:var(--green);color:var(--bg-surface);}
+.btn-primary:hover{background:var(--green-dark);}
+.btn-ghost{background:transparent;color:var(--text-primary);border:1px solid var(--border-default);}
+.btn-ghost:hover{border-color:var(--border-strong);}
+.btn-sm{padding:5px 10px;font-size:12px;line-height:16px;}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;}
+.chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
+.chip-toggle{border:1px solid var(--border-default);background:var(--bg-surface);}
+.chip-toggle.on{background:var(--cur-2570-tint);color:var(--cur-2570);border-color:var(--cur-2570);}
+.tab{padding:9px 16px;border-radius:4px 4px 0 0;font-size:14px;color:var(--text-secondary);border-bottom:2px solid transparent;}
+.tab.active{color:var(--text-primary);font-weight:500;border-bottom:2px solid var(--green);}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:12px;line-height:16px;color:var(--text-secondary);}
+.field input[type=text]{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:4px;padding:9px 10px;font-size:14px;color:var(--text-primary);}
+.field input:focus{outline:none;border-color:var(--border-strong);}
+.clo-card{border:1px solid var(--border-default);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--bg-surface);}
+.syl-row{display:grid;grid-template-columns:70px 1fr 1fr 56px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border-default);}
+.syl-input{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:4px;padding:6px 8px;font-size:13px;}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;height:100%;min-height:800px;">
+  <div class="app-header">
+    <div class="wordmark">ALIGN</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="body-sm">อ.ธนกร ใจดี</span>
+      <span class="role-badge">Instructor</span>
+    </div>
+  </div>
+  <div style="display:flex;flex:1;min-height:0;">
+    <div class="side-nav">
+      <div class="nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg>
+        <span>หน้าแรก</span>
+      </div>
+      <div class="nav-item active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H18a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6.5A1.5 1.5 0 0 1 5 18.5z"/><path d="M5 17.5C5 16.7 5.7 16 6.5 16H19"/></svg>
+        <span>รายวิชาของฉัน</span>
+      </div>
+      <div class="nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+        <span>แผนที่ CLO × สัปดาห์</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div style="display:flex;flex-direction:column;gap:20px;max-width:820px;">
+
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="h1">จัดการรายวิชา</div>
+          <span class="chip chip-2570">2570</span>
+        </div>
+        <div class="body-sm text-secondary">ระบบฐานข้อมูล</div>
+        <div class="caption text-secondary">Map: AB-02, AB-03 (แท็บ CLO &amp; PLO) · AB-19 (แท็บ Course Syllabus)</div>
+
+        <div style="display:flex;gap:4px;border-bottom:1px solid var(--border-default);">
+          <button class="tab {{tabCloClass}}" onClick="{{onTabClo}}">CLO &amp; PLO</button>
+          <button class="tab {{tabSylClass}}" onClick="{{onTabSyl}}">Course Syllabus</button>
+        </div>
+
+        <sc-if value="{{showClo}}" hint-placeholder-val="{{true}}">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <sc-if value="{{showGapBanner}}" hint-placeholder-val="{{false}}">
+              <div style="border:1px solid var(--gap);background:var(--gap-tint);color:var(--gap);border-radius:8px;padding:12px 16px;font-size:14px;">
+                ยังไม่มี CLO ที่ผูกกับ PLO — ต้องผูกอย่างน้อย 1 คู่ก่อนจึงบันทึกการสอนได้
+              </div>
+            </sc-if>
+
+            <sc-for list="{{cloList}}" as="clo" hint-placeholder-count="3">
+              <div class="clo-card">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span class="mono body-sm">{{clo.code}}</span>
+                  <span class="body-sm">{{clo.desc}}</span>
+                </div>
+                <div class="caption text-secondary">เลือก PLO ที่ผูก (เฉพาะกลุ่มหลักสูตร 2570)</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <sc-for list="{{clo.ploChoices}}" as="p" hint-placeholder-count="4">
+                    <button class="chip chip-toggle {{p.onClass}}" onClick="{{p.toggle}}">{{p.label}}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+
+            <div style="display:flex;gap:10px;align-items:flex-end;">
+              <div class="field" style="flex:1;">
+                <label>เพิ่ม CLO ใหม่</label>
+                <input type="text" placeholder="คำอธิบาย CLO" value="{{newClo}}" onInput="{{onNewCloInput}}">
+              </div>
+              <button class="btn btn-primary" onClick="{{onAddClo}}">เพิ่ม CLO</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{showSyl}}" hint-placeholder-val="{{false}}">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="card" style="display:flex;flex-direction:column;gap:12px;">
+              <div class="h3">เพิ่มหัวข้อ syllabus</div>
+              <div style="display:flex;gap:10px;">
+                <input class="syl-input" type="text" style="width:70px;" placeholder="สัปดาห์" value="{{newWeek}}" onInput="{{onNewWeekInput}}">
+                <input class="syl-input" type="text" style="flex:1;" placeholder="หัวข้อ" value="{{newTopic}}" onInput="{{onNewTopicInput}}">
+                <input class="syl-input" type="text" style="flex:1;" placeholder="รายละเอียด (ย่อ)" value="{{newDetail}}" onInput="{{onNewDetailInput}}">
+                <button class="btn btn-ghost btn-sm" onClick="{{onAddSyl}}">เพิ่มหัวข้อ</button>
+              </div>
+              <div class="caption text-secondary">หรือ</div>
+              <div style="display:flex;gap:10px;">
+                <input class="syl-input" type="text" style="flex:1;" placeholder="ชื่อไฟล์ syllabus เช่น syllabus_db2570.pdf" value="{{uploadName}}" onInput="{{onUploadInput}}">
+                <button class="btn btn-ghost btn-sm" onClick="{{onUpload}}">อัปโหลดไฟล์</button>
+              </div>
+            </div>
+
+            <div class="card" style="display:flex;flex-direction:column;gap:2px;">
+              <div class="syl-row" style="font-weight:500;color:var(--text-secondary);font-size:12px;border-bottom:1px solid var(--border-strong);">
+                <span>สัปดาห์</span><span>หัวข้อ</span><span>รายละเอียด</span><span></span>
+              </div>
+              <sc-for list="{{sylRows}}" as="s" hint-placeholder-count="4">
+                <div class="syl-row">
+                  <input class="syl-input mono" type="text" value="{{s.week}}" onInput="{{s.onWeekInput}}">
+                  <input class="syl-input" type="text" value="{{s.topic}}" onInput="{{s.onTopicInput}}">
+                  <input class="syl-input" type="text" value="{{s.detail}}" onInput="{{s.onDetailInput}}">
+                  <button class="btn btn-ghost btn-sm" onClick="{{s.remove}}">ลบ</button>
+                </div>
+              </sc-for>
+            </div>
+            <div class="caption text-secondary">แก้ไขล่าสุดโดย อ.ธนกร ใจดี เมื่อ {{today}}</div>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tab: 'clo',
+      newClo: '',
+      newWeek: '',
+      newTopic: '',
+      newDetail: '',
+      uploadName: '',
+      cloItems: [
+        { code: 'CLO1', desc: 'สามารถออกแบบ ER Diagram ได้ถูกต้อง', plos: ['PLO2', 'PLO4'] },
+        { code: 'CLO2', desc: 'สามารถเขียนคำสั่ง SQL ระดับกลางได้', plos: ['PLO3'] },
+        { code: 'CLO4', desc: 'สามารถออกแบบ normalization ได้', plos: ['PLO2'] }
+      ],
+      sylRows: [
+        { week: 1, topic: 'Introduction to Databases', detail: 'ความหมาย/องค์ประกอบระบบฐานข้อมูล' },
+        { week: 4, topic: 'ER Modeling', detail: 'การออกแบบ Entity-Relationship' },
+        { week: 8, topic: 'Normalization', detail: '1NF–BCNF' },
+        { week: 11, topic: 'Transactions', detail: 'ACID, Concurrency Control' }
+      ]
+    };
+  }
+  renderVals() {
+    const today = new Date().toLocaleDateString('th-TH');
+    const cloList = this.state.cloItems.map((clo, ci) => ({
+      code: clo.code,
+      desc: clo.desc,
+      ploChoices: ['PLO1', 'PLO2', 'PLO3', 'PLO4'].map((p) => {
+        const on = clo.plos.includes(p);
+        return {
+          label: p,
+          onClass: on ? 'on' : '',
+          toggle: () => {
+            const next = this.state.cloItems.slice();
+            const plos = next[ci].plos.includes(p) ? next[ci].plos.filter((x) => x !== p) : [...next[ci].plos, p];
+            next[ci] = { ...next[ci], plos };
+            this.setState({ cloItems: next });
+          }
+        };
+      })
+    }));
+    const anyBound = this.state.cloItems.some((c) => c.plos.length > 0);
+    const sylRows = this.state.sylRows
+      .slice()
+      .sort((a, b) => a.week - b.week)
+      .map((s) => {
+        const i = this.state.sylRows.indexOf(s);
+        const patch = (field) => (e) => {
+          const next = this.state.sylRows.slice();
+          const value = field === 'week' ? (Number(e.target.value) || 0) : e.target.value;
+          next[i] = { ...next[i], [field]: value };
+          this.setState({ sylRows: next });
+        };
+        return {
+          week: s.week,
+          topic: s.topic,
+          detail: s.detail,
+          onWeekInput: patch('week'),
+          onTopicInput: patch('topic'),
+          onDetailInput: patch('detail'),
+          remove: () => {
+            const next = this.state.sylRows.slice();
+            next.splice(i, 1);
+            this.setState({ sylRows: next });
+          }
+        };
+      });
+    return {
+      tabCloClass: this.state.tab === 'clo' ? 'active' : '',
+      tabSylClass: this.state.tab === 'syl' ? 'active' : '',
+      showClo: this.state.tab === 'clo',
+      showSyl: this.state.tab === 'syl',
+      showGapBanner: !anyBound,
+      cloList,
+      newClo: this.state.newClo,
+      newWeek: this.state.newWeek,
+      newTopic: this.state.newTopic,
+      newDetail: this.state.newDetail,
+      uploadName: this.state.uploadName,
+      sylRows,
+      today,
+      onTabClo: () => this.setState({ tab: 'clo' }),
+      onTabSyl: () => this.setState({ tab: 'syl' }),
+      onNewCloInput: (e) => this.setState({ newClo: e.target.value }),
+      onAddClo: () => {
+        const desc = this.state.newClo.trim();
+        if (!desc) return;
+        const maxNum = this.state.cloItems.reduce((max, c) => Math.max(max, Number(c.code.replace('CLO', '')) || 0), 0);
+        const code = 'CLO' + (maxNum + 1);
+        this.setState({ cloItems: [...this.state.cloItems, { code, desc, plos: [] }], newClo: '' });
+      },
+      onNewWeekInput: (e) => this.setState({ newWeek: e.target.value }),
+      onNewTopicInput: (e) => this.setState({ newTopic: e.target.value }),
+      onNewDetailInput: (e) => this.setState({ newDetail: e.target.value }),
+      onAddSyl: () => {
+        const topic = this.state.newTopic.trim();
+        const week = Number(this.state.newWeek) || 0;
+        if (!topic || !week) return;
+        this.setState({
+          sylRows: [...this.state.sylRows, { week, topic, detail: this.state.newDetail.trim() }],
+          newWeek: '', newTopic: '', newDetail: ''
+        });
+      },
+      onUploadInput: (e) => this.setState({ uploadName: e.target.value }),
+      onUpload: () => {
+        const name = this.state.uploadName.trim();
+        if (!name) return;
+        this.setState({
+          sylRows: [...this.state.sylRows, { week: 0, topic: '(จากไฟล์ ' + name + ')', detail: 'รอแยกหัวข้อจากไฟล์ที่อัปโหลด' }],
+          uploadName: ''
+        });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

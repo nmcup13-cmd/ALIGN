@@ -1,0 +1,234 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-base:#F6F2EA; --bg-surface:#FDFBF7; --bg-sunken:#EFE9DD;
+  --border-default:#E2D9C8; --border-strong:#C9BBA0;
+  --text-primary:#2B2620; --text-secondary:#6B6255; --text-disabled:#B3AA9A;
+  --green:#5B6E4F; --green-dark:#46543D;
+  --draft:#B8863C; --draft-tint:#F3E6CE;
+  --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
+}
+*{box-sizing:border-box;} html,body{margin:0;}
+body{background:var(--bg-sunken);color:var(--text-primary);font-family:'IBM Plex Sans Thai Looped','Sarabun',system-ui,sans-serif;font-size:15px;line-height:22px;display:flex;justify-content:center;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input{font-family:inherit;font-size:14px;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.m-shell{width:375px;min-height:812px;background:var(--bg-base);display:flex;flex-direction:column;}
+.m-header{height:52px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 16px;background:var(--bg-surface);border-bottom:1px solid var(--border-default);}
+.m-content{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;}
+.m-tabbar{flex-shrink:0;min-height:60px;background:var(--bg-surface);border-top:1px solid var(--border-default);display:flex;}
+.m-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10.5px;color:var(--text-secondary);min-height:44px;}
+.m-tab.active{color:var(--green);}
+.h1{font-size:19px;line-height:25px;font-weight:600;margin:0;}
+.h2{font-size:16px;line-height:22px;font-weight:500;margin:0;}
+.body-sm{font-size:13px;line-height:18px;}
+.caption{font-size:11px;line-height:15px;}
+.text-secondary{color:var(--text-secondary);}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;background:var(--cur-2570-tint);color:var(--cur-2570);}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;}
+.badge-confirmed{border:1.5px solid var(--green);color:var(--green);background:var(--bg-surface);}
+.badge-draft{border:1.5px dashed var(--draft);color:var(--draft);background:var(--draft-tint);}
+.badge-rejected{border:1px solid var(--border-default);color:var(--text-disabled);background:var(--bg-sunken);}
+.item-card{border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;}
+.item-draft{border:1.5px dashed var(--draft);background:var(--draft-tint);}
+.item-confirmed{border:1.5px solid var(--green);background:var(--bg-surface);}
+.item-rejected{border:1px solid var(--border-default);background:var(--bg-sunken);opacity:0.7;}
+.num-input{width:56px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:4px;padding:8px;font-size:14px;min-height:36px;}
+.topic-input{flex:1;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:4px;padding:8px 10px;font-size:13px;min-height:38px;}
+.m-btn{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;border-radius:4px;padding:8px 12px;min-height:38px;}
+.m-btn-primary{background:var(--green);color:var(--bg-surface);}
+.m-btn-ghost{background:transparent;color:var(--text-primary);border:1px solid var(--border-default);}
+</style>
+</helmet>
+
+<div class="m-shell">
+  <div class="m-header">
+    <div class="h1" style="flex:1;">ตรวจสอบผล AI</div>
+    <span class="chip">2570</span>
+  </div>
+
+  <div class="m-content">
+    <div class="caption text-secondary">ระบบฐานข้อมูล · Map: AB-08–AB-10, AB-20–22</div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="h2">ผลจับคู่ CLO/PLO</div>
+      </div>
+      <button class="m-btn m-btn-primary" onClick="{{confirmAllClo}}">ยืนยันผลจับคู่ทั้งหมด</button>
+
+      <sc-for list="{{cloItems}}" as="item" hint-placeholder-count="3">
+        <div class="item-card {{item.cardClass}}">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <span class="mono body-sm">{{item.code}}</span>
+            <span class="badge {{item.badgeClass}}">{{item.badgeLabel}}</span>
+          </div>
+          <div class="body-sm">{{item.desc}}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <sc-if value="{{item.editing}}" hint-placeholder-val="{{false}}">
+              <span class="caption text-secondary">match %</span>
+              <input class="num-input" type="number" min="0" max="100" value="{{item.pct}}" onInput="{{item.onPctInput}}">
+              <button class="m-btn m-btn-ghost" onClick="{{item.toggleEdit}}">เสร็จ</button>
+            </sc-if>
+            <sc-if value="{{item.notEditing}}" hint-placeholder-val="{{true}}">
+              <span class="body-sm mono">{{item.pctLabel}}</span>
+              <span class="caption text-secondary">{{item.plosLabel}}</span>
+            </sc-if>
+          </div>
+          <sc-if value="{{item.showActions}}" hint-placeholder-val="{{true}}">
+            <div style="display:flex;gap:8px;">
+              <button class="m-btn m-btn-ghost" onClick="{{item.toggleEdit}}">แก้ไข</button>
+              <button class="m-btn m-btn-ghost" onClick="{{item.reject}}">ปฏิเสธ</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{item.isRejected}}" hint-placeholder-val="{{false}}">
+            <button class="m-btn m-btn-ghost" style="align-self:flex-start;" onClick="{{item.restore}}">เลิกปฏิเสธ</button>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="h2">Gap เทียบ Syllabus</div>
+      <button class="m-btn m-btn-primary" onClick="{{confirmGap}}">ยืนยันผลวิเคราะห์ gap</button>
+      <div class="item-card {{gapCardClass}}">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="body-sm">หัวข้อที่ยังไม่มีบันทึกการสอน {{missingCount}} หัวข้อ</span>
+          <span class="badge {{gapBadgeClass}}">{{gapBadgeLabel}}</span>
+        </div>
+        <div class="caption text-secondary">หัวข้อที่ขาด</div>
+        <sc-for list="{{missingTopics}}" as="t" hint-placeholder-count="2">
+          <div style="display:flex;gap:6px;">
+            <input class="topic-input" type="text" value="{{t.text}}" onInput="{{t.onInput}}">
+            <button class="m-btn m-btn-ghost" onClick="{{t.remove}}">ลบ</button>
+          </div>
+        </sc-for>
+        <div class="caption text-secondary">หัวข้อที่สอนเพิ่มนอกแผน</div>
+        <sc-for list="{{extraTopics}}" as="t" hint-placeholder-count="1">
+          <div style="display:flex;gap:6px;">
+            <input class="topic-input" type="text" value="{{t.text}}" onInput="{{t.onInput}}">
+            <button class="m-btn m-btn-ghost" onClick="{{t.remove}}">ลบ</button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div class="m-tabbar">
+    <div class="m-tab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg>
+      <span>หน้าแรก</span>
+    </div>
+    <div class="m-tab active">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H18a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6.5A1.5 1.5 0 0 1 5 18.5z"/><path d="M5 17.5C5 16.7 5.7 16 6.5 16H19"/></svg>
+      <span>รายวิชา</span>
+    </div>
+    <div class="m-tab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+      <span>CLO×สัปดาห์</span>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      cloItems: [
+        { code: 'CLO1', desc: 'สามารถออกแบบ ER Diagram ได้ถูกต้อง', pct: 82, plos: 'PLO2 · PLO4 เชื่อมแล้ว', status: 'draft', editing: false },
+        { code: 'CLO2', desc: 'สามารถเขียนคำสั่ง SQL ระดับกลางได้', pct: 65, plos: 'PLO3 เชื่อมแล้ว', status: 'draft', editing: false },
+        { code: 'CLO4', desc: 'สามารถออกแบบ normalization ได้', pct: 30, plos: 'PLO2 เชื่อมแล้ว', status: 'draft', editing: false }
+      ],
+      gapStatus: 'draft',
+      missingTopics: ['Normalization ระดับ BCNF', 'Transaction และ Concurrency Control'],
+      extraTopics: ['Data Warehousing เบื้องต้น (นอกแผน)']
+    };
+  }
+  renderVals() {
+    const cloItems = this.state.cloItems.map((item, i) => {
+      const badgeClass = item.status === 'confirmed' ? 'badge-confirmed' : item.status === 'rejected' ? 'badge-rejected' : 'badge-draft';
+      const badgeLabel = item.status === 'confirmed' ? 'ยืนยันแล้ว' : item.status === 'rejected' ? 'ปฏิเสธแล้ว' : 'AI — ยังไม่ยืนยัน';
+      const cardClass = item.status === 'confirmed' ? 'item-confirmed' : item.status === 'rejected' ? 'item-rejected' : 'item-draft';
+      return {
+        code: item.code, desc: item.desc, pct: item.pct,
+        pctLabel: 'แมทช์ ' + item.pct + '%', plosLabel: item.plos,
+        editing: item.editing, notEditing: !item.editing,
+        showActions: item.status !== 'confirmed' && item.status !== 'rejected' && !item.editing,
+        isRejected: item.status === 'rejected',
+        badgeClass, badgeLabel, cardClass,
+        toggleEdit: () => {
+          const next = this.state.cloItems.slice();
+          next[i] = { ...next[i], editing: !next[i].editing, status: next[i].editing ? 'edited' : next[i].status };
+          this.setState({ cloItems: next });
+        },
+        onPctInput: (e) => {
+          const next = this.state.cloItems.slice();
+          next[i] = { ...next[i], pct: Number(e.target.value) };
+          this.setState({ cloItems: next });
+        },
+        reject: () => {
+          const next = this.state.cloItems.slice();
+          next[i] = { ...next[i], status: 'rejected', editing: false };
+          this.setState({ cloItems: next });
+        },
+        restore: () => {
+          const next = this.state.cloItems.slice();
+          next[i] = { ...next[i], status: 'draft' };
+          this.setState({ cloItems: next });
+        }
+      };
+    });
+    const missingTopics = this.state.missingTopics.map((text, i) => ({
+      text,
+      onInput: (e) => {
+        const next = this.state.missingTopics.slice();
+        next[i] = e.target.value;
+        this.setState({ missingTopics: next });
+      },
+      remove: () => {
+        const next = this.state.missingTopics.slice();
+        next.splice(i, 1);
+        this.setState({ missingTopics: next });
+      }
+    }));
+    const extraTopics = this.state.extraTopics.map((text, i) => ({
+      text,
+      onInput: (e) => {
+        const next = this.state.extraTopics.slice();
+        next[i] = e.target.value;
+        this.setState({ extraTopics: next });
+      },
+      remove: () => {
+        const next = this.state.extraTopics.slice();
+        next.splice(i, 1);
+        this.setState({ extraTopics: next });
+      }
+    }));
+    return {
+      cloItems, missingTopics, extraTopics,
+      missingCount: this.state.missingTopics.length,
+      gapCardClass: this.state.gapStatus === 'confirmed' ? 'item-confirmed' : 'item-draft',
+      gapBadgeClass: this.state.gapStatus === 'confirmed' ? 'badge-confirmed' : 'badge-draft',
+      gapBadgeLabel: this.state.gapStatus === 'confirmed' ? 'ยืนยันแล้ว' : 'AI — ยังไม่ยืนยัน',
+      confirmAllClo: () => {
+        const next = this.state.cloItems.map((it) => it.status === 'rejected' ? it : { ...it, status: 'confirmed', editing: false });
+        this.setState({ cloItems: next });
+      },
+      confirmGap: () => this.setState({ gapStatus: 'confirmed' })
+    };
+  }
+}
+</script>
+</body>
+</html>

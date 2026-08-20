@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-base:#F6F2EA; --bg-surface:#FDFBF7; --bg-sunken:#EFE9DD;
+  --border-default:#E2D9C8; --border-strong:#C9BBA0;
+  --text-primary:#2B2620; --text-secondary:#6B6255; --text-disabled:#B3AA9A;
+  --green:#5B6E4F; --green-dark:#46543D; --green-tint:#E8ECE2;
+  --draft:#B8863C; --draft-tint:#F3E6CE;
+  --gap:#A65D45; --gap-tint:#F5E3DC;
+  --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
+}
+*{box-sizing:border-box;} html,body{margin:0;}
+body{background:#00000055;color:var(--text-primary);font-family:'IBM Plex Sans Thai Looped','Sarabun',system-ui,sans-serif;font-size:16px;line-height:24px;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input{font-family:inherit;}
+.h1{font-size:24px;line-height:32px;font-weight:600;margin:0;}
+.h3{font-size:16px;line-height:24px;font-weight:500;margin:0;}
+.body-sm{font-size:14px;line-height:20px;}
+.caption{font-size:12px;line-height:16px;}
+.text-secondary{color:var(--text-secondary);}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;background:var(--cur-2570-tint);color:var(--cur-2570);}
+.panel{background:var(--bg-surface);border-radius:12px;box-shadow:0 1px 2px rgba(43,38,32,0.06);padding:28px;width:520px;display:flex;flex-direction:column;gap:18px;}
+.preview-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-default);font-size:14px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:500;border-radius:4px;padding:10px 16px;line-height:20px;}
+.btn-primary{background:var(--green);color:var(--bg-surface);}
+.btn-primary:hover{background:var(--green-dark);}
+.toggle-track{width:40px;height:22px;border-radius:11px;background:var(--border-default);position:relative;flex-shrink:0;}
+.toggle-track.on{background:var(--green);}
+.toggle-thumb{width:18px;height:18px;border-radius:50%;background:var(--bg-surface);position:absolute;top:2px;transition:left 0.15s;}
+</style>
+</helmet>
+
+<div class="panel">
+  <div>
+    <div class="h1">ออกเอกสาร Word</div>
+    <div class="body-sm text-secondary">ระบบฐานข้อมูล · <span class="chip">2570</span></div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:2px;">
+    <div class="preview-row"><span>CLO/PLO ที่ยืนยันแล้ว</span><span class="text-secondary">3 ข้อ</span></div>
+    <div class="preview-row"><span>% ความสอดคล้อง</span><span class="text-secondary">59%</span></div>
+    <div class="preview-row"><span>ไฟล์หลักฐานที่อ้างอิง</span><span class="text-secondary">6 ไฟล์</span></div>
+    <sc-if value="{{includeAoi}}" hint-placeholder-val="{{true}}">
+      <div class="preview-row"><span>Area of Improvement</span><span class="text-secondary">รวมอยู่ในเอกสาร</span></div>
+    </sc-if>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <span class="h3">รวมส่วน Area of Improvement</span>
+    <button class="toggle-track {{toggleClass}}" onClick="{{onToggleAoi}}">
+      <span class="toggle-thumb" style="left:{{thumbLeft}};"></span>
+    </button>
+  </div>
+
+  <sc-if value="{{stateIdle}}" hint-placeholder-val="{{true}}">
+    <button class="btn btn-primary" onClick="{{onDownload}}">ดาวน์โหลดเอกสาร Word</button>
+  </sc-if>
+  <sc-if value="{{stateGenerating}}" hint-placeholder-val="{{false}}">
+    <button class="btn btn-primary" style="opacity:0.7;">กำลังสร้างเอกสาร…</button>
+  </sc-if>
+  <sc-if value="{{stateDone}}" hint-placeholder-val="{{false}}">
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <button class="btn btn-primary" onClick="{{onDownload}}">ดาวน์โหลดไฟล์อีกครั้ง</button>
+      <div class="caption text-secondary">สร้างเมื่อ {{doneAt}}</div>
+    </div>
+  </sc-if>
+
+  <div class="caption text-secondary">เอกสารอ้างอิงเฉพาะข้อมูลและหลักฐานที่ยืนยันแล้วในระบบเท่านั้น</div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { includeAoi: true, status: 'idle', doneAt: '' };
+  }
+  renderVals() {
+    return {
+      includeAoi: this.state.includeAoi,
+      toggleClass: this.state.includeAoi ? 'on' : '',
+      thumbLeft: this.state.includeAoi ? '20px' : '2px',
+      stateIdle: this.state.status === 'idle',
+      stateGenerating: this.state.status === 'generating',
+      stateDone: this.state.status === 'done',
+      doneAt: this.state.doneAt,
+      onToggleAoi: () => this.setState({ includeAoi: !this.state.includeAoi }),
+      onDownload: () => {
+        this.setState({ status: 'generating' });
+        setTimeout(() => {
+          this.setState({ status: 'done', doneAt: new Date().toLocaleString('th-TH') });
+        }, 900);
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

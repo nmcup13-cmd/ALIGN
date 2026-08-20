@@ -16,6 +16,7 @@ description: Design or update ALIGN's UI/UX prototype documentation (screens, na
    - บริบทอื่นจากบทสนทนาที่ agent context แยกจะไม่เห็น
 3. ถ้า `prototype-designer` ถามคำถามกลับผ่าน `AskUserQuestion` (เช่น เรื่องมติโลโก้/ไอคอนที่ยังไม่ปิดใน `DESIGN.md`) ให้รอคำตอบผู้ใช้ก่อน แล้วส่งกลับไปให้ agent ทำงานต่อ
 4. เมื่อ agent เขียนไฟล์เสร็จ ตรวจสอบผลลัพธ์ในโฟลเดอร์ `docs/02-design/01-prototypes/` และลิงก์ใน `index.md` ก่อนสรุปให้ผู้ใช้ว่ามีหน้าจอ/journey อะไรบ้าง และมีอะไรที่ยังต้องยืนยันเพิ่ม
+5. ถ้ามี [[align-interactive-prototype|align-interactive-prototype]] อยู่แล้ว (ต้นแบบที่คลิกได้จริงใน `interactive-prototype/`) และงานที่ทำในขั้นตอน 2-4 เปลี่ยนเนื้อหาหน้าจอที่ต้นแบบนั้นครอบคลุมอยู่ ให้แจ้งผู้ใช้ว่าต้นแบบที่คลิกได้อาจตกรุ่นแล้ว และต้องอัปเดตแยกผ่าน `design` skill (คนละ context/เครื่องมือจาก skill นี้) — ไม่ต้องพยายามแก้ไฟล์ `.dc.html` เอง
 
 ## กฎ
 

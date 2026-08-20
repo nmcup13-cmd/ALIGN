@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-base:#F6F2EA; --bg-surface:#FDFBF7; --bg-sunken:#EFE9DD;
+  --border-default:#E2D9C8; --border-strong:#C9BBA0;
+  --text-primary:#2B2620; --text-secondary:#6B6255;
+  --green:#5B6E4F; --green-dark:#46543D;
+  --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
+}
+*{box-sizing:border-box;} html,body{margin:0;}
+body{background:var(--bg-sunken);color:var(--text-primary);font-family:'IBM Plex Sans Thai Looped','Sarabun',system-ui,sans-serif;font-size:15px;line-height:22px;display:flex;justify-content:center;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.m-shell{width:375px;min-height:812px;background:var(--bg-base);display:flex;flex-direction:column;}
+.m-header{height:52px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 16px;background:var(--bg-surface);border-bottom:1px solid var(--border-default);}
+.m-content{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px;}
+.m-tabbar{flex-shrink:0;min-height:60px;background:var(--bg-surface);border-top:1px solid var(--border-default);display:flex;}
+.m-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10.5px;color:var(--text-secondary);min-height:44px;}
+.m-tab.active{color:var(--green);}
+.m-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;padding:16px;}
+.h1{font-size:19px;line-height:25px;font-weight:600;margin:0;}
+.h2{font-size:16px;line-height:22px;font-weight:500;margin:0;}
+.body-sm{font-size:13px;line-height:18px;}
+.caption{font-size:11px;line-height:15px;}
+.text-secondary{color:var(--text-secondary);}
+.display{font-size:26px;line-height:32px;font-weight:600;margin:0;}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;background:var(--cur-2570-tint);color:var(--cur-2570);}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;border:1.5px solid var(--green);color:var(--green);background:var(--bg-surface);}
+.clo-row{display:flex;flex-direction:column;gap:4px;padding:10px 0;border-bottom:1px solid var(--border-default);}
+.aoi-item{border-left:2px solid var(--green);padding:6px 0 6px 10px;font-size:13px;}
+.m-btn{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:500;border-radius:4px;padding:10px 14px;min-height:44px;}
+.m-btn-primary{background:var(--green);color:var(--bg-surface);}
+</style>
+</helmet>
+
+<div class="m-shell">
+  <div class="m-header">
+    <div class="h1" style="flex:1;">สรุปรายวิชา</div>
+    <span class="chip">2570</span>
+  </div>
+
+  <div class="m-content">
+    <div class="caption text-secondary">ระบบฐานข้อมูล · Map: AB-11, AB-16, AB-20–23</div>
+
+    <sc-if value="{{hasPending}}" hint-placeholder-val="{{true}}">
+      <div class="m-card" style="background:var(--bg-sunken);">
+        <span class="body-sm">มีผลจาก AI ที่ยังไม่ยืนยัน {{pendingCount}} รายการ — ไปตรวจสอบที่หน้า "ตรวจสอบผล AI"</span>
+      </div>
+    </sc-if>
+
+    <div class="m-card" style="display:flex;flex-direction:column;gap:2px;width:150px;">
+      <div class="display">59%</div>
+      <div class="caption text-secondary">ความสอดคล้อง — ยืนยันแล้ว</div>
+    </div>
+
+    <div>
+      <div class="h2" style="margin-bottom:6px;">CLO แต่ละข้อ</div>
+      <sc-for list="{{clos}}" as="c" hint-placeholder-count="3">
+        <div class="clo-row">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="mono body-sm">{{c.code}}</span>
+            <span class="badge">{{c.pct}}% · {{c.freq}} ครั้ง</span>
+          </div>
+          <div class="body-sm text-secondary">{{c.desc}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div>
+      <div class="h2" style="margin-bottom:8px;">แนวโน้มตลอดเทอม</div>
+      <div class="m-card">
+        <svg viewBox="0 0 300 90" width="100%" height="80" preserveAspectRatio="none">
+          <polyline points="0,72 40,64 80,60 120,50 160,44 200,36 240,30 280,18" fill="none" stroke="#5B6E4F" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+
+    <div>
+      <div class="h2" style="margin-bottom:6px;">Area of Improvement</div>
+      <div class="aoi-item">CLO 4 ยังมีหลักฐานรองรับน้อย (ความถี่ 1 ครั้ง) — พิจารณาเพิ่มกิจกรรม/ชิ้นงานในรอบถัดไป</div>
+      <div class="aoi-item">พบหัวข้อ "Transaction และ Concurrency Control" ที่ยังไม่มีบันทึกการสอนรองรับ</div>
+    </div>
+
+    <button class="m-btn m-btn-primary" onClick="{{onExport}}">ออกเอกสาร Word</button>
+    <sc-if value="{{exportClicked}}" hint-placeholder-val="{{false}}">
+      <div class="caption text-secondary">→ เปิดหน้า "ออกเอกสาร Word"</div>
+    </sc-if>
+  </div>
+
+  <div class="m-tabbar">
+    <div class="m-tab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg>
+      <span>หน้าแรก</span>
+    </div>
+    <div class="m-tab active">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H18a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6.5A1.5 1.5 0 0 1 5 18.5z"/><path d="M5 17.5C5 16.7 5.7 16 6.5 16H19"/></svg>
+      <span>รายวิชา</span>
+    </div>
+    <div class="m-tab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+      <span>CLO×สัปดาห์</span>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      exportClicked: false,
+      clos: [
+        { code: 'CLO1', desc: 'สามารถออกแบบ ER Diagram ได้ถูกต้อง', pct: 82, freq: 5 },
+        { code: 'CLO2', desc: 'สามารถเขียนคำสั่ง SQL ระดับกลางได้', pct: 65, freq: 3 },
+        { code: 'CLO4', desc: 'สามารถออกแบบ normalization ได้', pct: 30, freq: 1 }
+      ]
+    };
+  }
+  renderVals() {
+    return {
+      clos: this.state.clos,
+      hasPending: true, pendingCount: 2,
+      exportClicked: this.state.exportClicked,
+      onExport: () => this.setState({ exportClicked: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

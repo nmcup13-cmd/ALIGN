@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-base:#F6F2EA; --bg-surface:#FDFBF7; --bg-sunken:#EFE9DD;
+  --border-default:#E2D9C8; --border-strong:#C9BBA0;
+  --text-primary:#2B2620; --text-secondary:#6B6255; --text-disabled:#B3AA9A;
+  --green:#5B6E4F; --green-dark:#46543D; --green-tint:#E8ECE2;
+  --draft:#B8863C; --draft-tint:#F3E6CE;
+  --cur-2565:#A98F72; --cur-2565-tint:#F1E9DD;
+  --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
+}
+*{box-sizing:border-box;} html,body{margin:0;}
+body{background:var(--bg-sunken);color:var(--text-primary);font-family:'IBM Plex Sans Thai Looped','Sarabun',system-ui,sans-serif;font-size:15px;line-height:22px;display:flex;justify-content:center;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
+.m-shell{width:375px;min-height:812px;background:var(--bg-base);display:flex;flex-direction:column;}
+.m-header{height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--bg-surface);border-bottom:1px solid var(--border-default);}
+.wordmark-sm{font-size:16px;font-weight:600;color:var(--green);}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--green-tint);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;}
+.m-content{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px;}
+.m-tabbar{flex-shrink:0;min-height:60px;background:var(--bg-surface);border-top:1px solid var(--border-default);display:flex;}
+.m-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10.5px;color:var(--text-secondary);min-height:44px;}
+.m-tab.active{color:var(--green);}
+.m-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;padding:16px;}
+.h1{font-size:20px;line-height:26px;font-weight:600;margin:0;}
+.h2{font-size:16px;line-height:22px;font-weight:500;margin:0;}
+.body-sm{font-size:13px;line-height:18px;}
+.caption{font-size:11px;line-height:15px;}
+.text-secondary{color:var(--text-secondary);}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;line-height:15px;padding:2px 7px;border-radius:4px;}
+.chip-2565{background:var(--cur-2565-tint);color:var(--cur-2565);}
+.chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;line-height:15px;padding:2px 7px;border-radius:4px;}
+.badge-confirmed{border:1.5px solid var(--green);color:var(--green);background:var(--bg-surface);}
+.badge-draft{border:1.5px dashed var(--draft);color:var(--draft);background:var(--draft-tint);}
+.m-btn{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:500;border-radius:4px;padding:10px 14px;min-height:44px;}
+.m-btn-primary{background:var(--green);color:var(--bg-surface);}
+.m-btn-ghost{background:transparent;color:var(--text-primary);border:1px solid var(--border-default);}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:12px;color:var(--text-secondary);}
+.field input[type=text], .field select{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:4px;padding:11px 10px;font-size:14px;min-height:44px;}
+</style>
+</helmet>
+
+<div class="m-shell">
+  <div class="m-header">
+    <div class="wordmark-sm">ALIGN</div>
+    <div class="avatar">ธก</div>
+  </div>
+
+  <div class="m-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="h1">รายวิชาของฉัน</div>
+      <button class="m-btn m-btn-primary" style="padding:8px 12px;" onClick="{{toggleForm}}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        เพิ่ม
+      </button>
+    </div>
+    <div class="caption text-secondary">Map: AB-02, AB-19</div>
+
+    <sc-if value="{{formOpen}}" hint-placeholder-val="{{false}}">
+      <div class="m-card" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="field">
+          <label>ชื่อรายวิชา</label>
+          <input type="text" placeholder="เช่น ปัญญาประดิษฐ์เบื้องต้น" value="{{newName}}" onInput="{{onNameInput}}">
+        </div>
+        <div class="field">
+          <label>กลุ่มหลักสูตร</label>
+          <select value="{{newCur}}" onChange="{{onCurChange}}">
+            <option value="2565">2565</option>
+            <option value="2570">2570</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="m-btn m-btn-primary" style="flex:1;" onClick="{{onAdd}}">เพิ่ม</button>
+          <button class="m-btn m-btn-ghost" style="flex:1;" onClick="{{toggleForm}}">ยกเลิก</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <sc-for list="{{courses}}" as="c" hint-placeholder-count="4">
+        <div class="m-card" style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="h2">{{c.name}}</span>
+            <span class="chip {{c.curClass}}">{{c.curLabel}}</span>
+          </div>
+          <span class="badge {{c.badgeClass}}" style="align-self:flex-start;">{{c.badgeLabel}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div class="m-tabbar">
+    <div class="m-tab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg>
+      <span>หน้าแรก</span>
+    </div>
+    <div class="m-tab active">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H18a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6.5A1.5 1.5 0 0 1 5 18.5z"/><path d="M5 17.5C5 16.7 5.7 16 6.5 16H19"/></svg>
+      <span>รายวิชา</span>
+    </div>
+    <div class="m-tab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+      <span>CLO×สัปดาห์</span>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      formOpen: false,
+      newName: '',
+      newCur: '2570',
+      courses: [
+        { name: 'การเขียนโปรแกรมเชิงวัตถุ', cur: '2570', ready: true },
+        { name: 'หลักการออกแบบส่วนติดต่อผู้ใช้', cur: '2565', ready: true },
+        { name: 'ระบบฐานข้อมูล', cur: '2570', ready: true },
+        { name: 'ปัญญาประดิษฐ์เบื้องต้น', cur: '2570', ready: false }
+      ]
+    };
+  }
+  renderVals() {
+    const courses = this.state.courses.map((c) => ({
+      name: c.name,
+      curClass: c.cur === '2565' ? 'chip-2565' : 'chip-2570',
+      curLabel: c.cur,
+      badgeClass: c.ready ? 'badge-confirmed' : 'badge-draft',
+      badgeLabel: c.ready ? 'พร้อมบันทึกการสอน' : 'ยังตั้งค่าไม่ครบ'
+    }));
+    return {
+      courses,
+      formOpen: this.state.formOpen,
+      newName: this.state.newName,
+      newCur: this.state.newCur,
+      toggleForm: () => this.setState({ formOpen: !this.state.formOpen }),
+      onNameInput: (e) => this.setState({ newName: e.target.value }),
+      onCurChange: (e) => this.setState({ newCur: e.target.value }),
+      onAdd: () => {
+        const name = this.state.newName.trim();
+        if (!name) return;
+        this.setState({
+          courses: [...this.state.courses, { name, cur: this.state.newCur, ready: false }],
+          newName: '', formOpen: false
+        });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

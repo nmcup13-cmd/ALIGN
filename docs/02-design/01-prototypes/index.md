@@ -16,5 +16,6 @@
 - [[align-program-admin-screens|Prototype: หน้าจอแอป ALIGN — บทบาทผู้บริหารหลักสูตร (Program Administrator)]] — 5 หน้าจอ ครอบคลุม AB-01, 04, 07, 14, 17
 - [[align-navigation-flow|Prototype: User Flow / Navigation Flow — ALIGN (ทั้ง 2 บทบาท)]]
 - [[align-user-journey|Prototype: User Journey Map — ALIGN (ทั้ง 2 บทบาท)]]
+- [[align-interactive-prototype|Prototype: Interactive Clickable Canvas — ALIGN (ทั้ง 2 บทบาท, Desktop + Mobile)]] — ต้นแบบที่คลิก/กรอกข้อมูลได้จริง ไฟล์ต้นฉบับอยู่ที่ `interactive-prototype/`
 
 > เวอร์ชันแรกของ `align-app-screens` (อ้างอิง Canva pitch deck เท่านั้น ก่อนมี `DESIGN.md` และไม่ครอบคลุมบทบาทผู้บริหารหลักสูตร) ถูกย้ายไปเก็บที่ [[../../00-archived/align-app-screens-pitch-deck-v1|00-archived/align-app-screens-pitch-deck-v1]]
