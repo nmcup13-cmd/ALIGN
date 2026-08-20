@@ -20,3 +20,7 @@
 - [[e5-word-export|e5-word-export]] — Test case ของ Epic E5 (AB-15, AB-16, AB-17, AB-18): ออกเอกสาร Word, ส่วน Area of Improvement, ดาวน์โหลดเอกสารสำหรับ SAR, ตัวเลือกรวม/ไม่รวม Area of Improvement
 
 **สรุป**: รวม 106 test case ครอบคลุมทั้ง 23 User Stories — ดูรายละเอียดขอบเขต/ชุดข้อมูลทดสอบ/คำถามเปิดทั้งหมดใน [[test-plan-align|test-plan-align]]
+
+### Test Spec เดี่ยว (companion เฉพาะ Feature/User Journey)
+
+- [[test-spec-ai-review|test-spec-ai-review]] — **Test Spec** เฉพาะ Feature "ตรวจสอบและยืนยันผล AI ก่อนบันทึกจริง (Human-in-the-loop)" (AB-08, AB-09, AB-10) ผูกกับจุด "ระหว่างเทอม — หลังสอนแต่ละคาบ" ใน User Journey ของอาจารย์ผู้สอน และหน้าจอ 5–6 (Teaching Record Entry → AI Review Panel) โดยตรง — **เป็นเอกสารเสริม (companion) ของ [[e3-ai-matching-gap-analysis|e3-ai-matching-gap-analysis]] ไม่ใช่เอกสารทดแทน** จัดทำขึ้นเพื่อสาธิต Test Spec ที่ผูกกับ Feature/User Journey เดียวอย่างชัดเจนตามข้อกำหนดของงาน
