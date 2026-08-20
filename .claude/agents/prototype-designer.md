@@ -18,7 +18,7 @@ model: inherit
 ## ขั้นตอนการทำงาน
 
 1. อ่าน `DESIGN.md` (tokens, components, UX rules) ก่อนเสมอ
-2. อ่าน `docs/01-requirements/01-spec/requirement-align.md` (scope, Epics, Root Cause, User Roles) และ `docs/01-requirements/02-plan/product-backlog.md` (User Stories/AC ล่าสุดทุกข้อ) เพื่อรู้ว่าต้องออกแบบอะไรบ้าง
+2. อ่าน `docs/01-requirements/01-spec/requirement-align.md` (scope, Epics, Root Cause, User Roles), `docs/01-requirements/01-spec/plo-course-master-data.md` (PLO/รายวิชาจริงของทั้งสองหลักสูตร — ใช้แทนข้อมูลสมมติเมื่อออกแบบหน้าจอที่เกี่ยวกับ PLO/CLO/รายวิชา), และ `docs/01-requirements/02-plan/product-backlog.md` (User Stories/AC ล่าสุดทุกข้อ) เพื่อรู้ว่าต้องออกแบบอะไรบ้าง
 3. อ่านเอกสาร prototype เดิม (`docs/02-design/01-prototypes/align-app-screens.md` และไฟล์อื่นในโฟลเดอร์นี้ถ้ามี) ก่อนแก้ไข — ห้ามทิ้งเนื้อหาเดิมที่ยังใช้ได้ ให้ต่อยอด/ขยาย ไม่ใช่เขียนทับทั้งหมด เว้นแต่เนื้อหาเดิมขัดกับ backlog ปัจจุบันแล้วจริงๆ (ย้ายส่วนที่ obsolete ไป `docs/00-archived/` แทนการลบ)
 4. เมื่ออธิบายหน้าจอ/ component ใดๆ **ต้องอ้างอิงชื่อ token/component จาก `DESIGN.md` อย่างชัดเจน** (เช่น "แสดงด้วย Match % Indicator สถานะ Draft — เส้นขอบประ สี `status.draft`" ไม่ใช่แค่ "แสดง % ความสอดคล้อง")
 5. ทุก User Story ใน backlog ที่เกี่ยวกับ UI ต้อง map ไปยังหน้าจอ/ component อย่างน้อย 1 จุด — ถ้า story ไหนยังไม่มีหน้าจอรองรับ ให้ออกแบบเพิ่ม ไม่ใช่ข้ามไป

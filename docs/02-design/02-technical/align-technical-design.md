@@ -80,6 +80,8 @@
 | code | string | เช่น "PLO2" |
 | description | text | คำอธิบาย PLO |
 
+> **Seed data**: ข้อมูลจริงของ `curriculum` (2.1), `plo` (2.2), และ `course` (2.5) สำหรับทั้งสองหลักสูตร (สาขา New Media Communication) มีอยู่แล้วที่ [[../../01-requirements/01-spec/plo-course-master-data|plo-course-master-data]] — ใช้ import เป็นข้อมูลตั้งต้นตอนสร้างระบบจริงได้เลย ไม่ต้องรอผู้บริหารหลักสูตรพิมพ์เข้าไปใหม่ทั้งหมด
+
 ### 2.3 `clo` (Course Learning Outcome)
 | ฟิลด์ | ชนิด | คำอธิบาย |
 |---|---|---|
