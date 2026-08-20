@@ -251,10 +251,10 @@ function screenSignup(){
   return `
     <div><div class="h1">สมัครใช้งาน ALIGN</div><div class="body-sm text-secondary" style="margin-top:4px;">สำหรับอาจารย์ผู้สอน — บัญชีต้องรอผู้บริหารหลักสูตรอนุมัติก่อนใช้งานจริง</div></div>
     <div class="stack">
-      <div class="field"><label>ชื่อ-นามสกุล</label><input type="text" value="${f.name}" placeholder="เช่น นายสมชาย ใจดี" oninput="S.signup.name=this.value;render()"></div>
-      <div class="field"><label>อีเมลสถาบัน</label><input type="text" class="${emailErr?'err':''}" value="${f.email}" placeholder="name@university.ac.th" oninput="S.signup.email=this.value;S.signup.touched=true;render()">${emailErr?'<span class="field-err">กรุณากรอกอีเมลสถาบันให้ถูกต้อง</span>':''}</div>
-      <div class="field"><label>รหัสผ่าน</label><input type="password" value="${f.pw}" oninput="S.signup.pw=this.value;render()"></div>
-      <div class="field"><label>ยืนยันรหัสผ่าน</label><input type="password" class="${pwMismatch?'err':''}" value="${f.pw2}" oninput="S.signup.pw2=this.value;S.signup.touched=true;render()">${pwMismatch?'<span class="field-err">รหัสผ่านไม่ตรงกัน</span>':''}</div>
+      <div class="field"><label>ชื่อ-นามสกุล</label><input id="f-signup-name" type="text" value="${f.name}" placeholder="เช่น นายสมชาย ใจดี" oninput="S.signup.name=this.value;render()"></div>
+      <div class="field"><label>อีเมลสถาบัน</label><input id="f-signup-email" type="text" class="${emailErr?'err':''}" value="${f.email}" placeholder="name@university.ac.th" oninput="S.signup.email=this.value;S.signup.touched=true;render()">${emailErr?'<span class="field-err">กรุณากรอกอีเมลสถาบันให้ถูกต้อง</span>':''}</div>
+      <div class="field"><label>รหัสผ่าน</label><input id="f-signup-pw" type="password" value="${f.pw}" oninput="S.signup.pw=this.value;render()"></div>
+      <div class="field"><label>ยืนยันรหัสผ่าน</label><input id="f-signup-pw2" type="password" class="${pwMismatch?'err':''}" value="${f.pw2}" oninput="S.signup.pw2=this.value;S.signup.touched=true;render()">${pwMismatch?'<span class="field-err">รหัสผ่านไม่ตรงกัน</span>':''}</div>
     </div>
     <button class="btn btn-primary" ${disable?'disabled':''} onclick="submitSignup()">สมัครสมาชิก</button>
   `;
@@ -765,7 +765,21 @@ const SCREENS = {
   'admin-accesslog': screenAdminAccessLog, 'admin-approve': screenAdminApprove
 };
 function render(){
+  const active = document.activeElement;
+  let saved = null;
+  if (active && active.id && active.id.indexOf('f-') === 0) {
+    saved = { id: active.id, start: active.selectionStart, end: active.selectionEnd };
+  }
   document.getElementById('content').innerHTML = (SCREENS[S.screen] || screenSignup)();
+  if (saved) {
+    const el = document.getElementById(saved.id);
+    if (el) {
+      el.focus();
+      if (typeof el.setSelectionRange === 'function' && saved.start != null) {
+        try { el.setSelectionRange(saved.start, saved.end); } catch(e) {}
+      }
+    }
+  }
 }
 setRole('instructor');
 </script>
