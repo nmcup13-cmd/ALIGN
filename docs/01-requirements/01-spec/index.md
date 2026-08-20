@@ -12,3 +12,4 @@
 ## เอกสาร
 
 - [[requirement-align|Requirement: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]] → แตกเป็นแผนงานที่ [[../02-plan/product-backlog|product-backlog]]
+- [[plo-course-master-data|ข้อมูลหลัก PLO และรายวิชา — หลักสูตร 2565 และ 2570]] — ข้อมูลจริงของสาขา ใช้ตั้งค่าตาม AB-01/AB-02
