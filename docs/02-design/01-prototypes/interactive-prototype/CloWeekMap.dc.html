@@ -45,6 +45,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;padding:24px;}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;}
 .chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
+.chip-2565{background:var(--cur-2565-tint);color:var(--cur-2565);}
 .week-head{font-size:11px;color:var(--text-secondary);text-align:center;padding:6px 0;}
 .clo-cell{display:flex;align-items:center;gap:8px;padding:8px 4px;}
 .count-cell{display:flex;align-items:center;justify-content:center;height:32px;border-radius:4px;font-size:13px;color:var(--text-primary);}
@@ -81,9 +82,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
         <div style="display:flex;align-items:center;gap:12px;">
           <div class="h1">แผนที่ CLO × สัปดาห์</div>
-          <span class="chip chip-2570">2570</span>
+          <span class="chip chip-2565">2565</span>
         </div>
-        <div class="body-sm text-secondary">ระบบฐานข้อมูล</div>
+        <div class="body-sm text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล</div>
         <div class="caption text-secondary">Map: AB-13 — คลิกที่ช่องเพื่อบันทึกจำนวนชิ้นงานสะสม (สาธิต)</div>
 
         <div class="card" style="display:flex;flex-direction:column;gap:4px;width:200px;">
@@ -102,7 +103,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
             <sc-for list="{{rows}}" as="row" hint-placeholder-count="4">
               <div class="clo-cell">
                 <span class="mono body-sm">{{row.code}}</span>
-                <span class="chip chip-2570">2570</span>
+                <span class="chip chip-2565">2565</span>
               </div>
               <sc-for list="{{row.cells}}" as="cell" hint-placeholder-count="12">
                 <button class="count-cell" style="background:{{cell.bg}};" onClick="{{cell.onClick}}">{{cell.label}}</button>
@@ -124,9 +125,9 @@ class Component extends DCLogic {
     super(props);
     this.state = {
       rows: [
-        { code: 'CLO1', counts: [0,1,0,2,0,1,0,0,1,0,0,0], plo: 'PLO2 · PLO4' },
-        { code: 'CLO2', counts: [0,0,1,0,1,0,2,0,0,1,0,0], plo: 'PLO3' },
-        { code: 'CLO3', counts: [1,0,0,1,0,0,0,1,0,0,1,0], plo: 'PLO1' },
+        { code: 'CLO1', counts: [0,0,0,0,0,0,0,0,0,0,0,1], plo: 'PLO1' },
+        { code: 'CLO2', counts: [0,0,0,0,1,0,0,0,0,0,0,0], plo: 'PLO2' },
+        { code: 'CLO3', counts: [0,0,0,0,0,0,0,0,0,1,0,0], plo: 'PLO2 · PLO3' },
         { code: 'CLO4', counts: [0,0,0,0,0,0,0,0,0,0,0,0], plo: null }
       ]
     };
@@ -152,7 +153,7 @@ class Component extends DCLogic {
       return {
         code: row.code,
         cells,
-        ploLabel: row.plo ? row.plo + ' (หลักสูตร 2570)' : '–'
+        ploLabel: row.plo ? row.plo + ' (หลักสูตร 2565)' : '–'
       };
     });
     return { weeks, rows, totalEvidence: total };

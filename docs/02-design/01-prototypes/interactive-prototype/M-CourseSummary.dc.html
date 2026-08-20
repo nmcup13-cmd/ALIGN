@@ -15,6 +15,7 @@
   --border-default:#E2D9C8; --border-strong:#C9BBA0;
   --text-primary:#2B2620; --text-secondary:#6B6255;
   --green:#5B6E4F; --green-dark:#46543D;
+  --cur-2565:#A98F72; --cur-2565-tint:#F1E9DD;
   --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
 }
 *{box-sizing:border-box;} html,body{margin:0;}
@@ -34,7 +35,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .caption{font-size:11px;line-height:15px;}
 .text-secondary{color:var(--text-secondary);}
 .display{font-size:26px;line-height:32px;font-weight:600;margin:0;}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;background:var(--cur-2570-tint);color:var(--cur-2570);}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;}
+.chip-2565{background:var(--cur-2565-tint);color:var(--cur-2565);}
+.chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;border:1.5px solid var(--green);color:var(--green);background:var(--bg-surface);}
 .clo-row{display:flex;flex-direction:column;gap:4px;padding:10px 0;border-bottom:1px solid var(--border-default);}
 .aoi-item{border-left:2px solid var(--green);padding:6px 0 6px 10px;font-size:13px;}
@@ -46,11 +49,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <div class="m-shell">
   <div class="m-header">
     <div class="h1" style="flex:1;">สรุปรายวิชา</div>
-    <span class="chip">2570</span>
+    <span class="chip chip-2565">2565</span>
   </div>
 
   <div class="m-content">
-    <div class="caption text-secondary">ระบบฐานข้อมูล · Map: AB-11, AB-16, AB-20–23</div>
+    <div class="caption text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล · Map: AB-11, AB-16, AB-20–23</div>
 
     <sc-if value="{{hasPending}}" hint-placeholder-val="{{true}}">
       <div class="m-card" style="background:var(--bg-sunken);">
@@ -87,8 +90,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
     <div>
       <div class="h2" style="margin-bottom:6px;">Area of Improvement</div>
-      <div class="aoi-item">CLO 4 ยังมีหลักฐานรองรับน้อย (ความถี่ 1 ครั้ง) — พิจารณาเพิ่มกิจกรรม/ชิ้นงานในรอบถัดไป</div>
-      <div class="aoi-item">พบหัวข้อ "Transaction และ Concurrency Control" ที่ยังไม่มีบันทึกการสอนรองรับ</div>
+      <div class="aoi-item">CLO4 ยังมีหลักฐานรองรับน้อย — พิจารณาเพิ่มกิจกรรม/ชิ้นงานในรอบถัดไป</div>
+      <div class="aoi-item">พบหัวข้อ "การวิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมและสังคม" ที่ยังไม่มีบันทึกการสอนรองรับ</div>
     </div>
 
     <button class="m-btn m-btn-primary" onClick="{{onExport}}">ออกเอกสาร Word</button>
@@ -121,9 +124,9 @@ class Component extends DCLogic {
     this.state = {
       exportClicked: false,
       clos: [
-        { code: 'CLO1', desc: 'สามารถออกแบบ ER Diagram ได้ถูกต้อง', pct: 82, freq: 5 },
-        { code: 'CLO2', desc: 'สามารถเขียนคำสั่ง SQL ระดับกลางได้', pct: 65, freq: 3 },
-        { code: 'CLO4', desc: 'สามารถออกแบบ normalization ได้', pct: 30, freq: 1 }
+        { code: 'CLO1', desc: 'วิเคราะห์และประเมินความน่าเชื่อถือของข้อมูลข่าวสารดิจิทัลได้', pct: 82, freq: 5 },
+        { code: 'CLO2', desc: 'อธิบายกลไกการทำงานของอัลกอริทึมสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสารได้', pct: 65, freq: 3 },
+        { code: 'CLO3', desc: 'ประยุกต์ใช้เครื่องมือตรวจสอบข้อเท็จจริง (Fact-checking) กับเนื้อหาสื่อดิจิทัลได้', pct: 30, freq: 1 }
       ]
     };
   }

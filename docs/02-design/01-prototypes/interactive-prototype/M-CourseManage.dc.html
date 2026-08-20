@@ -16,6 +16,7 @@
   --text-primary:#2B2620; --text-secondary:#6B6255; --text-disabled:#B3AA9A;
   --green:#5B6E4F; --green-dark:#46543D; --green-tint:#E8ECE2;
   --gap:#A65D45; --gap-tint:#F5E3DC;
+  --cur-2565:#A98F72; --cur-2565-tint:#F1E9DD;
   --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
 }
 *{box-sizing:border-box;} html,body{margin:0;}
@@ -35,7 +36,9 @@ input{font-family:inherit;font-size:14px;color:var(--text-primary);}
 .body-sm{font-size:13px;line-height:18px;}
 .caption{font-size:11px;line-height:15px;}
 .text-secondary{color:var(--text-secondary);}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;line-height:15px;padding:2px 7px;border-radius:4px;background:var(--cur-2570-tint);color:var(--cur-2570);}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;line-height:15px;padding:2px 7px;border-radius:4px;}
+.chip-2565{background:var(--cur-2565-tint);color:var(--cur-2565);}
+.chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
 .tabrow{display:flex;background:var(--bg-sunken);border-radius:8px;padding:3px;gap:3px;}
 .tabbtn{flex:1;padding:9px;border-radius:6px;font-size:13px;color:var(--text-secondary);min-height:40px;}
 .tabbtn.active{background:var(--bg-surface);color:var(--text-primary);font-weight:500;}
@@ -54,11 +57,11 @@ input{font-family:inherit;font-size:14px;color:var(--text-primary);}
   <div class="m-header">
     <div class="wordmark-sm" style="font-weight:600;color:var(--green);">ALIGN</div>
     <div class="h1" style="flex:1;">จัดการรายวิชา</div>
-    <span class="chip">2570</span>
+    <span class="chip chip-2565">2565</span>
   </div>
 
   <div class="m-content">
-    <div class="caption text-secondary">ระบบฐานข้อมูล · Map: AB-02, AB-03, AB-19</div>
+    <div class="caption text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล · Map: AB-02, AB-03, AB-19</div>
 
     <div class="tabrow">
       <button class="tabbtn {{tabCloClass}}" onClick="{{onTabClo}}">CLO &amp; PLO</button>
@@ -73,7 +76,7 @@ input{font-family:inherit;font-size:14px;color:var(--text-primary);}
           </div>
         </sc-if>
 
-        <sc-for list="{{cloList}}" as="clo" hint-placeholder-count="3">
+        <sc-for list="{{cloList}}" as="clo" hint-placeholder-count="4">
           <div class="m-card" style="display:flex;flex-direction:column;gap:8px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="mono body-sm">{{clo.code}}</span>
@@ -143,15 +146,16 @@ class Component extends DCLogic {
       tab: 'clo',
       newClo: '', newWeek: '', newTopic: '', newDetail: '',
       cloItems: [
-        { code: 'CLO1', desc: 'สามารถออกแบบ ER Diagram ได้ถูกต้อง', plos: ['PLO2', 'PLO4'] },
-        { code: 'CLO2', desc: 'สามารถเขียนคำสั่ง SQL ระดับกลางได้', plos: ['PLO3'] },
-        { code: 'CLO4', desc: 'สามารถออกแบบ normalization ได้', plos: ['PLO2'] }
+        { code: 'CLO1', desc: 'วิเคราะห์และประเมินความน่าเชื่อถือของข้อมูลข่าวสารดิจิทัลได้', plos: ['PLO1'] },
+        { code: 'CLO2', desc: 'อธิบายกลไกการทำงานของอัลกอริทึมสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสารได้', plos: ['PLO2'] },
+        { code: 'CLO3', desc: 'ประยุกต์ใช้เครื่องมือตรวจสอบข้อเท็จจริง (Fact-checking) กับเนื้อหาสื่อดิจิทัลได้', plos: ['PLO2', 'PLO3'] },
+        { code: 'CLO4', desc: 'วิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมผู้รับสารและสังคมได้', plos: ['PLO4'] }
       ],
       sylRows: [
-        { week: 1, topic: 'Introduction to Databases', detail: 'ความหมาย/องค์ประกอบ' },
-        { week: 4, topic: 'ER Modeling', detail: 'การออกแบบ ER' },
-        { week: 8, topic: 'Normalization', detail: '1NF–BCNF' },
-        { week: 11, topic: 'Transactions', detail: 'ACID, Concurrency' }
+        { week: 1, topic: 'แนะนำแนวคิดการรู้เท่าทันสื่อดิจิทัลและระบบนิเวศสื่อออนไลน์', detail: '' },
+        { week: 5, topic: 'กลไกอัลกอริทึมของสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสาร', detail: '' },
+        { week: 10, topic: 'เครื่องมือและเทคนิคการตรวจสอบข้อเท็จจริง (Fact-checking)', detail: '' },
+        { week: 14, topic: 'การวิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมและสังคม', detail: '' }
       ]
     };
   }

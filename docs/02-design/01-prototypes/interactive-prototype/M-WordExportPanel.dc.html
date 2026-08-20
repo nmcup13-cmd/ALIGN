@@ -15,6 +15,7 @@
   --border-default:#E2D9C8; --border-strong:#C9BBA0;
   --text-primary:#2B2620; --text-secondary:#6B6255;
   --green:#5B6E4F; --green-dark:#46543D;
+  --cur-2565:#A98F72; --cur-2565-tint:#F1E9DD;
   --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
 }
 *{box-sizing:border-box;} html,body{margin:0;}
@@ -28,7 +29,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .body-sm{font-size:13px;line-height:18px;}
 .caption{font-size:11px;line-height:15px;}
 .text-secondary{color:var(--text-secondary);}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;background:var(--cur-2570-tint);color:var(--cur-2570);}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;}
+.chip-2565{background:var(--cur-2565-tint);color:var(--cur-2565);}
+.chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
 .m-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;padding:16px;}
 .preview-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-default);font-size:13px;}
 .m-btn{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:500;border-radius:4px;padding:12px 14px;min-height:44px;}
@@ -42,11 +45,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <div class="m-shell">
   <div class="m-header">
     <div class="h1" style="flex:1;">ออกเอกสาร Word</div>
-    <span class="chip">2570</span>
+    <span class="chip chip-2565">2565</span>
   </div>
 
   <div class="m-content">
-    <div class="body-sm text-secondary">ระบบฐานข้อมูล · Map: AB-15, AB-16, AB-18</div>
+    <div class="body-sm text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล · Map: AB-15, AB-16, AB-18</div>
 
     <div class="m-card" style="display:flex;flex-direction:column;gap:2px;">
       <div class="preview-row"><span>CLO/PLO ที่ยืนยันแล้ว</span><span class="text-secondary">3 ข้อ</span></div>

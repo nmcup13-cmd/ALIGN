@@ -46,6 +46,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .btn-ghost{background:transparent;color:var(--text-primary);border:1px solid var(--border-default);}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;}
 .chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
+.chip-2565{background:var(--cur-2565-tint);color:var(--cur-2565);}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;}
 .badge-confirmed{border:1.5px solid var(--green);color:var(--green);background:var(--bg-surface);}
 .clo-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-default);}
@@ -83,7 +84,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
         <div style="display:flex;align-items:center;gap:16px;">
           <div>
             <div class="h1">สรุปรายวิชา</div>
-            <div class="body-sm text-secondary">ระบบฐานข้อมูล · <span class="chip chip-2570">2570</span></div>
+            <div class="body-sm text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล · <span class="chip chip-2565">2565</span></div>
           </div>
         </div>
         <div class="caption text-secondary">Map: AB-11, AB-16, AB-20, AB-21, AB-22/23</div>
@@ -126,8 +127,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
         <div style="display:flex;flex-direction:column;gap:8px;">
           <div class="h2">ข้อเสนอแนะจุดที่ควรพัฒนา (Area of Improvement)</div>
-          <div class="aoi-item">CLO 4 ยังมีหลักฐานรองรับน้อย (ความถี่ 1 ครั้ง) — พิจารณาเพิ่มกิจกรรม/ชิ้นงานที่เชื่อมโยงกับหัวข้อนี้ในรอบถัดไป</div>
-          <div class="aoi-item">พบหัวข้อ "Transaction และ Concurrency Control" ใน syllabus ที่ยังไม่มีบันทึกการสอนรองรับ — พิจารณาจัดสรรเวลาสอนเพิ่มก่อนสิ้นภาคการศึกษา</div>
+          <div class="aoi-item">CLO4 ยังมีหลักฐานรองรับน้อย — พิจารณาเพิ่มกิจกรรม/ชิ้นงานที่เชื่อมโยงกับหัวข้อนี้ในรอบถัดไป</div>
+          <div class="aoi-item">พบหัวข้อ "การวิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมและสังคม" ใน syllabus ที่ยังไม่มีบันทึกการสอนรองรับ — พิจารณาจัดสรรเวลาสอนเพิ่มก่อนสิ้นภาคการศึกษา</div>
         </div>
 
         <button class="btn btn-primary" style="align-self:flex-start;" onClick="{{onExport}}">ออกเอกสาร Word</button>
@@ -148,9 +149,9 @@ class Component extends DCLogic {
     this.state = {
       exportClicked: false,
       clos: [
-        { code: 'CLO1', desc: 'สามารถออกแบบ ER Diagram ได้ถูกต้อง', pct: 82, freq: 5 },
-        { code: 'CLO2', desc: 'สามารถเขียนคำสั่ง SQL ระดับกลางได้', pct: 65, freq: 3 },
-        { code: 'CLO4', desc: 'สามารถออกแบบ normalization ได้', pct: 30, freq: 1 }
+        { code: 'CLO1', desc: 'วิเคราะห์และประเมินความน่าเชื่อถือของข้อมูลข่าวสารดิจิทัลได้', pct: 82, freq: 5 },
+        { code: 'CLO2', desc: 'อธิบายกลไกการทำงานของอัลกอริทึมสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสารได้', pct: 65, freq: 3 },
+        { code: 'CLO3', desc: 'ประยุกต์ใช้เครื่องมือตรวจสอบข้อเท็จจริง (Fact-checking) กับเนื้อหาสื่อดิจิทัลได้', pct: 30, freq: 1 }
       ]
     };
   }

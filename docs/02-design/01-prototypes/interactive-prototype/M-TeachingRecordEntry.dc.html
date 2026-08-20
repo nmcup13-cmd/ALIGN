@@ -15,6 +15,7 @@
   --border-default:#E2D9C8; --border-strong:#C9BBA0;
   --text-primary:#2B2620; --text-secondary:#6B6255; --text-disabled:#B3AA9A;
   --green:#5B6E4F; --green-dark:#46543D;
+  --cur-2565:#A98F72; --cur-2565-tint:#F1E9DD;
   --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
 }
 *{box-sizing:border-box;} html,body{margin:0;}
@@ -32,7 +33,9 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
 .body-sm{font-size:13px;line-height:18px;}
 .caption{font-size:11px;line-height:15px;}
 .text-secondary{color:var(--text-secondary);}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;background:var(--cur-2570-tint);color:var(--cur-2570);}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;}
+.chip-2565{background:var(--cur-2565-tint);color:var(--cur-2565);}
+.chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
 .field{display:flex;flex-direction:column;gap:6px;}
 .field label{font-size:12px;color:var(--text-secondary);}
 .field input, .field select{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:4px;padding:11px 10px;font-size:14px;min-height:44px;width:100%;}
@@ -47,11 +50,11 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
 <div class="m-shell">
   <div class="m-header">
     <div class="h1" style="flex:1;">บันทึกการสอน</div>
-    <span class="chip">2570</span>
+    <span class="chip chip-2565">2565</span>
   </div>
 
   <div class="m-content">
-    <div class="caption text-secondary">ระบบฐานข้อมูล · Map: AB-05, AB-06, AB-07</div>
+    <div class="caption text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล · Map: AB-05, AB-06, AB-07</div>
 
     <sc-if value="{{formVisible}}" hint-placeholder-val="{{true}}">
       <div class="m-card" style="display:flex;flex-direction:column;gap:16px;">
@@ -69,7 +72,7 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
         </div>
         <div class="field">
           <label>หัวข้อการสอน</label>
-          <input type="text" placeholder="เช่น Normalization และ ER Diagram" value="{{topic}}" onInput="{{onTopicInput}}">
+          <input type="text" placeholder="เช่น Workshop เสริม: การตรวจสอบข่าวปลอมด้วยเครื่องมือ AI" value="{{topic}}" onInput="{{onTopicInput}}">
         </div>
 
         <div style="display:flex;flex-direction:column;gap:8px;">
@@ -130,10 +133,10 @@ class Component extends DCLogic {
     super(props);
     const today = new Date().toISOString().slice(0, 10);
     this.state = {
-      week: 6, taughtOn: today, today, topic: '', newFile: '', submitted: false,
+      week: 12, taughtOn: today, today, topic: '', newFile: '', submitted: false,
       evidence: [
-        { name: 'สไลด์บรรยาย Normalization.pdf' },
-        { name: 'งานนักศึกษา - แบบฝึกหัด ER.pdf' }
+        { name: 'ภาพกิจกรรม_Workshop_ตรวจสอบข่าวปลอม.jpg' },
+        { name: 'ใบงานนักศึกษา - แบบฝึกหัดตรวจสอบข้อเท็จจริง.pdf' }
       ]
     };
   }

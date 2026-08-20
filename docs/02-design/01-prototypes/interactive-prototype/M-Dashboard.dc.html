@@ -89,7 +89,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
     <sc-if value="{{showGap}}" hint-placeholder-val="{{true}}">
       <div class="m-card" style="border-color:var(--gap);background:var(--gap-tint);display:flex;flex-direction:column;gap:10px;">
-        <div class="body-sm">CLO 4 (ระบบฐานข้อมูล · <span class="chip chip-2570">2570</span>) — ยังไม่มีข้อมูลการสอนรองรับ</div>
+        <div class="body-sm">CLO 4 (127121 การรู้เท่าทันสื่อดิจิทัล · <span class="chip chip-2565">2565</span>) — ยังไม่มีข้อมูลการสอนรองรับ</div>
         <button class="m-btn m-btn-ghost" onClick="{{onGapClick}}">บันทึกการสอน</button>
       </div>
     </sc-if>
@@ -97,7 +97,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     <div style="display:flex;flex-direction:column;gap:8px;">
       <div class="h2">การสอนจริง เทียบกับ Syllabus</div>
       <div class="m-card" style="display:flex;flex-direction:column;gap:6px;">
-        <div style="display:flex;align-items:center;gap:8px;"><span class="h2">ระบบฐานข้อมูล</span><span class="chip chip-2570">2570</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><span class="h2">127121 การรู้เท่าทันสื่อดิจิทัล</span><span class="chip chip-2565">2565</span></div>
         <div class="body-sm">หัวข้อที่ขาด: <span class="mono">2</span> · เพิ่มนอกแผน: <span class="mono">1</span></div>
       </div>
     </div>
@@ -128,9 +128,9 @@ class Component extends DCLogic {
       selectedId: null,
       gapClicked: false,
       courses: [
-        { id: 1, name: 'การเขียนโปรแกรมเชิงวัตถุ', cur: '2570', pct: 72, ready: true },
-        { id: 2, name: 'หลักการออกแบบส่วนติดต่อผู้ใช้', cur: '2565', pct: 58, ready: true },
-        { id: 3, name: 'ระบบฐานข้อมูล', cur: '2570', pct: 40, ready: true }
+        { id: 1, name: '70127121 การรู้เท่าทันสื่อดิจิทัลและการตรวจสอบข้อเท็จจริง', cur: '2570', pct: 72, ready: true },
+        { id: 2, name: '125212 จิตวิทยาเพื่อการสื่อสาร', cur: '2565', pct: 58, ready: true },
+        { id: 3, name: '127121 การรู้เท่าทันสื่อดิจิทัล', cur: '2565', pct: 40, ready: true }
       ]
     };
   }

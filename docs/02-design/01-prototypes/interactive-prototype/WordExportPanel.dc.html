@@ -17,6 +17,7 @@
   --green:#5B6E4F; --green-dark:#46543D; --green-tint:#E8ECE2;
   --draft:#B8863C; --draft-tint:#F3E6CE;
   --gap:#A65D45; --gap-tint:#F5E3DC;
+  --cur-2565:#A98F72; --cur-2565-tint:#F1E9DD;
   --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
 }
 *{box-sizing:border-box;} html,body{margin:0;}
@@ -28,7 +29,9 @@ input{font-family:inherit;}
 .body-sm{font-size:14px;line-height:20px;}
 .caption{font-size:12px;line-height:16px;}
 .text-secondary{color:var(--text-secondary);}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;background:var(--cur-2570-tint);color:var(--cur-2570);}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;}
+.chip-2565{background:var(--cur-2565-tint);color:var(--cur-2565);}
+.chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
 .panel{background:var(--bg-surface);border-radius:12px;box-shadow:0 1px 2px rgba(43,38,32,0.06);padding:28px;width:520px;display:flex;flex-direction:column;gap:18px;}
 .preview-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-default);font-size:14px;}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:500;border-radius:4px;padding:10px 16px;line-height:20px;}
@@ -43,7 +46,7 @@ input{font-family:inherit;}
 <div class="panel">
   <div>
     <div class="h1">ออกเอกสาร Word</div>
-    <div class="body-sm text-secondary">ระบบฐานข้อมูล · <span class="chip">2570</span></div>
+    <div class="body-sm text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล · <span class="chip chip-2565">2565</span></div>
   </div>
 
   <div style="display:flex;flex-direction:column;gap:2px;">

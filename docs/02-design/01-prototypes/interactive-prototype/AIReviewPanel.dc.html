@@ -51,6 +51,7 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
 .btn-sm{padding:5px 10px;font-size:12px;line-height:16px;}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;}
 .chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
+.chip-2565{background:var(--cur-2565-tint);color:var(--cur-2565);}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;}
 .badge-confirmed{border:1.5px solid var(--green);color:var(--green);background:var(--bg-surface);}
 .badge-draft{border:1.5px dashed var(--draft);color:var(--draft);background:var(--draft-tint);}
@@ -93,7 +94,7 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
 
         <div>
           <div class="h1">ตรวจสอบและยืนยันผล AI</div>
-          <div class="caption text-secondary">Map: AB-08, AB-09, AB-10, AB-20, AB-21, AB-22 · ระบบฐานข้อมูล · หลักสูตร 2570</div>
+          <div class="caption text-secondary">Map: AB-08, AB-09, AB-10, AB-20, AB-21, AB-22 · 127121 การรู้เท่าทันสื่อดิจิทัล · หลักสูตร 2565</div>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:14px;">
@@ -107,7 +108,7 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
               <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
                 <div style="display:flex;align-items:center;gap:10px;">
                   <span class="mono body-sm">{{item.code}}</span>
-                  <span class="chip chip-2570">2570</span>
+                  <span class="chip chip-2565">2565</span>
                 </div>
                 <span class="badge {{item.badgeClass}}">{{item.badgeLabel}}</span>
               </div>
@@ -179,13 +180,13 @@ class Component extends DCLogic {
     super(props);
     this.state = {
       cloItems: [
-        { id: 1, code: 'CLO1', desc: 'สามารถออกแบบ ER Diagram ได้ถูกต้อง', pct: 82, plos: 'PLO2 · PLO4 เชื่อมแล้ว', status: 'draft', editing: false },
-        { id: 2, code: 'CLO2', desc: 'สามารถเขียนคำสั่ง SQL ระดับกลางได้', pct: 65, plos: 'PLO3 เชื่อมแล้ว', status: 'draft', editing: false },
-        { id: 3, code: 'CLO4', desc: 'สามารถออกแบบ normalization ได้', pct: 30, plos: 'PLO2 เชื่อมแล้ว', status: 'draft', editing: false }
+        { id: 1, code: 'CLO1', desc: 'วิเคราะห์และประเมินความน่าเชื่อถือของข้อมูลข่าวสารดิจิทัลได้', pct: 82, plos: 'PLO1 เชื่อมแล้ว', status: 'draft', editing: false },
+        { id: 2, code: 'CLO2', desc: 'อธิบายกลไกการทำงานของอัลกอริทึมสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสารได้', pct: 65, plos: 'PLO2 เชื่อมแล้ว', status: 'draft', editing: false },
+        { id: 3, code: 'CLO3', desc: 'ประยุกต์ใช้เครื่องมือตรวจสอบข้อเท็จจริง (Fact-checking) กับเนื้อหาสื่อดิจิทัลได้', pct: 30, plos: 'PLO2 · PLO3 เชื่อมแล้ว', status: 'draft', editing: false }
       ],
       gapStatus: 'draft',
-      missingTopics: ['Normalization ระดับ BCNF', 'Transaction และ Concurrency Control'],
-      extraTopics: ['Data Warehousing เบื้องต้น (นอกแผน)']
+      missingTopics: ['week 1 — แนะนำแนวคิดการรู้เท่าทันสื่อดิจิทัลและระบบนิเวศสื่อออนไลน์', 'week 14 — การวิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมและสังคม'],
+      extraTopics: ['Workshop เสริม: การตรวจสอบข่าวปลอมด้วยเครื่องมือ AI (นอกแผน, week 12)']
     };
   }
   renderVals() {
@@ -198,7 +199,7 @@ class Component extends DCLogic {
         desc: item.desc,
         pct: item.pct,
         pctLabel: 'แมทช์ ' + item.pct + '%',
-        plosLabel: item.plos + ' (หลักสูตร 2570)',
+        plosLabel: item.plos + ' (หลักสูตร 2565)',
         editing: item.editing,
         notEditing: !item.editing,
         showActions: item.status !== 'confirmed' && item.status !== 'rejected' && !item.editing,

@@ -50,6 +50,7 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
 .btn-sm{padding:5px 10px;font-size:12px;line-height:16px;}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;}
 .chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
+.chip-2565{background:var(--cur-2565-tint);color:var(--cur-2565);}
 .chip-toggle{border:1px solid var(--border-default);background:var(--bg-surface);}
 .chip-toggle.on{background:var(--cur-2570-tint);color:var(--cur-2570);border-color:var(--cur-2570);}
 .tab{padding:9px 16px;border-radius:4px 4px 0 0;font-size:14px;color:var(--text-secondary);border-bottom:2px solid transparent;}
@@ -93,9 +94,9 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
 
         <div style="display:flex;align-items:center;gap:12px;">
           <div class="h1">จัดการรายวิชา</div>
-          <span class="chip chip-2570">2570</span>
+          <span class="chip chip-2565">2565</span>
         </div>
-        <div class="body-sm text-secondary">ระบบฐานข้อมูล</div>
+        <div class="body-sm text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล</div>
         <div class="caption text-secondary">Map: AB-02, AB-03 (แท็บ CLO &amp; PLO) · AB-19 (แท็บ Course Syllabus)</div>
 
         <div style="display:flex;gap:4px;border-bottom:1px solid var(--border-default);">
@@ -111,13 +112,13 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
               </div>
             </sc-if>
 
-            <sc-for list="{{cloList}}" as="clo" hint-placeholder-count="3">
+            <sc-for list="{{cloList}}" as="clo" hint-placeholder-count="4">
               <div class="clo-card">
                 <div style="display:flex;align-items:center;gap:10px;">
                   <span class="mono body-sm">{{clo.code}}</span>
                   <span class="body-sm">{{clo.desc}}</span>
                 </div>
-                <div class="caption text-secondary">เลือก PLO ที่ผูก (เฉพาะกลุ่มหลักสูตร 2570)</div>
+                <div class="caption text-secondary">เลือก PLO ที่ผูก (เฉพาะกลุ่มหลักสูตร 2565)</div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
                   <sc-for list="{{clo.ploChoices}}" as="p" hint-placeholder-count="4">
                     <button class="chip chip-toggle {{p.onClass}}" onClick="{{p.toggle}}">{{p.label}}</button>
@@ -148,7 +149,7 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
               </div>
               <div class="caption text-secondary">หรือ</div>
               <div style="display:flex;gap:10px;">
-                <input class="syl-input" type="text" style="flex:1;" placeholder="ชื่อไฟล์ syllabus เช่น syllabus_db2570.pdf" value="{{uploadName}}" onInput="{{onUploadInput}}">
+                <input class="syl-input" type="text" style="flex:1;" placeholder="ชื่อไฟล์ syllabus เช่น syllabus_127121_2565.pdf" value="{{uploadName}}" onInput="{{onUploadInput}}">
                 <button class="btn btn-ghost btn-sm" onClick="{{onUpload}}">อัปโหลดไฟล์</button>
               </div>
             </div>
@@ -188,15 +189,16 @@ class Component extends DCLogic {
       newDetail: '',
       uploadName: '',
       cloItems: [
-        { code: 'CLO1', desc: 'สามารถออกแบบ ER Diagram ได้ถูกต้อง', plos: ['PLO2', 'PLO4'] },
-        { code: 'CLO2', desc: 'สามารถเขียนคำสั่ง SQL ระดับกลางได้', plos: ['PLO3'] },
-        { code: 'CLO4', desc: 'สามารถออกแบบ normalization ได้', plos: ['PLO2'] }
+        { code: 'CLO1', desc: 'วิเคราะห์และประเมินความน่าเชื่อถือของข้อมูลข่าวสารดิจิทัลได้', plos: ['PLO1'] },
+        { code: 'CLO2', desc: 'อธิบายกลไกการทำงานของอัลกอริทึมสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสารได้', plos: ['PLO2'] },
+        { code: 'CLO3', desc: 'ประยุกต์ใช้เครื่องมือตรวจสอบข้อเท็จจริง (Fact-checking) กับเนื้อหาสื่อดิจิทัลได้', plos: ['PLO2', 'PLO3'] },
+        { code: 'CLO4', desc: 'วิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมผู้รับสารและสังคมได้', plos: ['PLO4'] }
       ],
       sylRows: [
-        { week: 1, topic: 'Introduction to Databases', detail: 'ความหมาย/องค์ประกอบระบบฐานข้อมูล' },
-        { week: 4, topic: 'ER Modeling', detail: 'การออกแบบ Entity-Relationship' },
-        { week: 8, topic: 'Normalization', detail: '1NF–BCNF' },
-        { week: 11, topic: 'Transactions', detail: 'ACID, Concurrency Control' }
+        { week: 1, topic: 'แนะนำแนวคิดการรู้เท่าทันสื่อดิจิทัลและระบบนิเวศสื่อออนไลน์', detail: '' },
+        { week: 5, topic: 'กลไกอัลกอริทึมของสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสาร', detail: '' },
+        { week: 10, topic: 'เครื่องมือและเทคนิคการตรวจสอบข้อเท็จจริง (Fact-checking)', detail: '' },
+        { week: 14, topic: 'การวิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมและสังคม', detail: '' }
       ]
     };
   }

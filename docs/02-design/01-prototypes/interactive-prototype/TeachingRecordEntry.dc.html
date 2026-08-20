@@ -52,6 +52,7 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
 .btn-sm{padding:5px 10px;font-size:12px;line-height:16px;}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;}
 .chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
+.chip-2565{background:var(--cur-2565-tint);color:var(--cur-2565);}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;padding:3px 8px;border-radius:4px;}
 .badge-confirmed{border:1.5px solid var(--green);color:var(--green);background:var(--bg-surface);}
 .field{display:flex;flex-direction:column;gap:6px;}
@@ -91,9 +92,9 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
 
         <div style="display:flex;align-items:center;gap:12px;">
           <div class="h1">บันทึกการสอน</div>
-          <span class="chip chip-2570">2570</span>
+          <span class="chip chip-2565">2565</span>
         </div>
-        <div class="body-sm text-secondary">ระบบฐานข้อมูล</div>
+        <div class="body-sm text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล</div>
         <div class="caption text-secondary">Map: AB-05, AB-06, AB-07</div>
 
         <sc-if value="{{formVisible}}" hint-placeholder-val="{{true}}">
@@ -116,7 +117,7 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
 
             <div class="field">
               <label>หัวข้อการสอน</label>
-              <input type="text" placeholder="เช่น Normalization และ ER Diagram" value="{{topic}}" onInput="{{onTopicInput}}">
+              <input type="text" placeholder="เช่น Workshop เสริม: การตรวจสอบข่าวปลอมด้วยเครื่องมือ AI" value="{{topic}}" onInput="{{onTopicInput}}">
             </div>
 
             <div style="display:flex;flex-direction:column;gap:10px;">
@@ -144,7 +145,7 @@ input,select{font-family:inherit;font-size:14px;color:var(--text-primary);}
                 <div class="caption text-secondary">ยังไม่มีไฟล์แนบ — ลากไฟล์มาวางหรือเลือกไฟล์</div>
               </sc-if>
               <div style="display:flex;gap:10px;">
-                <input type="text" placeholder="ชื่อไฟล์ เช่น รูปกระดานคำสั่ง SQL.jpg" value="{{newFile}}" onInput="{{onFileInput}}" style="flex:1;">
+                <input type="text" placeholder="ชื่อไฟล์ เช่น ภาพกิจกรรม_Workshop_ตรวจสอบข่าวปลอม.jpg" value="{{newFile}}" onInput="{{onFileInput}}" style="flex:1;">
                 <button class="btn btn-ghost btn-sm" onClick="{{onAttach}}">แนบไฟล์</button>
               </div>
             </div>
@@ -175,15 +176,15 @@ class Component extends DCLogic {
     super(props);
     const today = new Date().toISOString().slice(0, 10);
     this.state = {
-      week: 6,
+      week: 12,
       taughtOn: today,
       today,
       topic: '',
       newFile: '',
       submitted: false,
       evidence: [
-        { name: 'สไลด์บรรยาย Normalization.pdf', restricted: false },
-        { name: 'งานนักศึกษา - แบบฝึกหัด ER.pdf', restricted: true }
+        { name: 'ภาพกิจกรรม_Workshop_ตรวจสอบข่าวปลอม.jpg', restricted: false },
+        { name: 'ใบงานนักศึกษา - แบบฝึกหัดตรวจสอบข้อเท็จจริง.pdf', restricted: true }
       ]
     };
   }

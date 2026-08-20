@@ -15,6 +15,7 @@
   --border-default:#E2D9C8; --border-strong:#C9BBA0;
   --text-primary:#2B2620; --text-secondary:#6B6255;
   --green:#5B6E4F; --green-tint:#E8ECE2;
+  --cur-2565:#A98F72; --cur-2565-tint:#F1E9DD;
   --cur-2570:#8A9A78; --cur-2570-tint:#EDF1E7;
 }
 *{box-sizing:border-box;} html,body{margin:0;}
@@ -33,7 +34,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .body-sm{font-size:13px;line-height:18px;}
 .caption{font-size:11px;line-height:15px;}
 .text-secondary{color:var(--text-secondary);}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;background:var(--cur-2570-tint);color:var(--cur-2570);}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;}
+.chip-2565{background:var(--cur-2565-tint);color:var(--cur-2565);}
+.chip-2570{background:var(--cur-2570-tint);color:var(--cur-2570);}
 .clo-card{border:1px solid var(--border-default);border-radius:8px;background:var(--bg-surface);overflow:hidden;}
 .clo-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;}
 .week-strip{display:flex;gap:6px;overflow-x:auto;padding:0 14px 14px;}
@@ -44,11 +47,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <div class="m-shell">
   <div class="m-header">
     <div class="h1" style="flex:1;">CLO × สัปดาห์</div>
-    <span class="chip">2570</span>
+    <span class="chip chip-2565">2565</span>
   </div>
 
   <div class="m-content">
-    <div class="caption text-secondary">ระบบฐานข้อมูล · Map: AB-13 · แตะช่องสัปดาห์เพื่อบันทึกจำนวนชิ้นงาน</div>
+    <div class="caption text-secondary">127121 การรู้เท่าทันสื่อดิจิทัล · Map: AB-13 · แตะช่องสัปดาห์เพื่อบันทึกจำนวนชิ้นงาน</div>
 
     <div class="m-card" style="display:flex;flex-direction:column;gap:2px;width:150px;">
       <div class="display">{{totalEvidence}}</div>
@@ -98,9 +101,9 @@ class Component extends DCLogic {
     super(props);
     this.state = {
       rows: [
-        { code: 'CLO1', counts: [0,1,0,2,0,1,0,0,1,0,0,0], plo: 'PLO2 · PLO4' },
-        { code: 'CLO2', counts: [0,0,1,0,1,0,2,0,0,1,0,0], plo: 'PLO3' },
-        { code: 'CLO3', counts: [1,0,0,1,0,0,0,1,0,0,1,0], plo: 'PLO1' },
+        { code: 'CLO1', counts: [0,0,0,0,0,0,0,0,0,0,0,1], plo: 'PLO1' },
+        { code: 'CLO2', counts: [0,0,0,0,1,0,0,0,0,0,0,0], plo: 'PLO2' },
+        { code: 'CLO3', counts: [0,0,0,0,0,0,0,0,0,1,0,0], plo: 'PLO2 · PLO3' },
         { code: 'CLO4', counts: [0,0,0,0,0,0,0,0,0,0,0,0], plo: null }
       ]
     };
@@ -123,7 +126,7 @@ class Component extends DCLogic {
           }
         };
       });
-      return { code: row.code, cells, ploLabel: row.plo ? row.plo + ' · 2570' : '–' };
+      return { code: row.code, cells, ploLabel: row.plo ? row.plo + ' · 2565' : '–' };
     });
     return { rows, totalEvidence: total };
   }
