@@ -130,13 +130,13 @@
 
 | Epic | จำนวน Test Case | รวม Happy path | รวม Edge case | รวม Rejection/ละเมิดกฎ | รวม Placeholder (คำถามเปิด) |
 |---|---|---|---|---|---|
-| E1 | 27 | 11 | 8 | 8 | 0 |
-| E2 | 16 | 6 | 4 | 6 | 0 |
-| E3 | 32 | 15 | 6 | 11 | 0 |
+| E1 | 30 | 12 | 10 | 8 | 0 |
+| E2 | 18 | 7 | 5 | 6 | 0 |
+| E3 | 35 | 16 | 8 | 11 | 0 |
 | E4 | 20 | 9 | 5 | 6 | 0 |
 | E5 | 15 | 6 | 3 | 6 | 0 |
 | E6 | 25 | 12 | 4 | 9 | 0 |
-| **รวม** | **135** | **59** | **29** | **47** | **0** |
+| **รวม** | **143** | **62** | **35** | **46** | **0** |
 
 (ตัวเลขนับตามจริงจากตารางในแต่ละไฟล์ย่อย — นับ 1 แถว = 1 test case; TC-AB19-06 ใน E1 ที่มีประเภท "Accepted Risk" ถูกนับรวมในคอลัมน์ Edge case เพื่อให้ผลรวมของแต่ละแถวตรงกับจำนวน test case จริง)
 (อัปเดตหลังตอบคำถามเปิด §6.1: E3 TC-AB21-04/05 เปลี่ยนจาก placeholder เป็น Edge case/Happy path ที่ยืนยันแล้ว และเพิ่ม TC-AB11-05 ใหม่ใน E4)
@@ -149,6 +149,12 @@
 - **E3**: TC-AB22-06 เปลี่ยนจาก placeholder เป็น Happy path ยืนยันแล้ว (§6.2 — วิธีเทียบหัวข้อ syllabus ใช้ semantic similarity ไม่ใช่ exact string match) จำนวนรวม E3 ไม่เปลี่ยน (ยังเป็น 32) แต่ placeholder ลดจาก 1 เหลือ 0, happy path เพิ่มจาก 14 เป็น 15
 - **E5**: AB-18 ถูกตัดออกจาก scope ทั้งหมด — ย้าย TC-AB18-01/02/03 (เดิม 2 happy + 1 rejection) ไปที่ [[../../00-archived/backlog-ab-18-area-of-improvement-toggle|00-archived]] และเพิ่ม TC-AB16-06 ใหม่ (Happy path) ยืนยันว่า export แสดง Area of Improvement เสมอ ไม่มี option ให้ซ่อน — จำนวนรวม E5 ลดจาก 17 เป็น 15 (happy path 7→6, rejection 7→6, edge case คงที่ 3)
 - **รวมทั้งหมด**: ลดจาก 137 เหลือ **135 test case** และ **placeholder เหลือ 0 รายการ — ปิดคำถามเปิดครบทุกข้อแล้ว** (ดูหัวข้อ 6))
+(อัปเดต 2026-08-23 หลัง audit พบ gap 2 รายการเทียบกับ `align-api-schema-design.md` §4.1/§5.1/§5.3 ที่ยืนยันแล้ว — ไม่มีคำถามเปิดใหม่ เพิ่ม test case ยืนยันพฤติกรรมที่มีอยู่แล้วในเอกสารเทคนิค:
+- **E1**: เพิ่ม TC-AB01-06/07/08 (soft-delete PLO — ไม่ error 409, `clo_plo_ready` re-evaluate ทันที, `total_clo_count` ไม่ถูกกระทบ) — จาก 27 เป็น **30** (happy path 11→12, edge case 8→10)
+- **E2**: เพิ่ม TC-AB06-06/07 (soft-delete evidence — ไม่ hard-delete จริง, PDPA ยังคุมสิทธิ์เข้าถึงแม้ `is_deleted=true`) — จาก 16 เป็น **18** (happy path 6→7, edge case 4→5)
+- **E3**: เพิ่ม TC-AB09-04/05/06 (`ai_match_result.linked_plo_ids` ล็อกเป็น snapshot ถาวรทันทีที่ confirmed — ไม่เปลี่ยนตาม `clo_plo_mapping` ที่แก้ไข/ปลด/PLO ที่ถูก soft-delete ภายหลัง แต่ยังแก้ไขได้ตามปกติก่อน confirm) — จาก 32 เป็น **35** (happy path 15→16, edge case 6→8)
+- **หมายเหตุ**: ไม่เขียน test case สำหรับ `DELETE /courses/{id}/clos/{clo_id}` เพราะยังเป็น open question ตาม align-api-schema-design.md §5.1 ว่าจะ implement จริงหรือไม่ — คงไว้เหมือนเดิม
+- **รวมทั้งหมด**: เพิ่มจาก 135 เป็น **143 test case** placeholder ยังคงเป็น 0 รายการ)
 
 ---
 
