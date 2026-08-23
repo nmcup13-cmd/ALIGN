@@ -50,6 +50,13 @@ input{font-family:inherit;font-size:14px;color:var(--text-primary);}
 .field input[type=text]{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:4px;padding:11px 10px;font-size:14px;width:100%;min-height:44px;}
 .syl-card{border:1px solid var(--border-default);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;background:var(--bg-surface);}
 .syl-card input{background:var(--bg-sunken);border:1px solid var(--border-default);border-radius:4px;padding:8px;font-size:13px;width:100%;}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:4px;color:var(--text-secondary);flex-shrink:0;}
+.icon-btn:hover{color:var(--gap);}
+.overlay{position:fixed;inset:0;background:rgba(43,38,32,0.45);display:flex;align-items:center;justify-content:center;z-index:10;padding:16px;}
+.confirm-panel{background:var(--bg-surface);border-radius:12px;box-shadow:0 1px 2px rgba(43,38,32,0.06);padding:20px;width:100%;max-width:335px;display:flex;flex-direction:column;gap:12px;}
+.h3{font-size:16px;line-height:22px;font-weight:500;margin:0;}
+.btn-danger{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:500;border-radius:4px;padding:10px 14px;min-height:44px;border:1px solid var(--gap);background:var(--gap-tint);color:var(--gap);}
+.btn-danger:hover{background:var(--gap);color:var(--bg-surface);}
 </style>
 </helmet>
 
@@ -78,9 +85,14 @@ input{font-family:inherit;font-size:14px;color:var(--text-primary);}
 
         <sc-for list="{{cloList}}" as="clo" hint-placeholder-count="4">
           <div class="m-card" style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="mono body-sm">{{clo.code}}</span>
-              <span class="body-sm">{{clo.desc}}</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="mono body-sm">{{clo.code}}</span>
+                <span class="body-sm">{{clo.desc}}</span>
+              </div>
+              <button class="icon-btn" onClick="{{clo.onDelete}}" aria-label="ลบ CLO นี้">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 6l1 14a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-14"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+              </button>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
               <sc-for list="{{clo.ploChoices}}" as="p" hint-placeholder-count="4">
@@ -137,6 +149,23 @@ input{font-family:inherit;font-size:14px;color:var(--text-primary);}
   </div>
 </div>
 
+<sc-if value="{{showConfirm}}" hint-placeholder-val="{{false}}">
+  <div class="overlay">
+    <div class="confirm-panel">
+      <div class="h3">ลบ CLO นี้ใช่หรือไม่</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="mono body-sm">{{pendingCode}}</span>
+        <span class="body-sm">{{pendingDesc}}</span>
+      </div>
+      <div class="body-sm text-secondary">CLO นี้อาจมีข้อมูลแผนที่ CLO×สัปดาห์และผลจับคู่ AI ผูกอยู่แล้ว — ข้อมูลเหล่านั้นจะยังถูกเก็บไว้เป็นประวัติ แต่ CLO นี้จะถูกซ่อนออกจากรายการทันทีหลังยืนยันลบ และระบบจะคำนวณสถานะความพร้อมบันทึกการสอนของวิชานี้ใหม่</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn-danger" onClick="{{onConfirmDelete}}">ลบ CLO นี้</button>
+        <button class="m-btn m-btn-ghost" onClick="{{onCancelDelete}}">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
 </x-dc>
 <script data-dc-script data-props='{}'>
 class Component extends DCLogic {
@@ -145,6 +174,7 @@ class Component extends DCLogic {
     this.state = {
       tab: 'clo',
       newClo: '', newWeek: '', newTopic: '', newDetail: '',
+      pendingDeleteIndex: null,
       cloItems: [
         { code: 'CLO1', desc: 'วิเคราะห์และประเมินความน่าเชื่อถือของข้อมูลข่าวสารดิจิทัลได้', plos: ['PLO1'] },
         { code: 'CLO2', desc: 'อธิบายกลไกการทำงานของอัลกอริทึมสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสารได้', plos: ['PLO2'] },
@@ -164,6 +194,7 @@ class Component extends DCLogic {
     const cloList = this.state.cloItems.map((clo, ci) => ({
       code: clo.code,
       desc: clo.desc,
+      onDelete: () => this.setState({ pendingDeleteIndex: ci }),
       ploChoices: ['PLO1', 'PLO2', 'PLO3', 'PLO4'].map((p) => {
         const on = clo.plos.includes(p);
         return {
@@ -178,6 +209,7 @@ class Component extends DCLogic {
         };
       })
     }));
+    const pendingClo = this.state.pendingDeleteIndex !== null ? this.state.cloItems[this.state.pendingDeleteIndex] : null;
     const anyBound = this.state.cloItems.some((c) => c.plos.length > 0);
     const sylRows = this.state.sylRows.slice().sort((a, b) => a.week - b.week).map((s) => {
       const i = this.state.sylRows.indexOf(s);
@@ -204,6 +236,15 @@ class Component extends DCLogic {
       showSyl: this.state.tab === 'syl',
       showGapBanner: !anyBound,
       cloList, sylRows, today,
+      showConfirm: this.state.pendingDeleteIndex !== null,
+      pendingCode: pendingClo ? pendingClo.code : '',
+      pendingDesc: pendingClo ? pendingClo.desc : '',
+      onCancelDelete: () => this.setState({ pendingDeleteIndex: null }),
+      onConfirmDelete: () => {
+        const next = this.state.cloItems.slice();
+        next.splice(this.state.pendingDeleteIndex, 1);
+        this.setState({ cloItems: next, pendingDeleteIndex: null });
+      },
       newClo: this.state.newClo, newWeek: this.state.newWeek, newTopic: this.state.newTopic, newDetail: this.state.newDetail,
       onTabClo: () => this.setState({ tab: 'clo' }),
       onTabSyl: () => this.setState({ tab: 'syl' }),
