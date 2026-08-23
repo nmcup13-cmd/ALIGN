@@ -11,4 +11,7 @@
 
 ## เอกสาร
 
-- [[align-technical-design|Technical Design: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]]
+- [[align-high-level-architecture|High-Level Architecture (Conceptual): ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]] — ภาพรวมเชิงแนวคิด (logical component + data flow) อ่านก่อนเอกสารด้านล่าง ไม่ผูกกับ technical stack ใดๆ
+- [[align-technical-design|Technical Design: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]] — รายละเอียด schema/API/tech stack ที่ต่อยอดจากเอกสารด้านบน
+- [[align-api-schema-design|API Spec + Database Schema (Conceptual): ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]] — ER Diagram (Mermaid), รายละเอียดฟิลด์ต่อ entity พร้อม PDPA flag, และ API Spec แบบละเอียดตาม Epic — ต่อยอดจาก `align-technical-design.md` §2/§3 โดยไม่ผูกกับ technical stack ใดๆ เช่นกัน
+- [[align-detailed-design|Detailed Design (Conceptual): ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]] — Sequence Diagram (Mermaid) และ State Machine (Mermaid) ของ scenario หลักทั้งหมด (บันทึกการสอน→AI จับคู่→ยืนยัน, วิเคราะห์ gap เทียบ syllabus, สมัคร/อนุมัติบัญชี, ออกเอกสาร Word, แจ้งเตือน CLO ขาดหลักฐาน) พร้อมจุดบังคับใช้กฎทางธุรกิจต่อ step — ต่อยอดจาก 2 เอกสารข้างต้น ไม่ผูกกับ technical stack ใดๆ เช่นกัน
