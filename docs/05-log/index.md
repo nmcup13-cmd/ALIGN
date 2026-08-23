@@ -14,3 +14,4 @@
 - [[2026-08-02-log|2026-08-02: ปรับ requirement เรื่องหลักสูตร 2565/2570 และสร้าง Product Backlog]]
 - [[2026-08-20-log|2026-08-20: Epic E6 (สมัคร/อนุมัติบัญชี), ข้อมูล PLO/รายวิชาจริง, และปิดคำถามเปิดหลายข้อ]]
 - [[2026-08-23-log|2026-08-23: วิเคราะห์ Non-Functional Requirements (NFR) และสร้าง align-nfr.md]]
+- [[2026-08-23-release-planner-log|2026-08-23: เพิ่ม Agent/Skill สำหรับแบ่ง Phase/Release และผูก Task ต่อ Phase]]
