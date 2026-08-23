@@ -76,12 +76,13 @@ Key conventions:
 
 ทุก subagent อ่าน `CLAUDE.md` และไฟล์เอกสารที่เกี่ยวข้องเองจาก path ที่ให้ไปใน prompt (ไม่มีความจำจากบทสนทนาหลัก) และยึดกฎ "ห้ามลบเนื้อหาเดิม" + "ห้ามสมมติ requirement ที่ไม่มีในสเปค/backlog" เหมือนกันทุกตัว
 
-### ความสัมพันธ์ระหว่าง 5 เอกสารใน `02-design/02-technical/`
+### ความสัมพันธ์ระหว่าง 6 เอกสารใน `02-design/02-technical/`
 
-โฟลเดอร์นี้มี 5 เอกสารที่ชื่อดูทับซ้อนกันแต่เป็นคนละชั้น **ไม่ใช่เนื้อหาซ้ำที่ต้องรวมกัน**:
+โฟลเดอร์นี้มี 6 เอกสารที่ชื่อดูทับซ้อนกันแต่เป็นคนละชั้น **ไม่ใช่เนื้อหาซ้ำที่ต้องรวมกัน**:
 
 - `align-high-level-architecture.md`, `align-api-schema-design.md`, `align-detailed-design.md` (จาก `architecture-designer`, `api-schema-designer`, `detailed-designer`) — ชั้น **conceptual ที่ยังไม่ผูกกับ technical stack** ตอบคำถาม "ระบบมีส่วนไหนบ้าง/เก็บข้อมูลอะไร/ทีละขั้นตอนเกิดอะไรขึ้น" อ่านได้โดยไม่ต้องมีพื้นฐานสายเทคนิคมาก เอกสารกลุ่มนี้เป็น**ฐาน**ที่มาก่อน
 - `align-technical-design.md` (จาก `technical-designer`) — ชั้น**implementation-ready**ที่ลงรายละเอียด schema/API สำหรับทีมพัฒนาเริ่มลงมือสร้าง ควรอ้างอิง/สอดคล้องกับเอกสาร conceptual 3 ฉบับข้างต้นเสมอ ไม่ใช่คิดใหม่แยกกัน
 - `align-tech-stack.md` (จาก `tech-stack-advisor`) — ชั้น**เลือก stack จริง**โดยเจตนา (ตรงข้ามกับ 3 เอกสาร conceptual) ได้มาจากการสัมภาษณ์ผู้ใช้แบบเข้มข้นเรื่องทีม/งบ/timeline/data residency ไม่ใช่แค่ข้อเสนอลอยๆ — เป็นฉบับที่ควรยึดถือแทนข้อเสนอสั้นๆ ใน `align-technical-design.md` §5 เดิม (ถ้า §5 ยังไม่ถูกปรับให้ชี้มาที่นี่ ให้ถือว่า `align-tech-stack.md` เป็นฉบับล่าสุดกว่า)
+- `align-nfr.md` — ชั้น **Non-Functional Requirements** แปลงกฎทางธุรกิจ + ข้อจำกัดทีม/งบ/timeline จาก `align-tech-stack.md` §1 ให้เป็นเป้าหมายเชิงคุณภาพที่วัดผลได้ (security, PDPA/privacy, maintainability, auditability, availability, backup/DR, capacity ฯลฯ) แยกเป็น "ต้องมี/ตัดสินใจแล้ว/ยังไม่ยืนยัน/ควรมี/เลื่อนได้" — ไม่ใช่ subagent เฉพาะทาง เขียน/อัปเดตในบทสนทนาหลักได้เมื่อผู้ใช้ยืนยัน trade-off แต่ละมิติแล้ว
 
-ถ้าพบเนื้อหาที่ดูขัดแย้งกันระหว่างเอกสารกลุ่ม conceptual กับ `align-technical-design.md`/`align-tech-stack.md` ให้รัน `audit-align-docs` แล้วให้ผู้ใช้ตัดสินใจว่าฉบับไหนเป็นปัจจุบัน แทนที่จะสมมติเอง
+ถ้าพบเนื้อหาที่ดูขัดแย้งกันระหว่างเอกสารกลุ่ม conceptual กับ `align-technical-design.md`/`align-tech-stack.md`/`align-nfr.md` ให้รัน `audit-align-docs` แล้วให้ผู้ใช้ตัดสินใจว่าฉบับไหนเป็นปัจจุบัน แทนที่จะสมมติเอง

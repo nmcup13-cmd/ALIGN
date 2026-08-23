@@ -186,4 +186,4 @@
 
 ---
 
-เชื่อมโยง: [[align-high-level-architecture|align-high-level-architecture]] · [[align-api-schema-design|align-api-schema-design]] · [[align-technical-design|align-technical-design]] · [[../../01-requirements/01-spec/requirement-align|requirement-align]] · [[../../01-requirements/01-spec/plo-course-master-data|plo-course-master-data]]
+เชื่อมโยง: [[align-high-level-architecture|align-high-level-architecture]] · [[align-api-schema-design|align-api-schema-design]] · [[align-technical-design|align-technical-design]] · [[align-nfr|align-nfr]] (แปลงข้อจำกัดทีม/งบ/timeline ในเอกสารนี้เป็นเป้าหมาย NFR ที่วัดผลได้) · [[../../01-requirements/01-spec/requirement-align|requirement-align]] · [[../../01-requirements/01-spec/plo-course-master-data|plo-course-master-data]]
