@@ -10,4 +10,4 @@
 
 ## เอกสาร
 
-- [[task-breakdown|Task Breakdown: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]]
+- [[task-breakdown|Task Breakdown: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]] — มีคอลัมน์ "Phase" ที่ผูกกับ [[../02-plan/release-plan|release-plan]]

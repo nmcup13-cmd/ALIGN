@@ -13,3 +13,4 @@
 
 - [[product-backlog|Product Backlog: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]]
 - [[feature-list|Feature List: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]]
+- [[release-plan|Release Plan: ระบบติดตามความสอดคล้อง CLO/PLO (ALIGN)]] — แบ่ง Phase/Release (dependency-first, 6 Phase ตรงกับ 6 Epic) และผูกกับ [[../03-task/task-breakdown|task-breakdown]]
