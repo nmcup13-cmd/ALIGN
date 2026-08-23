@@ -69,17 +69,19 @@ Key conventions:
 | `backlog-to-architecture` | `architecture-designer` | สร้าง/อัปเดตเอกสาร High-Level Architecture แบบ conceptual (ยังไม่ผูกกับ tech stack) — system context, logical component, data flow ตาม user journey ใน `02-design/02-technical/` — จุดไหนไม่ชัดเจนจะถามผู้ใช้พร้อมอย่างน้อย 3 แนวทางเลือกและข้อดี-ข้อเสียเสมอ |
 | `backlog-to-api-schema` | `api-schema-designer` | สร้าง/อัปเดตเอกสาร API Spec + Database Schema แบบ conceptual (ยังไม่ผูกกับ tech stack) — รายละเอียดแต่ละตาราง, ER Diagram (Mermaid) ใน `02-design/02-technical/` — จุดไหนไม่ชัดเจนจะถามผู้ใช้พร้อมอย่างน้อย 3 แนวทางเลือกและข้อดี-ข้อเสียเสมอ |
 | `backlog-to-detailed-design` | `detailed-designer` | สร้าง/อัปเดตเอกสาร Detailed Design แบบ conceptual (ยังไม่ผูกกับ tech stack) — sequence flow (Mermaid), state machine, จุดบังคับใช้กฎทางธุรกิจต่อขั้นตอน ใน `02-design/02-technical/` — จุดไหนไม่ชัดเจนจะถามผู้ใช้พร้อมอย่างน้อย 3 แนวทางเลือกและข้อดี-ข้อเสียเสมอ |
+| `choose-tech-stack` | `tech-stack-advisor` | **ตรงข้ามกับ 3 skill ข้างบน** — สัมภาษณ์ผู้ใช้แบบเข้มข้น (ทีม, งบ/โครงสร้างพื้นฐาน, timeline, data residency/PDPA, แนวทาง AI, hosting, auth) แล้วแนะนำ/เขียนเอกสาร tech stack ที่ผูกกับเทคโนโลยีจริง ใน `02-design/02-technical/` — ทุกคำถามมีอย่างน้อย 3 แนวทางเลือกและข้อดี-ข้อเสียเสมอ |
 | `backlog-to-test-plan` | `test-designer` | แตก Acceptance Criteria เป็น Test Case + ประกอบ Test Plan ใน `03-testing/01-test-plan/` |
 | `audit-align-docs` | `backlog-auditor` (read-only) | ตรวจสอบเอกสารทั้งหมดว่าสอดคล้อง/เป็นปัจจุบันหรือไม่ (terminology drift, traceability gap, contradiction, orphaned link) — รายงานเท่านั้น ไม่แก้ไขเอง ต้องให้ผู้ใช้ตัดสินใจก่อนส่งต่อไปแก้ |
 | `check-prototype-updates` | `prototype-sync-checker` (read-only) → `prototype-designer` | เช็คว่า prototype ตกรุ่นจาก `DESIGN.md`/backlog หรือไม่ ถ้าเป็นแค่ token/role/entity เปลี่ยนชื่อ จะส่งต่อให้ `prototype-designer` แก้อัตโนมัติ ถ้าเป็น story ใหม่ที่ต้องออกแบบเพิ่มจะถามผู้ใช้ก่อน |
 
 ทุก subagent อ่าน `CLAUDE.md` และไฟล์เอกสารที่เกี่ยวข้องเองจาก path ที่ให้ไปใน prompt (ไม่มีความจำจากบทสนทนาหลัก) และยึดกฎ "ห้ามลบเนื้อหาเดิม" + "ห้ามสมมติ requirement ที่ไม่มีในสเปค/backlog" เหมือนกันทุกตัว
 
-### ความสัมพันธ์ระหว่าง 4 เอกสารใน `02-design/02-technical/`
+### ความสัมพันธ์ระหว่าง 5 เอกสารใน `02-design/02-technical/`
 
-โฟลเดอร์นี้มี 4 เอกสารที่ชื่อดูทับซ้อนกันแต่เป็นคนละชั้น **ไม่ใช่เนื้อหาซ้ำที่ต้องรวมกัน**:
+โฟลเดอร์นี้มี 5 เอกสารที่ชื่อดูทับซ้อนกันแต่เป็นคนละชั้น **ไม่ใช่เนื้อหาซ้ำที่ต้องรวมกัน**:
 
 - `align-high-level-architecture.md`, `align-api-schema-design.md`, `align-detailed-design.md` (จาก `architecture-designer`, `api-schema-designer`, `detailed-designer`) — ชั้น **conceptual ที่ยังไม่ผูกกับ technical stack** ตอบคำถาม "ระบบมีส่วนไหนบ้าง/เก็บข้อมูลอะไร/ทีละขั้นตอนเกิดอะไรขึ้น" อ่านได้โดยไม่ต้องมีพื้นฐานสายเทคนิคมาก เอกสารกลุ่มนี้เป็น**ฐาน**ที่มาก่อน
-- `align-technical-design.md` (จาก `technical-designer`) — ชั้น**implementation-ready**ที่ลงรายละเอียดพร้อมข้อเสนอ tech stack จริง (§5) สำหรับทีมพัฒนาเริ่มลงมือสร้าง ควรอ้างอิง/สอดคล้องกับเอกสาร conceptual 3 ฉบับข้างต้นเสมอ ไม่ใช่คิดใหม่แยกกัน
+- `align-technical-design.md` (จาก `technical-designer`) — ชั้น**implementation-ready**ที่ลงรายละเอียด schema/API สำหรับทีมพัฒนาเริ่มลงมือสร้าง ควรอ้างอิง/สอดคล้องกับเอกสาร conceptual 3 ฉบับข้างต้นเสมอ ไม่ใช่คิดใหม่แยกกัน
+- `align-tech-stack.md` (จาก `tech-stack-advisor`) — ชั้น**เลือก stack จริง**โดยเจตนา (ตรงข้ามกับ 3 เอกสาร conceptual) ได้มาจากการสัมภาษณ์ผู้ใช้แบบเข้มข้นเรื่องทีม/งบ/timeline/data residency ไม่ใช่แค่ข้อเสนอลอยๆ — เป็นฉบับที่ควรยึดถือแทนข้อเสนอสั้นๆ ใน `align-technical-design.md` §5 เดิม (ถ้า §5 ยังไม่ถูกปรับให้ชี้มาที่นี่ ให้ถือว่า `align-tech-stack.md` เป็นฉบับล่าสุดกว่า)
 
-ถ้าพบเนื้อหาที่ดูขัดแย้งกันระหว่างเอกสารกลุ่ม conceptual กับ `align-technical-design.md` ให้รัน `audit-align-docs` แล้วให้ผู้ใช้ตัดสินใจว่าฉบับไหนเป็นปัจจุบัน แทนที่จะสมมติเอง
+ถ้าพบเนื้อหาที่ดูขัดแย้งกันระหว่างเอกสารกลุ่ม conceptual กับ `align-technical-design.md`/`align-tech-stack.md` ให้รัน `audit-align-docs` แล้วให้ผู้ใช้ตัดสินใจว่าฉบับไหนเป็นปัจจุบัน แทนที่จะสมมติเอง

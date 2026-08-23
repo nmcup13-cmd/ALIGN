@@ -11,6 +11,7 @@
 - [[../../01-requirements/01-spec/requirement-align|requirement-align]] — สเปคและ Root Cause
 - [[../../01-requirements/02-plan/product-backlog|product-backlog]] — User Story/AC ที่แต่ละหน้าจอ map ถึง
 - [[../02-technical/align-technical-design|align-technical-design]] — entity/state (`ai_match_result`, `syllabus_gap_result`, `clo_coverage_summary`) ที่หน้าจอเหล่านี้แสดงผล
+- [[../02-technical/align-api-schema-design|align-api-schema-design]] — พฤติกรรม endpoint ระดับ API เช่น `DELETE /courses/{id}/clos/{clo_id}` (soft-delete CLO, หน้าจอ 3) ที่หน้าจอต้องออกแบบ confirm dialog/state รองรับ
 
 เอกสารคู่กัน: [[align-program-admin-screens|align-program-admin-screens]] (บทบาทผู้บริหารหลักสูตร), [[align-navigation-flow|align-navigation-flow]] (แผนภาพลำดับการไปมาระหว่างหน้าจอทั้ง 2 บทบาท), [[align-user-journey|align-user-journey]] (User Journey Map)
 
@@ -148,14 +149,18 @@
 **Layout**: หน้าจัดการรายวิชาใช้ tab 2 แท็บ — แท็บนี้คือ "CLO & PLO" (แท็บที่สองคือ "Course Syllabus" หน้าจอ 4)
 
 1. หัวหน้า: ชื่อวิชา + Curriculum Tag ของวิชานี้ (fixed ตอนสร้างวิชา, ไม่ให้แก้ทีหลังในหน้านี้เพื่อกันข้อมูลปนกลุ่ม — ตาม AB-02: "ไม่สามารถป้อน CLO โดยไม่ระบุกลุ่มหลักสูตรได้")
-2. รายการ CLO ของวิชา (การ์ดต่อข้อ): รหัส CLO (font `IBM Plex Mono` ตาม DESIGN.md §2.2), คำอธิบาย, และรายการ PLO ที่ผูกไว้แสดงเป็น chip เล็ก — **ตัวเลือก PLO ที่เลือกผูกได้ต้องกรองมาจากกลุ่มหลักสูตรเดียวกับ CLO นี้เท่านั้น** (dropdown/selector ไม่แสดง PLO ต่างกลุ่มให้เลือกเลย ป้องกันการผูกผิดตั้งแต่ UI ไม่ใช่แค่ validate ตอนบันทึก — ตรงกับ constraint ที่ backend บังคับใน `clo_plo_mapping`)
+2. รายการ CLO ของวิชา (การ์ดต่อข้อ): รหัส CLO (font `IBM Plex Mono` ตาม DESIGN.md §2.2), คำอธิบาย, และรายการ PLO ที่ผูกไว้แสดงเป็น chip เล็ก — **ตัวเลือก PLO ที่เลือกผูกได้ต้องกรองมาจากกลุ่มหลักสูตรเดียวกับ CLO นี้เท่านั้น** (dropdown/selector ไม่แสดง PLO ต่างกลุ่มให้เลือกเลย ป้องกันการผูกผิดตั้งแต่ UI ไม่ใช่แค่ validate ตอนบันทึก — ตรงกับ constraint ที่ backend บังคับใน `clo_plo_mapping`) — มุมขวาบนของการ์ดแต่ละใบมี**ปุ่มลบ CLO** (ghost button สไตล์เดียวกับปุ่ม "ลบ" ของหัวข้อ syllabus ที่หน้าจอ 4: ไม่มีพื้นหลัง/เส้นขอบในสถานะปกติ, ไอคอนถังขยะ line icon stroke 1.5px สี `text.secondary` ปกติ เปลี่ยนเป็นสี `status.gap` เมื่อ hover เพื่อสื่อว่าเป็น action ที่มีผลกระทบย้อนหลัง) — กดแล้ว**เปิด confirm dialog ก่อนเสมอ ไม่ลบทันที** (ดูรายละเอียดข้อ 3)
    - ตัวอย่าง (วิชา 127121 การรู้เท่าทันสื่อดิจิทัล, หลักสูตร 2565): CLO1 "วิเคราะห์และประเมินความน่าเชื่อถือของข้อมูลข่าวสารดิจิทัลได้" ผูก PLO1; CLO2 "อธิบายกลไกการทำงานของอัลกอริทึมสื่อสังคมออนไลน์และผลกระทบต่อผู้รับสารได้" ผูก PLO2; CLO3 "ประยุกต์ใช้เครื่องมือตรวจสอบข้อเท็จจริง (Fact-checking) กับเนื้อหาสื่อดิจิทัลได้" ผูก PLO2, PLO3; CLO4 "วิเคราะห์ผลกระทบของสื่อดิจิทัลต่อพฤติกรรมผู้รับสารและสังคมได้" ผูก PLO4 (ดูรายการ PLO ทั้งหมดที่ [[../../01-requirements/01-spec/plo-course-master-data|plo-course-master-data]])
-3. Gap Alert Banner แบบ inline ท้ายรายการ: ถ้ายังไม่มี CLO ใดผูกกับ PLO เลยสักข้อ แสดงข้อความ "ยังไม่มี CLO ที่ผูกกับ PLO — ต้องผูกอย่างน้อย 1 คู่ก่อนจึงบันทึกการสอนได้" (โทน `status.gap`, เป็นกลาง)
-4. ปุ่ม "เพิ่ม CLO" ท้ายรายการ
+3. **Confirm Dialog ก่อนลบ CLO** (บังคับเสมอ ไม่มีทางลบตรงจากการ์ดโดยไม่ผ่าน dialog นี้ — เพราะกระทบ `ai_match_result`/แผนที่ CLO×สัปดาห์ที่อาจมีอยู่แล้วตาม [[../02-technical/align-api-schema-design|align-api-schema-design]] §4.1): เปิด modal ลอยกลางจอ (`radius.lg` + `shadow.card` — pattern เดียวกับ Word Export Panel ที่หน้าจอ 9)
+   - หัวข้อ modal (`text.h3`): "ลบ CLO นี้ใช่หรือไม่" พร้อมรหัส CLO (`IBM Plex Mono`) และคำอธิบาย CLO นั้นกำกับให้เห็นชัดว่ากำลังจะลบข้อไหน
+   - เนื้อหาอธิบายผลกระทบด้วยโทนกลาง ไม่ตัดสิน (`text.body-sm`, สี `text.secondary`, ตาม UX Rule 3): "CLO นี้อาจมีข้อมูลแผนที่ CLO×สัปดาห์และผลจับคู่ AI (ทั้งที่ยังไม่ยืนยันและยืนยันแล้ว) ผูกอยู่แล้ว — ข้อมูลเหล่านั้นจะยังถูกเก็บไว้เป็นประวัติ แต่ CLO นี้จะถูกซ่อนออกจากรายการที่ใช้งานอยู่ทันทีหลังยืนยันลบ และระบบจะคำนวณสถานะความพร้อมบันทึกการสอนของวิชานี้ใหม่" (สอดคล้องกับพฤติกรรม soft-delete ที่ไม่ลบแถวจริงและ re-evaluate `clo_plo_ready` ทันทีตามที่ระบุไว้ใน align-api-schema-design.md)
+   - ปุ่ม 2 ปุ่มท้าย dialog: **"ยกเลิก"** (ghost button, สี `text.secondary`, ปิด dialog โดยไม่มีอะไรเปลี่ยนแปลง) และ **"ลบ CLO นี้"** (ปุ่มเน้น เส้นขอบทึบสี `status.gap`, พื้นหลัง `status.gap-tint`, ตัวอักษรสี `status.gap` — เจตนา**ไม่ใช้** `primary.green` เพราะปุ่มนี้เป็น destructive action ไม่ใช่ action เชิงยืนยันข้อมูลเชิงบวกแบบปุ่มอื่นในระบบ; DESIGN.md ยังไม่มี token "danger" แยกต่างหาก จึงเลือกใช้โทนเตือน `status.gap` ที่ใกล้เคียงที่สุดในชุดโทเค็นแทนสีแดงสด เพื่อคงธีม Earth Tone/Minimalist)
+4. Gap Alert Banner แบบ inline ท้ายรายการ: ถ้ายังไม่มี CLO ใดผูกกับ PLO เลยสักข้อ แสดงข้อความ "ยังไม่มี CLO ที่ผูกกับ PLO — ต้องผูกอย่างน้อย 1 คู่ก่อนจึงบันทึกการสอนได้" (โทน `status.gap`, เป็นกลาง) — banner นี้ต้องคำนวณใหม่ทันทีหลังลบ CLO สำเร็จเช่นกัน (ไม่ต้อง refresh หน้า) เผื่อ CLO ที่ถูกลบเป็นข้อสุดท้ายที่เคยผูกกับ PLO อยู่
+5. ปุ่ม "เพิ่ม CLO" ท้ายรายการ
 
 **Curriculum tag**: แสดงที่หัวหน้าและกำกับตัวเลือก PLO ทุกจุด (UX Rule 2)
 
-**States**: Empty State (ยังไม่มี CLO เลย), บล็อกไม่ให้ไปหน้าจอ 5 (บันทึกการสอน) จนกว่าเงื่อนไข "CLO ≥1 ผูก PLO ≥1" ผ่าน — สะท้อนด้วย badge สถานะที่หน้าจอ 2
+**States**: Empty State (ยังไม่มี CLO เลย), บล็อกไม่ให้ไปหน้าจอ 5 (บันทึกการสอน) จนกว่าเงื่อนไข "CLO ≥1 ผูก PLO ≥1" ผ่าน — สะท้อนด้วย badge สถานะที่หน้าจอ 2, **ลบ CLO สำเร็จ** — หลังกด "ลบ CLO นี้" ใน confirm dialog แล้ว การ์ด CLO นั้นหายออกจากรายการทันที (ไม่ต้อง refresh หน้า) และถ้าทำให้เงื่อนไข "CLO ≥1 ผูก PLO ≥1" ไม่ผ่านอีกต่อไป ระบบสลับกลับไปแสดง Gap Alert Banner ของข้อ 4 และสถานะ "ยังตั้งค่าไม่ครบ" ที่หน้าจอ 2 ทันทีเช่นกัน
 
 **จุดเชื่อมต่อ**: จากหน้าจอ 2 → สลับแท็บไปหน้าจอ 4 (Course Syllabus) ได้ในหน้าเดียวกัน → เมื่อเงื่อนไขผ่านแล้ว ปลดล็อกปุ่ม "บันทึกการสอน" ที่หน้าจอ 2 ให้ไปหน้าจอ 5
 
@@ -308,7 +313,7 @@
 | AB-24 | หน้าจอ 0A | ฟอร์มสมัครสมาชิก, badge draft-style "สถานะบัญชี: รออนุมัติ" |
 | AB-25 | หน้าจอ 0B | badge สถานะบัญชี (รออนุมัติ/ถูกปฏิเสธ), รายการฟีเจอร์ที่ถูกล็อก |
 | AB-27 | หน้าจอ 0B | badge สถานะบัญชี 3 แบบ (รออนุมัติ/อนุมัติแล้ว/ถูกปฏิเสธ), ปุ่มตามสถานะ |
-| AB-02 | หน้าจอ 3 | Curriculum Tag, ฟอร์ม CLO |
+| AB-02 | หน้าจอ 3 | Curriculum Tag, ฟอร์ม CLO, ปุ่มลบ CLO ต่อการ์ด + Confirm Dialog (soft-delete ตาม [[../02-technical/align-api-schema-design|align-api-schema-design]] §4.1) |
 | AB-03 | หน้าจอ 3 | Gap Alert Banner (เงื่อนไขผูก CLO–PLO), PLO selector ที่กรองตามหลักสูตร |
 | AB-05 | หน้าจอ 5 | ฟอร์มบันทึกการสอน, Evidence Attachment List |
 | AB-06 | หน้าจอ 5 | Evidence Attachment List (multi-file) |
