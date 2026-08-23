@@ -74,7 +74,7 @@
 ## หมายเหตุ
 
 - นับรวมทั้งหมด **26 Feature** จาก 26 User Stories ที่ใช้งานอยู่จริง (นับตามจำนวนแถวจริงในตารางของเอกสารนี้: E1=5, E2=3, E3=6, E4=5, E5=3, E6=4) — ไม่รวม AB-18 ที่ถูกตัดออกแล้ว (ดู [[../../00-archived/backlog-ab-18-area-of-improvement-toggle|00-archived]])
-- คำถามเปิดที่เคยยังไม่นิยามชัดเจน (นิยาม "ความถี่ที่แมทช์", โครงสร้างข้อมูล syllabus, "3 ระดับ" ของ Area of Improvement) **ปิดครบทุกข้อแล้ว (ยืนยัน 2026-08-20)** ดูรายละเอียดคำตอบที่ [[../../03-testing/01-test-plan/test-plan-align#6. หมายเหตุ — คำถามเปิดที่ต้องตอบก่อน implement/ทดสอบจริง|test-plan-align §6]]
+- คำถามเปิดที่เคยยังไม่นิยามชัดเจน — **ปิดครบทั้ง 3 ข้อแล้ว ยืนยัน 2026-08-20**: (1) โครงสร้างข้อมูล syllabus, (2) "3 ระดับ" ของ Area of Improvement, และ (3) **AB-21 (นิยาม "ความถี่ที่แมทช์" — หน่วยวัดและสูตรที่แน่นอน)** ไม่มีคำถามเปิดเหลืออีกต่อไป ดูรายละเอียดคำตอบที่ [[../../03-testing/01-test-plan/test-plan-align#6. หมายเหตุ — คำถามเปิดที่ต้องตอบก่อน implement/ทดสอบจริง|test-plan-align §6]] (โดยเฉพาะ §6.1 สำหรับ AB-21)
 
 ---
 ต่อยอด/เชื่อมโยง: [[product-backlog|product-backlog]] (User Story + Acceptance Criteria เต็ม) · [[../../02-design/01-prototypes/index|02-design/01-prototypes]] (หน้าจอที่รองรับแต่ละ Feature) · [[../../03-testing/01-test-plan/index|03-testing/01-test-plan]] (Test Case ต่อ Feature)
