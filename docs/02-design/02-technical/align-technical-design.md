@@ -79,6 +79,10 @@
 | curriculum_id | FK → curriculum | **บังคับ** — PLO ต้องผูกกับหลักสูตรเดียวเสมอ |
 | code | string | เช่น "PLO2" |
 | description | text | คำอธิบาย PLO |
+| is_deleted | boolean, default `false` | **[ยืนยันแล้ว]** ธง soft-delete — `DELETE /curricula/{year}/plos/{plo_id}` (หัวข้อ 3, E1) เป็น soft-delete เสมอ ไม่ลบแถวจริง แม้มี `clo_plo_mapping` ผูกอยู่แล้วก็ตาม เพื่อรักษาความสมบูรณ์ของ mapping/เอกสาร Word ที่เคย export ไปแล้ว (กฎ #4) — ดูรายละเอียดเหตุผลการตัดสินใจที่ align-api-schema-design.md §5.1/§3.2 |
+| deleted_at | datetime, nullable | ต้อง not-null คู่กับ `is_deleted = true` |
+
+> **Query rule**: ทุก query ที่ใช้แสดง PLO เป็นตัวเลือกให้ผูก CLO ใหม่ (เช่น dropdown ในหน้าจัดการ CLO–PLO) ต้องกรอง `is_deleted = false` เสมอ — PLO ที่ถูก soft-delete แล้วยังคง valid ในข้อมูลย้อนหลัง (mapping เดิม, `ai_match_result.linked_plo_ids` ที่เคย snapshot ไว้) แต่ไม่แสดงเป็นตัวเลือกใหม่ — ถ้าการ soft-delete ทำให้ CLO ใดเหลือ PLO ที่ `is_deleted=false` ผูกอยู่ 0 ข้อ ต้อง re-evaluate `course.clo_plo_ready` ทันที (กฎ #1)
 
 > **Seed data**: ข้อมูลจริงของ `curriculum` (2.1), `plo` (2.2), และ `course` (2.5) สำหรับทั้งสองหลักสูตร (สาขา New Media Communication) มีอยู่แล้วที่ [[../../01-requirements/01-spec/plo-course-master-data|plo-course-master-data]] — ใช้ import เป็นข้อมูลตั้งต้นตอนสร้างระบบจริงได้เลย ไม่ต้องรอผู้บริหารหลักสูตรพิมพ์เข้าไปใหม่ทั้งหมด
 
@@ -90,6 +94,10 @@
 | curriculum_id | FK → curriculum | **denormalized จาก course.curriculum_id** เพื่อให้ query/ตรวจ constraint ข้าม curriculum ได้เร็วโดยไม่ต้อง join ทุกครั้ง |
 | code | string | เช่น "CLO1" |
 | description | text | คำอธิบาย CLO |
+| is_deleted | boolean, default `false` | **[ยืนยันแล้ว]** ธง soft-delete — `DELETE /courses/{id}/clos/{clo_id}` (หัวข้อ 3, E1) เป็น soft-delete เสมอ ไม่ลบแถวจริง แม้มี `ai_match_result` (รวมที่ confirmed แล้ว) อ้างอิงอยู่ก็ตาม — ดูรายละเอียดเหตุผลการตัดสินใจที่ align-api-schema-design.md §5.1/§3.3 |
+| deleted_at | datetime, nullable | ต้อง not-null คู่กับ `is_deleted = true` |
+
+> **Query rule**: ไม่แสดง CLO ที่ `is_deleted = true` ในรายการ CLO ของวิชาอีก — หลัง soft-delete ต้อง re-evaluate `course.clo_plo_ready` ทันที (นับเฉพาะ CLO ที่ `is_deleted = false` ที่มี PLO ผูกอยู่ — กฎ #1) และ `total_clo_count` ใน `clo_coverage_summary` (หัวข้อ 2.10) ต้องนับเฉพาะ CLO ที่ `is_deleted = false` ของวิชานั้น (ฐาน 100% ไม่รวม CLO ที่ถูกลบแล้ว)
 
 ### 2.4 `clo_plo_mapping`
 | ฟิลด์ | ชนิด | คำอธิบาย |
@@ -135,6 +143,10 @@
 | taught_at | date | วันที่สอนจริง (ไม่ใช่แผนล่วงหน้า) |
 | created_by | FK → user | อาจารย์ผู้บันทึก |
 | status | enum('draft_ai_pending','confirmed') | สถานะยืนยันผล AI |
+| is_deleted | boolean, default `false` | **[ยืนยันแล้ว]** ธง soft-delete — บันทึกการสอนที่เคยถูกใช้คำนวณ `ai_match_result`/ปรากฏในเอกสาร Word ที่ export ไปแล้วยังคง valid ครบถ้วนตามกฎ #4 แม้อาจารย์ "ลบ" ออกจากหน้าจอที่ใช้งานอยู่ก็ตาม — ดูรายละเอียดที่ align-api-schema-design.md §5.1/§3.7 |
+| deleted_at | datetime, nullable | ต้อง not-null คู่กับ `is_deleted = true` |
+
+> **Query rule**: แผนที่ CLO×สัปดาห์ (หัวข้อ 3, E4) และ `clo_coverage_summary` (หัวข้อ 2.10) ต้องกรอง `is_deleted = false` ก่อนคำนวณ/แสดงผลเสมอ เพื่อไม่ให้บันทึกที่ "ลบ" แล้วยังถูกนับเป็นข้อมูลปัจจุบัน — เอกสาร Word ที่เคย export ไปแล้วยังอ้างอิงข้อมูลเดิมได้ครบ (ไม่กระทบย้อนหลัง)
 
 ### 2.8 `evidence` (ชิ้นงาน/หลักฐาน)
 | ฟิลด์ | ชนิด | คำอธิบาย |
@@ -146,6 +158,10 @@
 | uploaded_by | FK → user | |
 | uploaded_at | datetime | |
 | contains_student_pii | boolean (default true, ระมัดระวังไว้ก่อน) | ใช้เป็น flag ประกอบการควบคุมสิทธิ์ PDPA |
+| is_deleted | boolean, default `false` | **[ยืนยันแล้ว]** ธง soft-delete — สำคัญที่สุดในบรรดา entity ที่ soft-delete เพราะเป็น "หลักฐานจริง" ตามกฎ #4 โดยตรง — สิทธิ์เข้าถึง (หัวข้อ 2.13) ยังคงบังคับใช้เหมือนเดิมแม้ `is_deleted = true` แล้ว (ไม่เปิดให้ทุกคนเข้าถึงไฟล์ที่ "ลบแล้ว" ได้ง่ายขึ้น) — ดูรายละเอียดที่ align-api-schema-design.md §5.1/§3.8 |
+| deleted_at | datetime, nullable | ต้อง not-null คู่กับ `is_deleted = true` |
+
+> **Query rule**: หน้าจอ Evidence Attachment List และรายการหลักฐานที่ใช้สร้างเอกสาร export ต้องกรอง `is_deleted = false` เสมอ เพื่อไม่ให้ไฟล์ที่ถูก "ลบ" ปรากฏเป็นตัวเลือกที่ใช้งานได้อีก — การลบไฟล์จริงออกจากที่เก็บหลักฐาน (physical storage) เป็นรายละเอียดเชิง implementation แยกต่างหาก (เช่น job ลบไฟล์จริงหลังพ้นระยะเวลาที่กำหนด) ไม่ใช่ส่วนหนึ่งของ schema เชิงแนวคิดนี้
 
 ### 2.9 `ai_match_result` (ผลจับคู่ CLO/PLO ต่อบันทึกการสอน 1 รายการ — draft/confirmed)
 | ฟิลด์ | ชนิด | คำอธิบาย |
@@ -202,6 +218,10 @@
 | approved_at | datetime, nullable | เวลาที่อนุมัติ/ปฏิเสธครั้งล่าสุด — ต้อง not-null คู่กับ `approved_by` |
 | rejection_reason | text, nullable, ไม่บังคับกรอก | **[ยืนยันแล้ว]** เหตุผลที่ปฏิเสธบัญชี — ไม่บังคับกรอก เพราะเหตุผลปฏิเสธในทางปฏิบัติมีเพียงกรณีเดียวคือ "ไม่ใช่อาจารย์ผู้สอนของสาขา" คงฟิลด์นี้ไว้เป็น nullable เผื่อผู้บริหารหลักสูตรต้องการระบุรายละเอียดเพิ่มเติม แต่ backend ไม่ validate ว่าต้องมีค่า |
 | program_admin_curriculum_scope | FK[] → curriculum, nullable | สำหรับ `program_admin` (ผู้บริหารหลักสูตร) — ระบุว่าดูแลหลักสูตรกลุ่มใด ใช้จำกัด scope การเข้าถึงข้อมูล/หลักฐานข้ามหลักสูตร |
+| is_deleted | boolean, default `false` | **[ยืนยันแล้ว]** ธง soft-delete — ใช้เมื่ออาจารย์/ผู้บริหารหลักสูตรพ้นสภาพ (เช่น ลาออก) แยกจาก `account_status` โดยสิ้นเชิง (`account_status` คือสถานะการอนุมัติใช้งาน E1–E5, `is_deleted` คือบัญชีถูกปิดใช้งานถาวรแล้ว) — ดูรายละเอียดที่ align-api-schema-design.md §5.1/§3.12 |
+| deleted_at | datetime, nullable | ต้อง not-null คู่กับ `is_deleted = true` |
+
+> **หมายเหตุบังคับเพิ่มเติม — กลไกตรวจ `is_deleted` ของ `user`:** บัญชีที่ `is_deleted = true` ต้อง**ถูกปฏิเสธการ login/ทุก request ทันที** เสมือนเป็นอีกเงื่อนไข gate หนึ่งที่ประตูควบคุมสิทธิ์ต้องตรวจคู่กับ `account_status = 'approved'` (เพิ่มเติมจากหมายเหตุบังคับกฎ #6 ด้านล่าง) — บัญชีที่ `is_deleted = true` ต้องเข้าถึงอะไรไม่ได้เลยไม่ว่า `account_status` จะเป็นค่าใด — ข้อมูลที่บัญชีนี้เคยสร้าง/ยืนยันไว้ (`teaching_record.created_by`, `ai_match_result.confirmed_by` ฯลฯ) ยังคง valid ครบถ้วนตามกฎ #4 ไม่ได้รับผลกระทบ เพราะ FK ยังชี้ถึง `user_id` เดิมได้ปกติ — **ช่องว่างที่ยังไม่มีนิยาม**: ปัจจุบันยังไม่มี endpoint ที่ให้ deactivate/soft-delete บัญชี user โดยตรงทั้งในเอกสารนี้และ align-api-schema-design.md (มีแต่ field/กลไก แต่ยังไม่มี `DELETE`/`POST .../deactivate` ที่เรียกใช้จริง) ต้องออกแบบเพิ่มเมื่อ backlog ระบุ flow การ deactivate บัญชีชัดเจน
 
 > **[ยืนยันแล้ว] ฟิลด์ฟอร์มสมัครสมาชิก:** `name`, `email`, `password` เท่านั้น — **ไม่มีฟิลด์ `department`** เพราะระบบ ALIGN ทั้งระบบให้บริการเฉพาะสาขา New Media Communication สาขาเดียว (ดู [[../../CLAUDE.md|CLAUDE.md]] และ [[../01-requirements/01-spec/plo-course-master-data|plo-course-master-data]]) การระบุสังกัดจึงไม่มีความหมาย/ไม่จำเป็น หลังสมัครสำเร็จ อาจารย์เลือกวิชาที่สอน → อัปโหลดไฟล์ syllabus ทางการ + กรอกหัวข้อที่วางแผนสอนแต่ละสัปดาห์ → กรอก CLO/ผูก PLO → กรอกข้อมูลการสอนจริงแต่ละสัปดาห์ (ลำดับตาม E1/E2 ที่มีอยู่แล้ว) ต้นแบบ `M-SignUp.dc.html` และ `align-app-screens.md` ได้อัปเดตให้สอดคล้องกับการยืนยันนี้แล้ว (2026-08-20) — ฟอร์มสมัครสมาชิกในต้นแบบมีเฉพาะ ชื่อ-นามสกุล/อีเมลสถาบัน/รหัสผ่าน/ยืนยันรหัสผ่าน ไม่มีฟิลด์ department/สังกัดหลงเหลืออยู่อีกต่อไป
 
@@ -243,9 +263,11 @@ evidence 1──* evidence_access_log
 | Method & Path | จุดประสงค์ | Request/Response สำคัญ |
 |---|---|---|
 | `POST /curricula/{year}/plos` | เพิ่ม PLO ให้กลุ่มหลักสูตร 2565 หรือ 2570 | req: `{code, description}` (curriculum ระบุจาก path) |
-| `GET /curricula/{year}/plos` | ดึงรายการ PLO ของหลักสูตรนั้น (ไม่ปนกลุ่มอื่น) | res: `[{plo_id, code, description}]` |
+| `GET /curricula/{year}/plos` | ดึงรายการ PLO ของหลักสูตรนั้น (ไม่ปนกลุ่มอื่น) — กรอง `is_deleted = false` เสมอเมื่อใช้เป็นตัวเลือกให้ผูก CLO ใหม่ | res: `[{plo_id, code, description}]` |
+| `DELETE /curricula/{year}/plos/{plo_id}` | **[ยืนยันแล้ว]** soft-delete PLO — ตั้ง `is_deleted = true`, `deleted_at = now()` เสมอ ไม่ลบแถวจริง ไม่บล็อกด้วย 409 แม้มี `clo_plo_mapping` ผูกอยู่แล้ว (ดูผลกระทบที่หัวข้อ 2.2) | res: `{plo_id, is_deleted: true, deleted_at}` |
 | `POST /courses` | สร้างรายวิชา ต้องระบุ `curriculum_id` | req: `{code, name, curriculum_id, instructor_id}` |
 | `POST /courses/{id}/clos` | เพิ่ม CLO ให้วิชา (tag curriculum ตามวิชาอัตโนมัติ) | req: `{code, description}` |
+| `DELETE /courses/{id}/clos/{clo_id}` | **[ยืนยันแล้ว]** soft-delete CLO — ตั้ง `is_deleted = true`, `deleted_at = now()` เสมอ ไม่ลบแถวจริง ไม่บล็อกด้วย 409 แม้มี `ai_match_result` (รวมที่ confirmed แล้ว) อ้างอิงอยู่ — backend ต้อง re-evaluate `clo_plo_ready`/`total_clo_count` ทันทีหลัง soft-delete (ดูหัวข้อ 2.3) | res: `{clo_id, is_deleted: true, deleted_at}` |
 | `POST /courses/{id}/clo-plo-mappings` | ผูก CLO–PLO | req: `{clo_id, plo_id}` — backend ต้อง validate `clo.curriculum_id == plo.curriculum_id` มิฉะนั้น 422 |
 | `GET /courses/{id}/setup-status` | เช็คว่าวิชาผูก CLO–PLO ครบเงื่อนไข (gate ก่อนบันทึกการสอน) หรือยัง | res: `{clo_plo_ready: boolean}` |
 | `GET /curricula/{year}/courses/status-overview` | ภาพรวมความครบถ้วนการตั้งค่าของทุกวิชาในกลุ่มหลักสูตร (สำหรับผู้บริหารหลักสูตร/`program_admin`, AB-04) | res: `[{course_id, name, clo_plo_ready}]` |
@@ -258,8 +280,8 @@ evidence 1──* evidence_access_log
 |---|---|---|
 | `POST /courses/{id}/teaching-records` | บันทึกการสอน — backend ปฏิเสธ (409) ถ้า `clo_plo_ready = false` | req: `{topic, week_no, taught_at}` |
 | `POST /teaching-records/{id}/evidence` | แนบไฟล์หลักฐาน (เรียกซ้ำได้หลายไฟล์) | req: multipart file → res: `{evidence_id, file_name}` |
-| `DELETE /teaching-records/{id}/evidence/{evidence_id}` | ลบไฟล์ที่แนบผิดก่อนยืนยันบันทึก | — |
-| `GET /teaching-records/{id}/evidence` | ดูรายชื่อไฟล์ที่แนบ (เฉพาะผู้มีสิทธิ์ตาม PDPA) | res: `[{evidence_id, file_name, uploaded_at}]` |
+| `DELETE /teaching-records/{id}/evidence/{evidence_id}` | **[ยืนยันแล้ว]** soft-delete evidence เสมอ (ตั้ง `is_deleted = true`, `deleted_at = now()`) ไม่ลบแถว/ไฟล์จริงทันที ทั้งกรณีลบไฟล์ที่แนบผิดก่อนยืนยันบันทึก (AB-06) และกรณีอื่นใด — เพื่อรักษาความสมบูรณ์ของเอกสาร Word ที่เคย export อ้างอิงไฟล์นี้ไปแล้ว (กฎ #4) และรักษา audit trail ของ PDPA (กฎ #5) ดูหัวข้อ 2.8 | res: `{evidence_id, is_deleted: true, deleted_at}` |
+| `GET /teaching-records/{id}/evidence` | ดูรายชื่อไฟล์ที่แนบ (เฉพาะผู้มีสิทธิ์ตาม PDPA) — กรอง `is_deleted = false` เสมอ | res: `[{evidence_id, file_name, uploaded_at}]` |
 | `GET /evidence/{id}/download` | ดาวน์โหลดไฟล์หลักฐาน — backend ตรวจสิทธิ์ตามหัวข้อ 2.13 ก่อน proxy ไปยัง storage ทุกครั้ง และเขียน `evidence_access_log` | — |
 
 ### E3 — AI ประมวลผลจับคู่ CLO/PLO + วิเคราะห์ gap เทียบ course syllabus
@@ -356,19 +378,24 @@ evidence 1──* evidence_access_log
 
 ---
 
-## 5. Tech Stack — ข้อเสนอ (ยืนยันกับทีมพัฒนาก่อนเริ่มจริง)
+## 5. Tech Stack — สรุป (รายละเอียดเต็มอยู่ที่ [[align-tech-stack|align-tech-stack]])
 
-> หัวข้อนี้ทั้งหมดเป็น**ข้อเสนอ**เท่านั้น ยังไม่มีการตัดสินใจจริงจากทีมพัฒนา — เลือกจาก pattern ที่พบทั่วไปสำหรับ web app + backend API + relational DB + document-generation ลักษณะนี้ ไม่ใช่ข้อสรุปสุดท้าย
+> อัปเดต 2026-08-23: หัวข้อนี้เคยเป็นข้อเสนอคร่าวๆ ที่เขียนก่อนสัมภาษณ์ทีมพัฒนาจริง — เนื้อหาเดิมย้ายไปเก็บถาวรที่ [[../00-archived/align-technical-design-section5-tech-stack-draft|align-technical-design-section5-tech-stack-draft]] แล้ว (ไม่ใช่เพราะผิด แต่เพราะตอนนี้มีคำตอบจากการสัมภาษณ์จริงมาแทนที่) ปัจจุบันยึด [[align-tech-stack|align-tech-stack]] เป็น **แหล่งข้อมูลเต็มรูปแบบและเป็นทางการ** (rationale ทีละชั้น, ทางเลือกที่ไม่เลือกพร้อมเหตุผล, ประเด็นที่ยังต้องกลับมายืนยันซ้ำ) — หัวข้อนี้เหลือไว้เฉพาะบทสรุปสั้นๆ เพื่อให้เห็นภาพทันทีโดยไม่ต้องเปิดไฟล์อื่น
 
-| ส่วนประกอบ | ข้อเสนอ | เหตุผลคร่าวๆ |
-|---|---|---|
-| Frontend | Web app (SPA) เช่น React/Vue หรือ framework ที่ทีมคุ้นเคย | ต้องรองรับหน้าจอเชิงโต้ตอบ (แก้ไขผล AI ก่อนยืนยัน, ตารางแผนที่ CLO×สัปดาห์) ซึ่งเหมาะกับ SPA มากกว่า server-rendered ล้วน |
-| Backend API | REST API บน framework เชิง object-oriented หรือ Node.js/Python framework ที่ทีมคุ้นเคย | ต้องมี middleware สำหรับสิทธิ์ตามบทบาท/PDPA ได้ง่าย และ ecosystem ไลบรารีสร้างเอกสาร Word ที่พร้อมใช้ |
-| ฐานข้อมูล | Relational DB (เช่น PostgreSQL/MySQL) | โมเดลข้อมูลเป็นเชิงสัมพันธ์ชัดเจน (curriculum → PLO/CLO → mapping → course → teaching_record) และต้องบังคับ constraint เรื่อง curriculum เดียวกันได้แน่นหนา ซึ่ง RDBMS รองรับผ่าน foreign key + check constraint ได้ตรงจุด |
-| Evidence/File Storage | Object storage (เช่น S3-compatible) แยกจาก DB หลัก + ควบคุมสิทธิ์ผ่าน backend (signed URL ระยะสั้น หรือ proxy download) | ไฟล์ชิ้นงานมีขนาด/ชนิดหลากหลาย และต้องคุมสิทธิ์เข้าถึงตาม PDPA ได้ละเอียดกว่าเก็บเป็น BLOB ใน DB |
-| AI Matching Service | บริการแยก (internal service หรือเรียก LLM API ภายนอก) อยู่หลัง backend API เท่านั้น ไม่ให้ frontend เรียกตรง | แยก concern และควบคุม scope ข้อมูล (ส่งเฉพาะ CLO ของ curriculum ที่ถูกต้อง) ได้ง่ายกว่าให้ client คุยตรงกับ AI |
-| Word-export Service | ไลบรารี generate เอกสาร Word ฝั่ง backend (เช่น ไลบรารีสร้าง .docx จาก template) | ต้อง generate เอกสารตาม template มคอ./QA ที่มีรูปแบบคงที่ และอ่านข้อมูลจาก DB โดยตรงได้สะดวกกว่าทำฝั่ง client |
-| Auth | Session/token-based authentication พร้อม role (`instructor`/`program_admin`) และ scope (`program_admin_curriculum_scope`) แนบใน token/session | ต้องใช้ตรวจสิทธิ์ในทุก endpoint ที่แตะ evidence/เอกสารส่งออก — QA ไม่มี account จึงไม่มี role สำหรับ QA ในระบบนี้ |
+Stack ที่เลือกจริง (สรุปจากผลสัมภาษณ์ทีมพัฒนา 1–2 คน, เดดไลน์ปลายตุลาคม 2569, งบ/data residency/SSO/deployment ยังไม่ยืนยัน):
+
+| ส่วนประกอบ | Stack ที่เลือก |
+|---|---|
+| Frontend | Next.js (React) + Tailwind CSS |
+| Backend/API | Next.js API Routes / Server Actions (ฝังในโปรเจกต์เดียวกับ frontend — เป็น Access Gate + Core Orchestration ตามหัวข้อ 3) |
+| ฐานข้อมูล | PostgreSQL ผ่าน Supabase (RLS เป็น defense-in-depth ชั้นที่สอง ไม่ใช่กลไกบังคับกฎหลัก) |
+| Auth | Supabase Auth (email/password) รองรับ flow E6 พร้อมช่องเชื่อม SSO ในอนาคต |
+| Evidence storage | Supabase Storage (S3-compatible) — มีทางย้ายไป self-host MinIO ได้โดยไม่ต้องเขียนโค้ด access-control ใหม่ |
+| AI/LLM (จับคู่ CLO/PLO + gap analysis) | Hybrid: Transformers.js (`@xenova/transformers`, in-process, default เปิดเสมอ) + external LLM API (feature-flag, ปิดโดย default) — ผลลัพธ์ทุกเส้นทางเขียนเป็น `state = 'draft'` เสมอตามกฎ #3 |
+| Word export | ไลบรารี `docx`/`docxtemplater` (npm) เรียกจาก Server Action ที่อ่านเฉพาะข้อมูล `confirmed` |
+| Hosting | Vercel (frontend+API) + Supabase Cloud region Singapore (ap-southeast-1) เป็นจุดเริ่มต้น — portable ไปยัง self-host ได้ทั้งคู่เมื่อยืนยันงบ/data residency |
+
+หลักการเลือกภาพรวม: 1 โปรเจกต์ Next.js + 1 บริการ Supabase เป็น deployable unit เดียว เพื่อลดภาระดูแลของทีมเล็กที่ไม่มีโปรแกรมเมอร์มืออาชีพดูแลต่อ พร้อม migration path ที่ชัดเจนสำหรับทุกจุดที่ยังไม่ยืนยัน (งบ, data residency, SSO, ที่เก็บไฟล์, deployment สุดท้าย) — ดูรายละเอียดเหตุผล/ทางเลือกที่ไม่เลือก/ตารางประเด็นค้างยืนยันทั้งหมดที่ [[align-tech-stack|align-tech-stack]] §1–4
 
 ---
 
