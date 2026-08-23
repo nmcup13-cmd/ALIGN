@@ -150,7 +150,8 @@
     <b>สาธิต:</b>
     <button class="devbtn" id="devInstr" onclick="setRole('instructor')">อาจารย์ผู้สอน</button>
     <button class="devbtn" id="devAdmin" onclick="setRole('admin')">ผู้บริหารหลักสูตร</button>
-    <span style="margin-left:auto;color:var(--text-secondary);">บัญชี: <b id="devStatus">รออนุมัติ</b></span>
+    <button class="devbtn" onclick="demoSignupFlow()" title="ทดสอบขั้นตอนสมัครสมาชิก/รออนุมัติ (AB-24 ถึง AB-27) แยกต่างหาก">ทดสอบขั้นตอนสมัคร/อนุมัติ</button>
+    <span style="margin-left:auto;color:var(--text-secondary);">บัญชี: <b id="devStatus">อนุมัติแล้ว</b></span>
   </div>
 
   <div class="content" id="content"></div>
@@ -168,8 +169,8 @@
 /* ---------------- shared state ---------------- */
 const S = {
   role: 'instructor',
-  accountStatus: 'none',      // none -> pending -> approved | rejected
-  screen: 'signup',
+  accountStatus: 'approved',  // [โหมดทดสอบ] เริ่มต้นอนุมัติแล้วเพื่อข้ามขั้นตอนสมัคร/รออนุมัติ — กดปุ่ม "ทดสอบขั้นตอนสมัคร/อนุมัติ" ในแถบสาธิตเพื่อดู flow นี้แยกต่างหาก (ระบบจริงต้องเริ่มที่ 'none' เสมอตามกฎทางธุรกิจ #6)
+  screen: 'dashboard',
   signup: { name:'', email:'', pw:'', pw2:'', touched:false },
   pendingAccounts: [
     { id:1, name:'อ.กมลชนก พรหมมา', email:'kamonchanok.p@university.ac.th' }
@@ -201,6 +202,7 @@ function setRole(role){
   render();
 }
 
+function demoSignupFlow(){ S.accountStatus='none'; S.signup={ name:'', email:'', pw:'', pw2:'', touched:false }; setRole('instructor'); }
 function goto(screen){ S.screen = screen; render(); window.scrollTo(0,0); }
 function openExport(){
   const c = course();
