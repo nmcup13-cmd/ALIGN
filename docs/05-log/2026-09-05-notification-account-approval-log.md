@@ -39,3 +39,20 @@
 - §3.15: ปรับฟิลด์ชุดสุดท้ายเป็น `notification_id, user_id, clo_id, curriculum_id, message, is_resolved, resolved_at, created_at` (ลบเครื่องหมาย [ข้อเสนอ — ยังไม่ยืนยัน]) พร้อมเพิ่มหมายเหตุ index/unique constraint และปิดประเด็น Delete (ไม่มี soft/hard-delete — auto-resolve เปลี่ยนสถานะแทน)
 - §4.4: ปรับ `GET /me/notifications` ให้ default กรอง `is_resolved=false` (รับ `?include_resolved=true` เสริม) และตัด endpoint `POST /me/notifications/{id}/read` ออก (ไม่จำเป็นตามแนวทาง B) พร้อมหมายเหตุอธิบายเหตุผล
 - §5: ปิดหัวข้อ 5.5 เป็น "ยืนยันแล้ว: แนวทาง B" — ทุกหัวข้อ 5.1–5.5 ยืนยันครบแล้ว ไม่มีคำถามเปิดค้างในเอกสารนี้อีก
+
+## อัปเดต (2026-09-05, ภายหลังอีกครั้ง): เพิ่ม test case ให้ 2 entity นี้ครบแล้วใน test plan
+
+`test-designer` เพิ่ม test case ใน `docs/03-testing/01-test-plan/` รองรับพฤติกรรมของทั้ง 2 entity ที่ยืนยันแล้ว (ไม่มีคำถามเปิดเหลือ จึงเขียนเป็น test case ยืนยันได้ทันที ไม่ต้องเป็น placeholder):
+
+- **`notification` (BR#2, AB-12)** — เพิ่ม **TC-AB12-06 ถึง TC-AB12-10** (5 รายการ) ใน [[../03-testing/01-test-plan/e4-dashboard-alerts|e4-dashboard-alerts]]:
+  - TC-AB12-06 (Happy path): auto-resolve — `is_resolved`/`resolved_at` ถูก set อัตโนมัติทันทีที่ CLO มีผลจับคู่ `confirmed` แล้ว ไม่ใช่ผู้ใช้กด "อ่านแล้ว"
+  - TC-AB12-07 (Rejection): partial unique index กัน insert แจ้งเตือนซ้ำสำหรับ `clo_id` เดียวกันที่ยัง `is_resolved=false`
+  - TC-AB12-08 (Edge case): reopen ต้องสร้างแถวใหม่ ไม่ reuse/reopen แถวเดิมที่ resolved ไปแล้ว (รักษาประวัติ)
+  - TC-AB12-09 (Happy path): แจ้งเตือนที่ resolved หายจาก `GET /me/dashboard` เองทันที (ยังอยู่ใน DB, กรองออกจาก default query เท่านั้น)
+  - TC-AB12-10 (Rejection): PDPA/scope — เห็นเฉพาะแจ้งเตือนของตนเอง (`user_id = current_user`)
+- **`account_approval_log` (audit trail ของ AB-26)** — เพิ่ม **TC-AB26-08 ถึง TC-AB26-10** (3 รายการ) ใน [[../03-testing/01-test-plan/e6-user-registration-approval|e6-user-registration-approval]]:
+  - TC-AB26-08 (Happy path): INSERT แถวใหม่พร้อมกับอัปเดต `user.account_status`/`approved_by`/`approved_at` ในธุรกรรมเดียวกันเสมอ (ไม่ commit แยกกัน)
+  - TC-AB26-09 (Happy path): append-only — ประวัติเดิมไม่ถูกลบ/เขียนทับแม้บัญชีเดียวกันถูกตัดสินใจซ้ำหลายรอบ (ต่างจาก `user.approved_by`/`approved_at` ที่เก็บเฉพาะล่าสุด)
+  - TC-AB26-10 (Rejection): `decided_by` ต้องเป็นบัญชี `role=program_admin` เท่านั้น — มี constraint สำรองที่ระดับ schema ไม่ใช่พึ่งเฉพาะการตรวจ role ที่ backend API layer ชั้นเดียว
+
+**ผลกระทบต่อยอดรวม test plan**: อัปเดต §5 ของ [[../03-testing/01-test-plan/test-plan-align|test-plan-align]] และสรุปใน [[../03-testing/01-test-plan/index|index]] — E4 จาก 20 เป็น **25** (happy 9→11, edge 5→6, rejection 6→8), E6 จาก 25 เป็น **28** (happy 12→14, edge คงที่ 4, rejection 9→10) — ยอดรวมทั้งโปรเจกต์จาก **146 เป็น 154 test case** placeholder ยังคงเป็น 0 รายการ ไม่มีคำถามเปิดใหม่เกิดขึ้นจากงานนี้ (ทั้ง 2 entity มี field/พฤติกรรมยืนยันแล้วครบตาม `align-technical-design.md` §2.14/§2.15 และ `align-api-schema-design.md` §3.14/§3.15 อยู่แล้วก่อนเริ่มเขียน test case)

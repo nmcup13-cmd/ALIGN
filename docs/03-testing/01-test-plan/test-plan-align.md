@@ -133,10 +133,10 @@
 | E1 | 33 | 13 | 12 | 8 | 0 |
 | E2 | 18 | 7 | 5 | 6 | 0 |
 | E3 | 35 | 16 | 8 | 11 | 0 |
-| E4 | 20 | 9 | 5 | 6 | 0 |
+| E4 | 25 | 11 | 6 | 8 | 0 |
 | E5 | 15 | 6 | 3 | 6 | 0 |
-| E6 | 25 | 12 | 4 | 9 | 0 |
-| **รวม** | **146** | **63** | **37** | **46** | **0** |
+| E6 | 28 | 14 | 4 | 10 | 0 |
+| **รวม** | **154** | **67** | **38** | **49** | **0** |
 
 (ตัวเลขนับตามจริงจากตารางในแต่ละไฟล์ย่อย — นับ 1 แถว = 1 test case; TC-AB19-06 ใน E1 ที่มีประเภท "Accepted Risk" ถูกนับรวมในคอลัมน์ Edge case เพื่อให้ผลรวมของแต่ละแถวตรงกับจำนวน test case จริง)
 (อัปเดตหลังตอบคำถามเปิด §6.1: E3 TC-AB21-04/05 เปลี่ยนจาก placeholder เป็น Edge case/Happy path ที่ยืนยันแล้ว และเพิ่ม TC-AB11-05 ใหม่ใน E4)
@@ -158,6 +158,10 @@
 (อัปเดต 2026-08-23 (รอบที่ 2) — ผู้ใช้ยืนยันว่า **CLO soft-delete เป็นฟีเจอร์ที่ต้องการจริง** ครบ 5/5 entity ตามที่ `align-api-schema-design.md` §3.3, §4.1, §5.1 ระบุไว้แล้วว่า "[ยืนยันแล้ว]" — แก้ไขหมายเหตุด้านบน (เดิมเขียนผิดว่า `DELETE /courses/{id}/clos/{clo_id}` "ยังเป็น open question") ให้ตรงกับความจริงว่า**ไม่ใช่คำถามเปิด**และเพิ่ม test case ครบแล้ว:
 - **E1**: เพิ่ม TC-AB02-05/06/07 ใน [[e1-clo-plo-syllabus-setup|e1-clo-plo-syllabus-setup]] (ลบ CLO ที่มี `ai_match_result` รวมที่ confirmed แล้วอ้างอิงอยู่ → soft-delete สำเร็จ ไม่ error 409, ข้อมูลย้อนหลังยัง valid ครบถ้วน; หลัง soft-delete ไม่แสดง CLO ในรายการ CLO ของวิชาอีก, `clo_plo_ready`/`total_clo_count` re-evaluate ทันที; กรณีวิชาที่มี CLO เดียวแล้วถูกลบ → `clo_plo_ready` กลับเป็น `false` บล็อกบันทึกการสอนใหม่ด้วย 409) — จาก 30 เป็น **33** (happy path 12→13, edge case 10→12)
 - **รวมทั้งหมด**: เพิ่มจาก 143 เป็น **146 test case** placeholder ยังคงเป็น 0 รายการ)
+(อัปเดต 2026-09-05 — เพิ่ม test case รองรับ 2 entity ใหม่ที่เพิ่งเข้า schema (`align-technical-design.md` §2.14/§2.15, `align-api-schema-design.md` §3.14/§3.15) ซึ่งเดิมยังไม่มี test case ใดทดสอบเลย:
+- **E4**: เพิ่ม TC-AB12-06/07/08/09/10 ใน [[e4-dashboard-alerts|e4-dashboard-alerts]] ครอบคลุมกลไก `notification` (BR#2, AB-12, T-042–T-045) ครบ 5 พฤติกรรม — auto-resolve อัตโนมัติเมื่อ CLO มีผลจับคู่ `confirmed` แล้ว (TC-AB12-06), partial unique index กันสร้างแจ้งเตือนซ้ำสำหรับ `clo_id` เดียวกันที่ยัง unresolved (TC-AB12-07), reopen ต้องสร้างแถวใหม่ไม่ reuse แถวเดิมที่ resolved ไปแล้ว (TC-AB12-08), แจ้งเตือนที่ resolved หายจากแดชบอร์ดเองทันทีโดยผู้ใช้ไม่ต้องทำอะไร (TC-AB12-09), และขอบเขตสิทธิ์ PDPA เห็นเฉพาะแจ้งเตือนของตนเอง (TC-AB12-10) — จาก 20 เป็น **25** (happy path 9→11, edge case 5→6, rejection 6→8)
+- **E6**: เพิ่ม TC-AB26-08/09/10 ใน [[e6-user-registration-approval|e6-user-registration-approval]] ครอบคลุม `account_approval_log` (audit trail ของ AB-26) ครบ 3 พฤติกรรม — INSERT แถวใหม่พร้อมกับอัปเดต `user.account_status`/`approved_by`/`approved_at` ในธุรกรรมเดียวกันเสมอ (TC-AB26-08), เป็น append-only ไม่ลบ/ไม่เขียนทับประวัติเดิมแม้บัญชีเดียวกันถูกตัดสินใจซ้ำหลายรอบ (TC-AB26-09), และ `decided_by` ต้องเป็นบัญชี `role=program_admin` เท่านั้น มี constraint สำรองที่ระดับ schema ไม่ใช่พึ่งเฉพาะ backend layer (TC-AB26-10) — จาก 25 เป็น **28** (happy path 12→14, edge case คงที่ 4, rejection 9→10)
+- **รวมทั้งหมด**: เพิ่มจาก 146 เป็น **154 test case** placeholder ยังคงเป็น 0 รายการ)
 
 ---
 
