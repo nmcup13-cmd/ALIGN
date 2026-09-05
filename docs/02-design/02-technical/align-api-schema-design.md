@@ -236,7 +236,7 @@ erDiagram
 
 **Indexing เชิงแนวคิด**: ดัชนีที่ `course_id` (ทุกครั้งที่โหลดหน้าสรุปวิชา/แดชบอร์ด)
 
-### 3.11 `syllabus_gap_result` (ผลวิเคราะห์ gap เทียบ syllabus — draft/confirmed, แยกจาก ai_match_result)
+### 3.11 `syllabus_gap_result` (ผลวิเคราะห์ gap เทียบ syllabus — draft/confirmed, แยกจาก ai_match_result, append-only history [ยืนยันแล้ว])
 
 | ฟิลด์ | ชนิดเชิงแนวคิด | Constraint | ความสัมพันธ์ | PDPA/Draft-Confirmed |
 |---|---|---|---|---|
@@ -252,7 +252,9 @@ erDiagram
 
 **กฎสำคัญ**: เฉพาะ `state = 'confirmed'` เท่านั้นที่ใช้ในแดชบอร์ด (AB-23) และเอกสาร Area of Improvement (AB-16) — เป็นผลวิเคราะห์**แยก**จากการจับคู่ CLO/PLO โดยสิ้นเชิง (คนละ entity คนละปุ่มยืนยัน)
 
-**Indexing เชิงแนวคิด**: ดัชนีที่ `course_id` (ดึงผลล่าสุดของวิชา), อาจต้องดัชนีที่ `(course_id, generated_at)` ถ้าต้องเก็บประวัติหลายรอบต่อวิชา — หมายเหตุ: `syllabus_gap_result` **ไม่ได้อยู่ในรายการ 5 entity** ที่ตัดสินใจ soft-delete ในหัวข้อ 5.1 (ระบุเฉพาะ `plo`, `clo`, `teaching_record`, `evidence`, `user`) เรื่องการเก็บประวัติหลายรอบ/การลบผลวิเคราะห์รอบเก่าของ entity นี้จึงยังเป็นรายละเอียดที่ยังไม่ถูกกำหนด — ถ้าจำเป็นต้องตัดสินใจในอนาคต ให้ยกเป็นคำถามเปิดใหม่แยกต่างหาก
+**การเก็บประวัติหลายรอบ — [ยืนยันแล้ว]**: `syllabus_gap_result` เป็น **append-only / insert-only history** — ทุกครั้งที่ระบบรัน gap analysis ใหม่ (เช่น หลังบันทึกการสอนเพิ่ม หรือหลังแก้ไข syllabus) ให้ **INSERT แถวใหม่เสมอ** ห้าม UPDATE/เขียนทับแถวเดิม และห้ามลบแถวเก่าไม่ว่าจะเป็น hard-delete หรือ soft-delete — ทุกรอบที่เคยรันยังคงอยู่ในฐานข้อมูลถาวรเป็นประวัติการวิเคราะห์ทั้งหมดของวิชานั้น ด้วยเหตุนี้ entity นี้จึง**ไม่ต้องมีฟิลด์ `is_deleted`/`deleted_at`** เลย (ต่างจากกลุ่ม 5 entity ในหัวข้อ 5.1 ที่ต้องมีธง soft-delete เพราะมีการ "ลบ" เกิดขึ้นจริง — `syllabus_gap_result` ไม่มีการลบเกิดขึ้นเลยตามการตัดสินใจนี้ จึงไม่ใช่กรณีเดียวกับหัวข้อ 5.1 และไม่จำเป็นต้องเพิ่มเข้าไปในรายการนั้น) — field `generated_at` ที่มีอยู่แล้วในตารางด้านบนทำหน้าที่เป็นตัวระบุลำดับเวลาสำหรับหาแถว "ล่าสุด" อยู่แล้ว จึง**ไม่ต้องเพิ่มฟิลด์ใหม่**เข้า schema
+
+**Indexing เชิงแนวคิด**: ดัชนีที่ `(course_id, generated_at)` **จำเป็นเสมอ** (ไม่ใช่แค่ "อาจต้อง" อีกต่อไป) เพราะทุกการดึง "ผลล่าสุดของวิชา" ต้อง query แบบเรียงตาม `generated_at` จากมากไปน้อยต่อ `course_id` แล้วเอาแถวบนสุด (เทียบเท่า ORDER BY DESC LIMIT 1) — เนื่องจากแถวจะสะสมเพิ่มขึ้นเรื่อยๆ ตามจำนวนรอบที่รันโดยไม่มีการลบ จึงควรวางดัชนีนี้ไว้ตั้งแต่ต้นเพื่อไม่ให้กระทบ performance เมื่อประวัติยาวขึ้น
 
 ### 3.12 `user` / role
 
@@ -336,6 +338,8 @@ erDiagram
 
 **Error handling เพิ่มเติมที่ควรระบุชัด**: `POST /ai-match-results/{id}/confirm` ที่เรียกซ้ำกับรายการที่ `state` เป็น `confirmed`/`rejected` ไปแล้ว ควรตอบ **409 Conflict** (state transition ไม่ถูกต้อง) ไม่ใช่ทำซ้ำเงียบๆ — เช่นเดียวกับ `syllabus-gap-results/{id}/confirm`
 
+**`GET /courses/{id}/syllabus-gap-results` — [ยืนยันแล้ว, หัวข้อ 3.11]**: แม้ฐานข้อมูลจะเก็บ `syllabus_gap_result` ทุกรอบไว้เป็นประวัติแบบ append-only (ไม่มีการลบ/เขียนทับ) endpoint นี้ยังคง**ดึงเฉพาะแถวล่าสุดของวิชานั้นมาแสดง** (query แบบเรียงตาม `generated_at` มากไปน้อยต่อ `course_id` แล้วเอาแถวบนสุด — เทียบเท่า ORDER BY DESC LIMIT 1) เพื่อให้ UI แสดงสถานะปัจจุบันของ gap analysis เพียงชุดเดียว ไม่ปนกับประวัติรอบเก่า — สอดคล้องกับที่ [[align-technical-design#e3-ai-ประมวลผลจับคู่-clo-plo-วิเคราะห์-gap-เทียบ-course-syllabus|align-technical-design §3]] ระบุไว้ว่า "ดึงผลวิเคราะห์ gap ล่าสุด" อยู่แล้ว (เอกสารนี้เพียงทำให้ชัดว่า "ล่าสุด" หมายถึง query อย่างไรเมื่อ DB เก็บทุกรอบไว้จริง) — ถ้าในอนาคตมีความต้องการดูประวัติทุกรอบ (เช่น หน้าจอเปรียบเทียบ trend การลด gap) ให้เพิ่ม endpoint แยกต่างหาก (เช่น `GET /courses/{id}/syllabus-gap-results/history`) แทนการเปลี่ยนพฤติกรรมของ endpoint เดิม
+
 ### 4.4 E4 — แดชบอร์ดและแจ้งเตือน
 
 ครบตามที่ [[align-technical-design#e4-แดชบอร์ดและแจ้งเตือน|align-technical-design §3 (E4)]] ระบุไว้แล้ว (`GET /me/dashboard`, `GET /courses/{id}/clo-week-map`, `GET /curricula/{year}/dashboard`, `GET /courses/{id}/teaching-vs-syllabus`) — สิทธิ์ที่ต้องตรวจ: `account_status='approved'` เสมอ + (`instructor_id`ของตนเองสำหรับ endpoint ระดับวิชา, หรือ `program_admin_curriculum_scope` ตรงกับ `{year}` สำหรับ endpoint ระดับหลักสูตร)
@@ -370,7 +374,7 @@ erDiagram
 | **B. Hard-delete ทุก entity (ลบจริงทันที)** | Schema/query เรียบง่ายที่สุด; สอดคล้องหลัก data minimization ของ PDPA (ลบข้อมูลที่ไม่จำเป็นออกจริง) | เสี่ยงขัดกฎ #4 ถ้าลบ `evidence`/`clo`/`teaching_record` ที่เอกสาร Word เคยอ้างอิงไปแล้ว (เอกสารเก่าจะอ้างอิงถึงสิ่งที่ไม่มีอยู่จริง); ไม่มีทางตรวจสอบย้อนหลังว่าเคยมีอะไรอยู่ก่อนถูกลบ (กระทบ audit ตาม PDPA) |
 | **C. Hybrid — Soft-delete เฉพาะ entity ที่เป็น "หลักฐาน/ถูกอ้างอิงจากเอกสารที่ยืนยันแล้ว" (`evidence`, `teaching_record`, `ai_match_result`/`syllabus_gap_result` ที่ confirmed, `user`) ส่วน entity ที่เป็นแค่ "การตั้งค่า" ที่ยังไม่ถูกใช้จริง (`plo`, `clo` ที่ยังไม่มี `ai_match_result` ใดๆ อ้างอิง) ให้ hard-delete ได้ตามปกติ** | สมดุลระหว่างความสมบูรณ์ของหลักฐาน (กฎ #4) กับความเรียบง่าย — เฉพาะ CLO/PLO ที่ "เคยถูกใช้จริงแล้ว" เท่านั้นที่ถูกกันไว้ ไม่ปนกับ CLO ที่แค่ป้อนผิดแล้วยังไม่ทันใช้งาน | Logic การตัดสินใจ "ลบได้จริงหรือต้อง soft-delete" ซับซ้อนกว่า A/B (ต้องเช็คก่อนทุกครั้งว่ามี reference อยู่หรือไม่) — ต้องนิยามให้ชัดว่า "ถูกใช้จริงแล้ว" หมายถึงระดับไหน (มี `ai_match_result` ที่ draft ก็นับหรือต้อง confirmed เท่านั้น) |
 
-**ผลการตัดสินใจ**: ผู้ใช้เลือก **แนวทาง A — soft-delete ทุก entity ที่มีผลย้อนหลัง** สำหรับ 5 entity ที่ระบุไว้ชัดเจน คือ `plo` (§3.2), `clo` (§3.3), `teaching_record` (§3.7), `evidence` (§3.8), และ `user` (§3.12) — ทุก entity นี้เพิ่มฟิลด์ `is_deleted`/`deleted_at` แล้ว และปรับ endpoint `DELETE` ที่เกี่ยวข้องในหัวข้อ 4.1 ให้เป็น soft-delete แทนการปฏิเสธด้วย 409 ตามที่เคยเสนอไว้เป็น draft — entity อื่นที่ไม่ได้อยู่ในรายการนี้ (`curriculum`, `course`, `clo_plo_mapping`, `syllabus`, `ai_match_result`, `clo_coverage_summary`, `syllabus_gap_result`, `evidence_access_log`) **ไม่ได้อยู่ในขอบเขตของการตัดสินใจนี้** — ถ้าในอนาคตต้องออกแบบพฤติกรรมการลบของ entity เหล่านี้เพิ่มเติม (เช่น `course` ที่ยกเลิกทั้งวิชา) ให้ยกเป็นคำถามเปิดใหม่แยกต่างหาก ไม่ใช้แนวทาง A นี้แบบเหมารวมโดยไม่ถามก่อน
+**ผลการตัดสินใจ**: ผู้ใช้เลือก **แนวทาง A — soft-delete ทุก entity ที่มีผลย้อนหลัง** สำหรับ 5 entity ที่ระบุไว้ชัดเจน คือ `plo` (§3.2), `clo` (§3.3), `teaching_record` (§3.7), `evidence` (§3.8), และ `user` (§3.12) — ทุก entity นี้เพิ่มฟิลด์ `is_deleted`/`deleted_at` แล้ว และปรับ endpoint `DELETE` ที่เกี่ยวข้องในหัวข้อ 4.1 ให้เป็น soft-delete แทนการปฏิเสธด้วย 409 ตามที่เคยเสนอไว้เป็น draft — entity อื่นที่ไม่ได้อยู่ในรายการนี้ (`curriculum`, `course`, `clo_plo_mapping`, `syllabus`, `ai_match_result`, `clo_coverage_summary`, `syllabus_gap_result`, `evidence_access_log`) **ไม่ได้อยู่ในขอบเขตของการตัดสินใจนี้** — ถ้าในอนาคตต้องออกแบบพฤติกรรมการลบของ entity เหล่านี้เพิ่มเติม (เช่น `course` ที่ยกเลิกทั้งวิชา) ให้ยกเป็นคำถามเปิดใหม่แยกต่างหาก ไม่ใช้แนวทาง A นี้แบบเหมารวมโดยไม่ถามก่อน (หมายเหตุ: `syllabus_gap_result` ถูกยกเว้นจากรายการนี้โดยตั้งใจไม่ใช่เพราะยังไม่ตัดสินใจอีกต่อไป — ดู **[ยืนยันแล้ว] หัวข้อ 3.11** ที่ระบุแล้วว่า entity นี้ใช้ append-only/insert-only history แทนแนวทาง soft-delete โดยสิ้นเชิง จึงไม่ต้องมีฟิลด์ `is_deleted`/`deleted_at`)
 
 ### 5.2 กลยุทธ์ Pagination สำหรับ endpoint ที่ return รายการ — **[ยืนยันแล้ว: แนวทาง C]**
 

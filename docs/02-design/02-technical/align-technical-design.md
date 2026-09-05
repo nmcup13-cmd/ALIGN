@@ -170,7 +170,7 @@
 | teaching_record_id | FK → teaching_record | |
 | clo_id | FK → clo | ต้องอยู่ใน curriculum เดียวกับ course ของ teaching_record (ตรวจตอนสร้าง) |
 | match_confidence | decimal | ค่าความมั่นใจ/ความตรงที่ AI คำนวณสำหรับการจับคู่ **รายบันทึกการสอนนี้กับ CLO ข้อนี้โดยเฉพาะ** — เป็นสัญญาณเชิงเทคนิคภายใน **ไม่ใช่** ค่า "% ความสอดคล้อง" ระดับวิชาที่แสดงต่ออาจารย์ (ค่านั้นคำนวณจากสูตรใหม่ในหัวข้อ 2.10/4.2 โดยอิงจากจำนวน CLO ที่แมทช์ได้ ไม่ใช่ค่า confidence นี้) |
-| linked_plo_ids | FK[] → plo | PLO ที่เชื่อมต่อจาก CLO นี้ (อยู่ curriculum เดียวกันเท่านั้น) |
+| linked_plo_ids | FK[] → plo | PLO ที่เชื่อมต่อจาก CLO นี้ (อยู่ curriculum เดียวกันเท่านั้น) — ค่าเริ่มต้นดึงจาก `clo_plo_mapping` ปัจจุบันตอนสร้างแถว (`state = draft`) และแก้ไขได้ตามปกติระหว่างที่ยังเป็น `draft`/`edited` แต่ **[ยืนยันแล้ว — snapshot ถาวรทันทีที่ `state` เปลี่ยนเป็น `confirmed`]** ห้ามเปลี่ยนแปลงอีกเลยหลังจากนั้น แม้ `clo_plo_mapping` จริงจะถูกแก้ไข/ปลด หรือ PLO ที่เชื่อมไว้จะถูก soft-delete ในภายหลัง เพื่อให้เอกสาร export อ้างอิงหลักฐาน ณ ตอนที่อาจารย์ยืนยันเสมอ (กฎ #4) — ดูรายละเอียดการตัดสินใจที่ align-api-schema-design.md §5.3 |
 | state | enum('draft','edited','confirmed','rejected') | **draft** = ผลตั้งต้นจาก AI ยังไม่ผ่านตรวจ; **edited** = อาจารย์แก้ไข match confidence/ปลด CLO ก่อนยืนยัน; **confirmed** = ยืนยันแล้ว ใช้เป็นข้อมูลจริง — CLO นี้จะถูกนับว่า "แมทช์แล้ว 1 ครั้ง" ในการคำนวณของ 2.10; **rejected** = อาจารย์ปฏิเสธผลจับคู่นี้ ไม่ถูกนับ |
 | confirmed_by | FK → user, nullable | ต้อง not-null เมื่อ state = confirmed |
 | confirmed_at | datetime, nullable | |
@@ -201,7 +201,7 @@
 | syllabus_id | FK → syllabus | syllabus ที่ใช้เทียบ (ของรายวิชาเดียวกัน) |
 | missing_topics | JSON list | หัวข้อใน `syllabus.content` ที่ยังไม่พบ `teaching_record` รองรับ (AB-22) |
 | extra_topics | JSON list | หัวข้อที่มี `teaching_record` บันทึกจริง แต่ไม่พบใน `syllabus.content` (เนื้อหาที่สอนเพิ่มนอกแผน) |
-| generated_at | datetime | เวลาที่ AI ประมวลผลรอบนี้ — วิเคราะห์จาก `teaching_record` ที่มีอยู่ ณ เวลานั้น |
+| generated_at | datetime | เวลาที่ AI ประมวลผลรอบนี้ — วิเคราะห์จาก `teaching_record` ที่มีอยู่ ณ เวลานั้น — **[ยืนยันแล้ว]** เก็บทุกรอบที่รัน gap analysis เป็นประวัติ ไม่ overwrite ผลรอบเก่า (ทุกครั้งที่รันใหม่ เช่น หลังบันทึกการสอนเพิ่มหรือแก้ syllabus จะสร้างแถวใหม่เสมอ แถวเก่ายังคงอยู่ในฐานข้อมูลตลอดไปเป็นประวัติ) — ควรมี field ระบุเวลาที่รัน/ลำดับรอบ (เช่น `generated_at` นี้เอง) เพื่อใช้แสดงเฉพาะผลล่าสุดในหน้าจอ UI แม้จะเก็บประวัติทั้งหมดไว้ในฐานข้อมูล |
 | state | enum('draft','edited','confirmed','rejected') | รูปแบบเดียวกับ `ai_match_result` (2.9) — **draft** = ผลตั้งต้นจาก AI; **edited** = อาจารย์แก้ไขรายการหัวข้อที่ขาด/เกินก่อนยืนยัน; **confirmed** = ยืนยันแล้ว ใช้เป็นข้อมูลจริงในแดชบอร์ด/เอกสาร; **rejected** = ปฏิเสธผลรอบนี้ |
 | confirmed_by | FK → user, nullable | ต้อง not-null เมื่อ state = confirmed |
 | confirmed_at | datetime, nullable | |
