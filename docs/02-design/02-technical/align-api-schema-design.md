@@ -14,16 +14,17 @@
 
 ## 1. Conceptual Data Model (ภาพรวม)
 
-ระบบ ALIGN เก็บข้อมูลเป็น 6 กลุ่มหลักที่เกี่ยวโยงกันตามลำดับการใช้งานจริง (E1 → E6):
+ระบบ ALIGN เก็บข้อมูลเป็น 7 กลุ่มหลักที่เกี่ยวโยงกันตามลำดับการใช้งานจริง (E1 → E6):
 
 1. **กลุ่มโครงสร้างหลักสูตร** (`curriculum`, `plo`, `clo`, `clo_plo_mapping`) — เป็นข้อมูลตั้งต้นที่ต้องมีก่อนสิ่งอื่นทั้งหมด แยกขาดกันเด็ดขาดระหว่างกลุ่มหลักสูตร 2565/2570 (ทั้ง `plo` และ `clo` ต้องรู้ตัวเองว่าอยู่กลุ่มไหนเสมอ และการผูก `clo_plo_mapping` ทำได้เฉพาะภายในกลุ่มเดียวกัน)
 2. **กลุ่มรายวิชาและแผนการสอน** (`course`, `syllabus`) — รายวิชาแต่ละวิชาสังกัดกลุ่มหลักสูตรเดียวและมีอาจารย์ผู้สอนหลัก 1 คน, syllabus ผูกกับรายวิชาแบบ 1:1 เก็บทั้งไฟล์ทางการ (อ้างอิงเฉยๆ) และหัวข้อรายสัปดาห์ (ใช้วิเคราะห์ gap จริง)
 3. **กลุ่มหลักฐานการสอนจริง** (`teaching_record`, `evidence`) — ข้อมูลที่อาจารย์บันทึกหลังสอนจริงแต่ละครั้ง พร้อมไฟล์แนบที่อาจมีข้อมูลส่วนบุคคลของนักศึกษาปะปน (ต้องควบคุมสิทธิ์ตาม PDPA)
 4. **กลุ่มผลลัพธ์จาก AI (draft/confirmed)** (`ai_match_result`, `clo_coverage_summary`, `syllabus_gap_result`) — ทุก entity ในกลุ่มนี้ต้องมี state แยก draft/confirmed ชัดเจนตามกฎ #3 เพราะเป็นค่าตั้งต้นที่ต้องผ่านการยืนยันของอาจารย์ก่อนใช้เป็นข้อมูลจริง — `clo_coverage_summary` เป็นค่าที่ derived มาจาก `ai_match_result` ที่ confirmed เท่านั้น จึงสืบทอด "ความน่าเชื่อถือ" มาโดยอัตโนมัติแต่ไม่ต้องมี state ของตัวเองซ้ำอีกชั้น
-5. **กลุ่มบัญชีผู้ใช้และการอนุมัติ** (`user`) — 2 บทบาทเท่านั้น (`instructor`/`program_admin`) พร้อมสถานะบัญชี (`pending`/`approved`/`rejected`) ที่ gate การเข้าถึงทุกอย่างข้างต้น
+5. **กลุ่มบัญชีผู้ใช้และการอนุมัติ** (`user`, `account_approval_log`) — 2 บทบาทเท่านั้น (`instructor`/`program_admin`) พร้อมสถานะบัญชี (`pending`/`approved`/`rejected`) ที่ gate การเข้าถึงทุกอย่างข้างต้น — `account_approval_log` เป็น audit trail แบบ append-only ของทุกครั้งที่มีการอนุมัติ/ปฏิเสธบัญชี (AB-26) แยกจากฟิลด์ `approved_by`/`approved_at` บน `user` ที่เก็บเฉพาะการตัดสินใจ**ล่าสุด**เพื่อให้ UI อ่านได้เร็วโดยไม่ต้อง join
 6. **กลุ่ม audit trail ของ PDPA** (`evidence_access_log`) — บันทึกทุกครั้งที่มีการเข้าถึงไฟล์หลักฐาน แยกจากข้อมูลหลักเพื่อไม่ให้ปนกับ business data
+7. **กลุ่มการแจ้งเตือน** (`notification`) — ผูกกับกฎทางธุรกิจ #2 โดยตรง (แจ้งเตือน CLO ที่ยังไม่มีหลักฐานทันทีที่ตรวจพบ, AB-12) ส่งถึงอาจารย์เจ้าของวิชาที่ CLO นั้นสังกัด — สถานะวงจรชีวิตของแจ้งเตือน **[ยืนยันแล้ว, หัวข้อ 5.5]**: ใช้ `is_resolved`/`resolved_at` แบบ auto-resolve ผูกกับสถานะ CLO จริง (แจ้งเตือนจะถูกปิดอัตโนมัติทันทีที่ CLO นั้นมีหลักฐาน/ผลจับคู่ confirmed แล้ว) ไม่ใช่ manual read/unread
 
-ทิศทางการไหลของข้อมูลคร่าวๆ: กลุ่ม 1 → 2 ต้องเสร็จก่อนกลุ่ม 3 จะเริ่มได้ (กฎ #1) → กลุ่ม 3 ป้อนเข้ากลุ่ม 4 (ผ่าน AI, เป็น draft เสมอ) → อาจารย์ยืนยันกลุ่ม 4 → กลุ่ม 4 ที่ confirmed แล้วเท่านั้นถูกใช้สร้างเอกสารส่งออก (E5, ไม่ได้สร้าง entity ใหม่ในเอกสารนี้เพราะเป็นผลลัพธ์ชั่วคราวที่ประกอบจากข้อมูล confirmed ไม่ใช่ข้อมูลที่ระบบเก็บถาวรเป็นตารางแยก) — กลุ่ม 5 คร่อมทุกอย่างเป็น access gate และกลุ่ม 6 บันทึกร่องรอยการเข้าถึงกลุ่ม 3
+ทิศทางการไหลของข้อมูลคร่าวๆ: กลุ่ม 1 → 2 ต้องเสร็จก่อนกลุ่ม 3 จะเริ่มได้ (กฎ #1) → กลุ่ม 3 ป้อนเข้ากลุ่ม 4 (ผ่าน AI, เป็น draft เสมอ) → อาจารย์ยืนยันกลุ่ม 4 → กลุ่ม 4 ที่ confirmed แล้วเท่านั้นถูกใช้สร้างเอกสารส่งออก (E5, ไม่ได้สร้าง entity ใหม่ในเอกสารนี้เพราะเป็นผลลัพธ์ชั่วคราวที่ประกอบจากข้อมูล confirmed ไม่ใช่ข้อมูลที่ระบบเก็บถาวรเป็นตารางแยก) — กลุ่ม 5 คร่อมทุกอย่างเป็น access gate และกลุ่ม 6 บันทึกร่องรอยการเข้าถึงกลุ่ม 3 — กลุ่ม 7 (notification) รับสัญญาณจากกลุ่ม 3 โดยตรง (ไม่มี `teaching_record`/`evidence` ผูกกับ CLO ใดของวิชาที่รับผิดชอบ) เพื่อแจ้งเตือนอาจารย์เจ้าของวิชานั้นทันที ไม่ต้องรอผลจากกลุ่ม 4 (AI) เลย — และในทางกลับกัน เมื่อกลุ่ม 3 มี `teaching_record`/`evidence` ใหม่ (หรือกลุ่ม 4 มี `ai_match_result` ที่ confirmed) จน CLO นั้นไม่ขาดหลักฐานอีกต่อไป ระบบต้อง auto-resolve แถว `notification` ที่ยัง unresolved ของ CLO นั้นกลับ (ตาม **[ยืนยันแล้ว, หัวข้อ 5.5]**)
 
 ---
 
@@ -57,6 +58,10 @@ erDiagram
     SYLLABUS_GAP_RESULT }o--|| USER : "ยืนยัน/ปฏิเสธโดย (confirmed_by)"
     USER }o--o{ CURRICULUM : "ดูแล (program_admin_curriculum_scope, เฉพาะ program_admin)"
     USER ||--o{ USER : "อนุมัติ/ปฏิเสธบัญชี (approved_by, self-referencing)"
+    USER ||--o{ ACCOUNT_APPROVAL_LOG : "เป็นบัญชีที่ถูกตัดสินใจ (account_id)"
+    USER ||--o{ ACCOUNT_APPROVAL_LOG : "ตัดสินใจโดย (decided_by)"
+    USER ||--o{ NOTIFICATION : "ได้รับแจ้งเตือน (user_id ผู้รับ)"
+    CLO ||--o{ NOTIFICATION : "เป็นเหตุของการแจ้งเตือน (clo_id)"
 ```
 
 **อ่านไดอะแกรมนี้อย่างไร**:
@@ -67,9 +72,11 @@ erDiagram
 - `AI_MATCH_RESULT }o--o{ PLO` — N:M เชิงแนวคิด (ai_match_result หนึ่งรายการเชื่อมได้หลาย PLO ที่สืบทอดมาจาก `clo_plo_mapping` ของ CLO นั้น) — **[ยืนยันแล้ว, ดูหัวข้อ 5.3]** เก็บเป็น **array field ในแถว `ai_match_result` เดียว** (denormalize) ไม่แยก junction table และไม่ derive สดจาก `clo_plo_mapping` — ค่านี้เป็น **snapshot ณ ตอนยืนยันผล** เพื่อให้เอกสาร export อ้างอิงค่าที่ถูกต้อง ณ ตอนที่อาจารย์ยืนยันเสมอ แม้ `clo_plo_mapping` จะถูกแก้ไขภายหลัง
 - `COURSE ||--o{ CLO_COVERAGE_SUMMARY`, `CLO ||--o{ CLO_COVERAGE_SUMMARY` — เอนทิตี derived มี key ประกอบ (`course_id`, `clo_id`) ต่อ 1 แถว ไม่มี PK ของตัวเองแยกต่างหาก
 - `USER }o--o{ CURRICULUM` (ผ่าน `program_admin_curriculum_scope`) — เฉพาะบัญชี `program_admin` เท่านั้นที่มีความสัมพันธ์นี้ (`instructor` ไม่มี scope นี้)
-- `USER ||--o{ USER` — self-referencing แทน `approved_by` (ผู้บริหารหลักสูตรที่อนุมัติ/ปฏิเสธบัญชีอาจารย์ผู้สอนอีกคน)
+- `USER ||--o{ USER` — self-referencing แทน `approved_by` (ผู้บริหารหลักสูตรที่อนุมัติ/ปฏิเสธบัญชีอาจารย์ผู้สอนอีกคน) — ฟิลด์นี้บน `user` เก็บเฉพาะการตัดสินใจ**ล่าสุด**เท่านั้น ส่วนประวัติทุกครั้งอยู่ใน `account_approval_log` แยกต่างหาก (ดูจุดถัดไป)
+- `USER ||--o{ ACCOUNT_APPROVAL_LOG` (2 เส้น) — 1 บัญชี (`user`) ถูกบันทึกการตัดสินใจได้หลายครั้งตลอดอายุการใช้งาน (`account_id`) และผู้บริหารหลักสูตร 1 คนตัดสินใจได้หลายบัญชี (`decided_by`) — เป็น audit log แบบ **append-only ไม่มี soft-delete** (ตัดสินใจแล้ว ดูหัวข้อ 3.14) ต่างจาก `user` เองที่มี soft-delete
+- `USER ||--o{ NOTIFICATION`, `CLO ||--o{ NOTIFICATION` — ผู้ใช้ 1 คน (อาจารย์เจ้าของวิชา) ได้รับแจ้งเตือนได้หลายรายการ และ CLO 1 ข้อเป็นเหตุของแจ้งเตือนได้หลายรายการตลอดอายุการใช้งาน (เป็นประวัติสะสม — **[ยืนยันแล้ว, หัวข้อ 5.5]**: แนวทาง B มี unique/partial-unique constraint กันสร้างซ้ำเฉพาะแถวที่ `is_resolved=false` ของ CLO เดียวกันเท่านั้น ส่วนแถวที่ `is_resolved=true` แล้วสะสมเป็นประวัติได้หลายแถวต่อ CLO 1 ข้อ) — ไม่มีเส้นตรงไปยัง `CURRICULUM` ในไดอะแกรมนี้แม้ `notification` จะมีฟิลด์ `curriculum_id` แบบ denormalized (เช่นเดียวกับที่ `clo.curriculum_id` ไม่ถูกวาดเป็นเส้นตรงไปยัง `CURRICULUM` ในไดอะแกรมนี้ — สืบทอด scope ผ่าน `clo`/`course` แทน)
 
-ทุก entity ที่กล่าวถึงในเอกสารนี้ (13 entity) ปรากฏในไดอะแกรมข้างต้นครบทุกตัว ไม่มี entity ตกหล่น
+ทุก entity ที่กล่าวถึงในเอกสารนี้ (15 entity) ปรากฏในไดอะแกรมข้างต้นครบทุกตัว ไม่มี entity ตกหล่น
 
 ---
 
@@ -292,6 +299,47 @@ erDiagram
 
 **Retention**: log นี้เป็นหลักฐานตรวจสอบย้อนหลังตาม PDPA — ควร**ไม่ลบ**ตลอดอายุของ `evidence` ที่อ้างอิง (write-only, append-only โดยเจตนา — ไม่มีเหตุผลทางธุรกิจให้แก้ไข/ลบ log นี้เลย จึงไม่เข้าข่ายคำถามเปิดที่ 5.1 เหมือน entity อื่น)
 
+### 3.14 `account_approval_log` (audit trail การอนุมัติ/ปฏิเสธบัญชี — AB-26)
+
+> เพิ่มเข้าเอกสารนี้ตามที่ `T-092` ใน [[../../01-requirements/03-task/task-breakdown|task-breakdown]] ระบุไว้ — เดิม entity นี้ถูกอ้างถึงในงานย่อยแต่ไม่เคยถูกเพิ่มเข้าเอกสาร schema จริง
+
+| ฟิลด์ | ชนิดเชิงแนวคิด | Constraint | ความสัมพันธ์ | PDPA/Draft-Confirmed |
+|---|---|---|---|---|
+| log_id | PK | required, unique | — | — |
+| account_id | FK → user | required | บัญชีที่ถูกอนุมัติ/ปฏิเสธ (อาจารย์ผู้สอนที่สมัครเข้าใช้งานผ่าน `POST /auth/register`) | ข้อมูลบัญชีผู้ใช้ระบบ ไม่ใช่นักศึกษา (เช่นเดียวกับ `user.name`/`email` ที่ §3.12) |
+| action | enum('approve','reject') | required | สอดคล้องกับผลลัพธ์ของ `POST /admin/accounts/{user_id}/approve` หรือ `/reject` แต่ละครั้ง | — |
+| decided_by | FK → user | required, `user.role = 'program_admin'` เท่านั้น (ตรวจตอน insert) | ผู้บริหารหลักสูตรที่ตัดสินใจครั้งนั้น | — |
+| decided_at | datetime | required | เวลาที่ตัดสินใจ | — |
+
+**ความสัมพันธ์กับ `user.approved_by`/`approved_at` (§3.12)**: 2 ที่นี้**ไม่ซ้ำซ้อนกัน**โดยเจตนา — `user.approved_by`/`approved_at` เก็บเฉพาะผลการตัดสินใจ**ล่าสุด**แบบ denormalized เพื่อให้ UI (เช่น `GET /admin/accounts`) อ่านค่าปัจจุบันได้ทันทีโดยไม่ต้อง join ส่วน `account_approval_log` คือ**ประวัติทุกครั้ง**ที่เคยตัดสินใจกับบัญชีนั้น (append-only) — ทุกครั้งที่ endpoint `POST /admin/accounts/{user_id}/approve`/`reject` (§4.6) ทำงานสำเร็จ ต้อง (1) อัปเดต `user.account_status`/`approved_by`/`approved_at` และ (2) **INSERT แถวใหม่**เข้า `account_approval_log` เสมอทั้งสองอย่างในธุรกรรมเดียวกัน (ไม่ทำแค่อย่างใดอย่างหนึ่ง)
+
+**Delete/Update — ไม่มี soft-delete, ไม่มี hard-delete**: entity นี้เป็น **audit log ล้วนๆ ที่ต้องไม่ถูกลบ/แก้ไขเด็ดขาด** (insert-only) แตกต่างจาก 5 entity ในหัวข้อ 5.1 ที่ใช้ soft-delete — ไม่มีเหตุผลทางธุรกิจใดที่ควรแก้ไข/ลบแถวนี้เลย เพราะจุดประสงค์เดียวคือพิสูจน์ย้อนหลังว่า "ใครตัดสินใจอะไรกับบัญชีไหน เมื่อไหร่" (เทียบเคียงพฤติกรรมเดียวกับ `evidence_access_log` ที่ §3.13)
+
+**Indexing เชิงแนวคิด**: ดัชนีที่ `account_id` (ดูประวัติการตัดสินใจของบัญชีหนึ่ง), ดัชนีที่ `decided_by` (ตรวจสอบว่าผู้บริหารหลักสูตรคนหนึ่งเคยตัดสินใจอะไรบ้าง)
+
+> **หมายเหตุ — ขอบเขตฟิลด์**: `T-092` ระบุเฉพาะ 4 ฟิลด์ข้างต้น (ไม่รวม `reason`) จึงไม่เพิ่มฟิลด์เหตุผลการปฏิเสธซ้ำในตารางนี้ — เหตุผลการปฏิเสธล่าสุดยังคงเก็บที่ `user.rejection_reason` (§3.12) เท่านั้น หากในอนาคตต้องการเก็บเหตุผลของ**ทุก**ครั้งที่ปฏิเสธ (ไม่ใช่แค่ครั้งล่าสุด) จะต้องเพิ่มฟิลด์ `reason` เข้าตารางนี้ — เป็นการเปลี่ยนแปลง scope ที่ควรถามผู้ใช้ก่อนหากมีความต้องการนี้เกิดขึ้นจริง ไม่ใช่สิ่งที่เอกสารนี้ตัดสินใจแทนตอนนี้
+
+### 3.15 `notification` (แจ้งเตือน CLO ที่ยังไม่มีหลักฐาน — AB-12, กฎทางธุรกิจ #2)
+
+> เพิ่มเข้าเอกสารนี้ตามที่ `T-043` ใน [[../../01-requirements/03-task/task-breakdown|task-breakdown]] ระบุไว้ — เดิม entity นี้ถูกอ้างถึงในงานย่อยแต่ไม่เคยถูกเพิ่มเข้าเอกสาร schema จริง ฟิลด์หลัก 4 ฟิลด์ (`notification_id` เป็น PK ที่ทุก entity ต้องมี ไม่นับเป็นฟิลด์เพิ่มเติมนอกสเปค) ตรงตามที่ `T-043` ระบุ (`user_id, clo_id, message, created_at`) — ฟิลด์ที่เกินจากนี้ (`curriculum_id`, สถานะวงจรชีวิต) เคยถูกทำเครื่องหมาย [ข้อเสนอ — ยังไม่ยืนยัน] แต่**ผู้ใช้ยืนยันแล้วตามหัวข้อ 5.5** (2026-09-05) — ฟิลด์ชุดสุดท้ายเป็นดังตารางด้านล่าง
+
+| ฟิลด์ | ชนิดเชิงแนวคิด | Constraint | ความสัมพันธ์ | PDPA/Draft-Confirmed |
+|---|---|---|---|---|
+| notification_id | PK | required, unique | — | — |
+| user_id | FK → user | required | ผู้รับการแจ้งเตือน — ต้องเป็นอาจารย์ผู้สอน (`course.instructor_id`) ของวิชาที่ CLO นั้นสังกัด (ไม่ใช่ program_admin — สอดคล้องกับ AB-12 ที่ระบุมุมมอง "ในฐานะอาจารย์ผู้สอน") | ข้อมูลบัญชีผู้ใช้ระบบ ไม่ใช่นักศึกษา |
+| clo_id | FK → clo | required | CLO ที่ตรวจพบว่ายังไม่มี `teaching_record`/`evidence` ผูกอยู่เลย (กฎ #2) | ไม่ใช่ข้อมูลส่วนบุคคลของนักศึกษา (เป็นหัวข้อ/รหัส CLO) |
+| curriculum_id | FK → curriculum, denormalized จาก `clo.curriculum_id` — **[ยืนยันแล้ว, หัวข้อ 5.5]** | required | เพิ่มตามกฎบังคับของเอกสารนี้ที่ทุก entity ที่เกี่ยวข้องกับกลุ่มหลักสูตรต้องมี FK/scope ชัดเจน และตาม prototype (หน้าจอ 1, Gap Alert Banner — [[../01-prototypes/align-app-screens|align-app-screens]] บรรทัด "ระบุ Curriculum Tag ของวิชานั้นกำกับเสมอ") ที่ต้องแสดงกลุ่มหลักสูตรกำกับทุกครั้งโดยไม่ต้อง join `clo → course → curriculum` ทุกครั้งที่แสดงรายการ — ใช้ `curriculum_id` (ไม่ใช่ `course_id`) เพราะตรงกับ `program_admin_curriculum_scope` โดยตรง ทำให้กรองสิทธิ์ตามขอบเขตหลักสูตรได้โดยไม่ต้อง join เพิ่ม | — |
+| message | text | required | ข้อความสำเร็จรูปที่ backend ประกอบไว้แล้ว (เช่น "CLO4 — ... ยังไม่มีข้อมูลการสอนรองรับ") ไม่ generate ที่ frontend | ไม่ใช่ข้อมูลส่วนบุคคลของนักศึกษา |
+| is_resolved | boolean | required, default false — **[ยืนยันแล้ว, หัวข้อ 5.5: แนวทาง B]** | `true` เมื่อ CLO ที่แจ้งเตือนนี้อ้างถึงมีหลักฐาน/ผลจับคู่ confirmed แล้ว (gap หายไปตามกฎ #2) — ระบบ set ค่านี้อัตโนมัติ ไม่ใช่ผู้ใช้กดเอง (auto-resolve ผูกกับสถานะ CLO จริง ตรงกับพฤติกรรม Gap Alert Banner ที่หายเองเมื่อแก้ปัญหาแล้ว) | — |
+| resolved_at | datetime, nullable | required เป็น NULL จนกว่า `is_resolved=true` — **[ยืนยันแล้ว, หัวข้อ 5.5]** | เวลาที่ระบบ auto-resolve แจ้งเตือนนี้ (ตั้งพร้อมกับ `is_resolved=true` ในธุรกรรมเดียวกันเสมอ) | — |
+| created_at | datetime | required | เวลาที่กลไกตรวจจับ (background job/trigger, T-042) สร้างแจ้งเตือนนี้ | — |
+
+**กฎสำคัญ**: `notification` เป็นกลไกที่ทำให้กฎทางธุรกิจ #2 ("แจ้งเตือน CLO ที่ยังไม่มีหลักฐานทันที ไม่ต้องให้ผู้ใช้ตรวจสอบเองแบบ manual") เป็นจริงที่ระดับ schema — ต่างจากที่ prototype หน้าจอ 1 แสดง Gap Alert Banner แบบ inline (คำนวณสดจากการไม่มี `teaching_record`) entity นี้ **persist เป็นแถวข้อมูลจริง** ตามที่ `T-042`–`T-044` กำหนด (background job ตรวจจับ → เขียนแถว → ส่งแจ้งเตือน) — ทีมพัฒนาต้องออกแบบให้ทั้งสองแหล่งไม่ขัดแย้งกัน (เช่น banner หน้าแรกอาจอ่านจาก `notification` ที่ `is_resolved=false` โดยตรงแทนการคำนวณสดซ้ำ) — และต้องมีกลไกอีกด้านที่ตรวจจับตอนมี `teaching_record`/`evidence`/`ai_match_result` (confirmed) ใหม่เข้ามาแล้ว "ปิด" (`is_resolved=true`, `resolved_at=now()`) แถว `notification` ที่ยัง unresolved ของ CLO นั้นโดยอัตโนมัติ — ทั้งสองทิศทาง (เปิด/ปิด) ต้องทำงาน sync กันเสมอ ตามที่ตัดสินใจในหัวข้อ 5.5 (แนวทาง B)
+
+**Indexing เชิงแนวคิด**: ดัชนีที่ `user_id` (รายการแจ้งเตือนของอาจารย์แต่ละคนคือ query หลักของ T-045), ดัชนีที่ `curriculum_id` (กรองตามขอบเขตหลักสูตร), ดัชนีที่ `clo_id` ร่วมกับ **unique/partial-unique constraint บน `clo_id` เฉพาะแถวที่ `is_resolved=false`** (เช่น unique index บน `clo_id` WHERE `is_resolved=false`) เพื่อกันสร้างแจ้งเตือนซ้ำซ้อนสำหรับ CLO เดียวกันที่ยัง unresolved อยู่ — ทีมพัฒนาต้องตรวจก่อน insert แถวใหม่ว่ามีแถว unresolved ของ `clo_id` นั้นอยู่แล้วหรือไม่ ถ้ามีให้ข้าม (ไม่ insert ซ้ำ) แทนการพึ่ง constraint อย่างเดียว
+
+**Delete**: ไม่มี hard-delete/soft-delete สำหรับแถวที่ `is_resolved=true` — เก็บไว้เป็นประวัติสะสม (auto-resolve เปลี่ยนสถานะแทนการลบ) ตามที่ยืนยันในหัวข้อ 5.5 (แนวทาง B) — ไม่จำเป็นต้องมีฟิลด์ soft-delete (`is_deleted`) แยกต่างหากสำหรับ entity นี้ เพราะ `is_resolved` ทำหน้าที่เป็นสถานะวงจรชีวิตอยู่แล้ว
+
 ---
 
 ## 4. API Spec (Conceptual)
@@ -344,6 +392,14 @@ erDiagram
 
 ครบตามที่ [[align-technical-design#e4-แดชบอร์ดและแจ้งเตือน|align-technical-design §3 (E4)]] ระบุไว้แล้ว (`GET /me/dashboard`, `GET /courses/{id}/clo-week-map`, `GET /curricula/{year}/dashboard`, `GET /courses/{id}/teaching-vs-syllabus`) — สิทธิ์ที่ต้องตรวจ: `account_status='approved'` เสมอ + (`instructor_id`ของตนเองสำหรับ endpoint ระดับวิชา, หรือ `program_admin_curriculum_scope` ตรงกับ `{year}` สำหรับ endpoint ระดับหลักสูตร)
 
+**เพิ่มเติม (เติม endpoint สำหรับ entity `notification` ที่ §3.15 ซึ่ง `T-043`–`T-045` ต้องการแต่ align-technical-design.md เดิมยังไม่มี — สถานะวงจรชีวิต **[ยืนยันแล้ว, หัวข้อ 5.5: แนวทาง B]**):**
+
+| Method & Path | จุดประสงค์ | Request/Response สำคัญ | สิทธิ์ที่ต้องตรวจ |
+|---|---|---|---|
+| `GET /me/notifications` | รายการแจ้งเตือนของอาจารย์ผู้ล็อกอินปัจจุบัน (T-045) — เรียงตาม `created_at` ใหม่สุดก่อน — **default กรองเฉพาะ `is_resolved=false`** (แจ้งเตือนที่ยังไม่ auto-resolve เท่านั้น ตรงกับพฤติกรรม Gap Alert Banner ที่หายไปเองเมื่อ CLO มีหลักฐานแล้ว) รับ query parameter เสริม `?include_resolved=true` ได้ถ้าต้องการดูประวัติแจ้งเตือนที่ resolve ไปแล้วด้วย | req query: `{include_resolved?: boolean}` (default false) → res: `[{notification_id, clo_id, curriculum_id, curriculum_year, message, is_resolved, resolved_at, created_at}]` | `account_status='approved'`, กรองเฉพาะ `user_id = ตนเอง` เท่านั้น ห้ามรับพารามิเตอร์ดูของผู้ใช้อื่น |
+
+**หมายเหตุ**: ไม่มี endpoint สำหรับ "ทำเครื่องหมายว่าอ่านแล้ว/แก้ไขแล้ว" แบบ manual (เช่น `POST /me/notifications/{id}/read` ที่เคยเสนอไว้ก่อนยืนยันหัวข้อ 5.5) เพราะแนวทาง B (auto-resolve) ให้ระบบเป็นผู้ set `is_resolved=true`/`resolved_at` เองโดยอัตโนมัติทันทีที่ CLO นั้นมีหลักฐาน/ผลจับคู่ confirmed แล้ว (ดูกลไกที่ §3.15) ไม่ใช่การกระทำของผู้ใช้ — ถ้าในอนาคตต้องการให้อาจารย์ปิดแจ้งเตือนเองได้ก่อนที่ระบบจะ auto-resolve (เช่น กรณีพิเศษ) ถือเป็น scope ใหม่ที่ต้องยืนยันกับผู้ใช้เพิ่มเติม ไม่ใช่สิ่งที่เอกสารนี้ตัดสินใจแทนตอนนี้
+
 ### 4.5 E5 — ออกเอกสาร Word
 
 ครบตามที่ [[align-technical-design#e5-ออกเอกสาร-word|align-technical-design §3 (E5)]] ระบุไว้แล้ว (`POST /courses/{id}/export-word`, `GET /export-jobs/{id}`, `GET /curricula/{year}/courses/{id}/export-word`) — สิทธิ์ที่ต้องตรวจ: `account_status='approved'` + (`instructor_id`ของวิชา สำหรับ endpoint แรก, `program_admin_curriculum_scope` สำหรับ endpoint สุดท้าย)
@@ -358,11 +414,15 @@ erDiagram
 
 ครบตามที่ [[align-technical-design#e6-สมัครและอนุมัติบัญชีผู้ใช้-user-registration-approval|align-technical-design §3 (E6)]] ระบุไว้แล้ว (`POST /auth/register`, `GET /auth/me/account-status`, `GET /admin/accounts`, `POST /admin/accounts/{user_id}/approve`, `POST /admin/accounts/{user_id}/reject`) — เป็น 2 endpoint เดียวในทั้งระบบที่**ยกเว้น**การตรวจ `account_status='approved'` (`POST /auth/register`, `GET /auth/me/account-status`) ตามที่ align-technical-design.md §2.12 ระบุไว้แล้ว — `GET /admin/accounts` และ endpoint approve/reject ต้องตรวจ role `program_admin` เท่านั้น (403 ถ้า role อื่นเรียก, admin-only visibility ตาม AB-26)
 
+**เพิ่มเติม (เติมผลข้างเคียงต่อ `account_approval_log` ที่ §3.14 ซึ่ง `T-092` ต้องการแต่ align-technical-design.md เดิมยังไม่ระบุ):**
+
+`POST /admin/accounts/{user_id}/approve` และ `POST /admin/accounts/{user_id}/reject` ทั้งสอง endpoint **ต้อง INSERT แถวใหม่เข้า `account_approval_log`** (`account_id=user_id`, `action='approve'|'reject'`, `decided_by=ผู้เรียก`, `decided_at=now()`) ในธุรกรรมเดียวกันกับการอัปเดต `user.account_status`/`approved_by`/`approved_at` เสมอ — ไม่ใช่ endpoint ใหม่ แต่เป็นข้อกำหนดเพิ่มเติมต่อ 2 endpoint ที่มีอยู่แล้ว เพื่อให้ audit trail ตาม AB-26 ตรวจสอบย้อนหลังได้จริงระดับ schema — ปัจจุบันยังไม่มี endpoint แยกสำหรับอ่านประวัติทั้งหมดของ `account_approval_log` (หน้าจอที่มีอยู่ตาม T-093 ใช้ `approved_by`/`approved_at` ล่าสุดจาก `GET /admin/accounts` ก็เพียงพอแล้ว) หากในอนาคตต้องการ UI แสดงประวัติการตัดสินใจแบบละเอียดทุกครั้ง (ไม่ใช่แค่ครั้งล่าสุด) ให้เพิ่ม endpoint ใหม่ เช่น `GET /admin/accounts/{user_id}/approval-history` แยกต่างหาก
+
 ---
 
-## 5. ประเด็นที่เคยเป็นคำถามเปิด — สถานะ: ยืนยันแล้วทั้ง 4 ข้อ
+## 5. ประเด็นที่เคยเป็นคำถามเปิด — สถานะ: ยืนยันแล้วทั้ง 5 ข้อ (5.1–5.5)
 
-หัวข้อนี้เกิดจากการตรวจสเปค/backlog/prototype/align-technical-design.md อย่างละเอียดแล้วพบว่า**ยังไม่มีคำตอบชัดเจน**สำหรับประเด็น data-modeling/API-design 4 ข้อด้านล่าง — เอกสารนี้เสนอ 3 แนวทางพร้อมข้อดี-ข้อเสียให้ผู้ใช้ตัดสินใจก่อน (ตามกฎของ agent นี้ที่ห้ามสมมติเงียบๆ) แล้ว**ผู้ใช้ตอบกลับและยืนยันแล้วทั้ง 4 ข้อ** — ตารางข้อดี/ข้อเสียยังคงเก็บไว้เป็นบันทึกเหตุผลประกอบการตัดสินใจ (decision log) ไม่ลบทิ้ง ส่วนหัวข้อ 3/4 ที่เกี่ยวข้องได้อัปเดตให้ตรงกับการตัดสินใจนี้แล้วทุกจุด (ตามลิงก์ที่กำกับไว้ในแต่ละหัวข้อย่อย)
+หัวข้อนี้เกิดจากการตรวจสเปค/backlog/prototype/align-technical-design.md อย่างละเอียดแล้วพบว่า**ยังไม่มีคำตอบชัดเจน**สำหรับประเด็น data-modeling/API-design ด้านล่าง — เอกสารนี้เสนอ 3 แนวทางพร้อมข้อดี-ข้อเสียให้ผู้ใช้ตัดสินใจก่อน (ตามกฎของ agent นี้ที่ห้ามสมมติเงียบๆ) — **ทุกหัวข้อ (5.1–5.5) ผู้ใช้ตอบกลับและยืนยันแล้ว** ตารางข้อดี/ข้อเสียยังคงเก็บไว้เป็นบันทึกเหตุผลประกอบการตัดสินใจ (decision log) ไม่ลบทิ้ง ส่วนหัวข้อ 3/4 ที่เกี่ยวข้องได้อัปเดตให้ตรงกับการตัดสินใจนี้แล้วทุกจุด (ตามลิงก์ที่กำกับไว้ในแต่ละหัวข้อย่อย) — **หัวข้อ 5.5 (สถานะวงจรชีวิตของ `notification`) เป็นคำถามล่าสุดที่พบระหว่างเพิ่ม entity `notification` (T-043) เข้าเอกสารนี้ และผู้ใช้ยืนยันคำตอบแล้วเมื่อ 2026-09-05** (ดูรายละเอียดที่หัวข้อ 5.5)
 
 ### 5.1 Soft-delete หรือ Hard-delete สำหรับ entity ที่มีผลย้อนหลัง — **[ยืนยันแล้ว: แนวทาง A]**
 
@@ -411,6 +471,18 @@ erDiagram
 | **C. Header-based versioning** (ระบุเวอร์ชันผ่าน request header แทน path) | path สะอาด ไม่มีเลขเวอร์ชันปนในโครงสร้าง resource; เปลี่ยนเวอร์ชัน default ได้โดยไม่กระทบ URL ที่บันทึกไว้ที่อื่น | มองไม่เห็นเวอร์ชันจาก URL ตรงๆ (สื่อสารกับฝ่ายที่ไม่ใช่ทีมพัฒนายากกว่า path-based); เครื่องมือ debug/log ทั่วไปมักอ่าน path ง่ายกว่า header |
 
 **ผลการตัดสินใจ**: ผู้ใช้เลือก **แนวทาง A — ไม่ทำ API versioning เลยในชั้นนี้** — ทุก path ในหัวข้อ 4 คงรูปแบบเดิมไม่มี prefix เวอร์ชัน (ดูหัวข้อ 4.0 ที่อัปเดตแล้ว) เก็บแนวทาง B/C ไว้เป็นทางเลือกสำรองถ้าต้องรองรับ breaking change ในอนาคต
+
+### 5.5 สถานะวงจรชีวิตของ `notification` (read/resolved) — **[ยืนยันแล้ว: แนวทาง B]**
+
+**บริบท**: `T-043` ระบุฟิลด์ของตาราง `notification` ไว้เพียง 4 ฟิลด์ (`user_id, clo_id, message, created_at`) โดยไม่ได้ระบุว่าแจ้งเตือนแต่ละรายการมีสถานะ "อ่านแล้ว/ยังไม่อ่าน" หรือ "แก้ไขแล้ว/ยังไม่แก้ไข" หรือไม่ — ในขณะที่ `T-042` (background job ตรวจจับ CLO ที่ไม่มีหลักฐาน) น่าจะทำงานซ้ำเป็นระยะ (เช่น ทุกครั้งที่มีการบันทึกการสอน/แนบหลักฐานใหม่ หรือตามรอบเวลา) ซึ่งทำให้เกิดคำถามว่า: (1) ถ้า CLO เดิมยังขาดหลักฐานอยู่ในรอบถัดไป ระบบควรสร้างแถวใหม่ซ้ำหรือไม่ (เสี่ยงข้อมูลซ้ำซ้อน/แจ้งเตือนสแปม), และ (2) เมื่ออาจารย์บันทึกการสอน/แนบหลักฐานจนปิด gap ของ CLO นั้นแล้ว แจ้งเตือนเดิมควรหายไปจากรายการ (T-045) โดยอัตโนมัติหรือไม่ — ประเด็นนี้กระทบทั้งฟิลด์ที่ต้องมีใน schema (§3.15) และพฤติกรรมของ endpoint `GET /me/notifications`/`POST /me/notifications/{id}/read` (§4.4) จึงต้องยืนยันก่อนถือว่าออกแบบ entity นี้เสร็จสมบูรณ์
+
+| แนวทาง | ข้อดี | ข้อเสีย |
+|---|---|---|
+| **A. Manual read/unread (`is_read` boolean, default false) — ไม่มี dedup/auto-resolve** | ตรงกับฟิลด์ 4 ตัวที่ `T-043` ระบุมากที่สุด (เพิ่มแค่ 1 ฟิลด์); implement ง่ายที่สุด — trigger แค่ insert, ผู้ใช้กด "อ่านแล้ว" เอง | ถ้า trigger รันซ้ำหลายรอบขณะ CLO เดิมยังขาดหลักฐาน จะสร้างแถวซ้ำสะสม (แจ้งเตือนสแปมรายการเดิมซ้ำๆ); เมื่ออาจารย์แก้ gap แล้ว แจ้งเตือนเก่ายังค้างอยู่ในรายการ (ต้องเข้าไป "อ่าน" เองแม้ปัญหาจะหมดไปแล้ว) — ไม่ตรงกับพฤติกรรม Gap Alert Banner ของ prototype ที่หายไปทันทีเมื่อไม่มี gap |
+| **B. Auto-resolve ผูกกับสถานะ CLO จริง (`is_resolved` boolean + `resolved_at`, unique ต่อ `(user_id, clo_id)` ขณะยัง unresolved)** | พฤติกรรมตรงกับ Gap Alert Banner ของ prototype ที่สุด (แจ้งเตือนหายไปอัตโนมัติเมื่อ CLO มีหลักฐานแล้ว); ป้องกันแจ้งเตือนซ้ำซ้อนด้วย unique constraint; ยังเก็บประวัติไว้ตรวจสอบย้อนหลังได้ว่าเคยขาดหลักฐานช่วงไหน | Logic ซับซ้อนกว่า — ต้องมีกลไกที่ตรวจจับตอนมี `teaching_record`/`evidence` ใหม่แล้วย้อนกลับไปปิด (`is_resolved=true`) แจ้งเตือนเดิม ไม่ใช่แค่ insert อย่างเดียวเหมือน A; ต้องดูแล 2 จุดที่เขียนข้อมูล (ตอนตรวจพบ gap และตอนปิด gap) ให้ sync กันเสมอ |
+| **C. Stateless ตรงตาม `T-043` เป๊ะๆ (ไม่มีฟิลด์สถานะเพิ่มเลย) — รายการคือทุกแถวที่เคยสร้าง เรียงตาม `created_at`** | ไม่เพิ่มฟิลด์ใดๆ นอกเหนือจากที่ `T-043` ระบุไว้ตรงตัวที่สุด — เสี่ยงตีความเกินสเปคน้อยที่สุด | ไม่มีทางบอกได้ว่าอาจารย์เคยเห็นแจ้งเตือนนี้แล้วหรือยัง (T-045 ที่ต้องการ "รายการแจ้งเตือน" จะดูเหมือน inbox ที่ไม่มีวันว่างเปล่า); การ "เคลียร์" แจ้งเตือนที่ปัญหาหมดไปแล้วทำได้เฉพาะทาง hard-delete แถวจากภายนอก schema (พึ่งวินัยของ background job ล้วนๆ โดยไม่มีฟิลด์ช่วยควบคุม) |
+
+**ผลการตัดสินใจ (2026-09-05)**: ผู้ใช้เลือก **แนวทาง B — Auto-resolve ผูกสถานะ CLO จริง** — ใช้ `is_resolved` (boolean, default false) + `resolved_at` (datetime, nullable) แทน `is_read` — เมื่อ CLO ที่การแจ้งเตือนอ้างถึงมีหลักฐาน/ผลจับคู่ confirmed แล้ว (gap หายไปตามกฎ #2) ระบบ set `is_resolved=true, resolved_at=now()` โดยอัตโนมัติ ตรงกับพฤติกรรม Gap Alert Banner ใน prototype ที่หายไปเองเมื่อแก้ปัญหาแล้ว — มี unique/partial-unique constraint บน `clo_id` เฉพาะแถวที่ `is_resolved=false` เพื่อกันสร้างแจ้งเตือนซ้ำซ้อนสำหรับ CLO เดียวกันที่ยัง unresolved — และเลือกใช้ **`curriculum_id`** (ไม่ใช่ `course_id` ที่เคยเสนอไว้เดิม) เป็นฟิลด์ denormalized สำหรับกรองตามหลักสูตร เพราะตรงกับ `program_admin_curriculum_scope` โดยตรง — หัวข้อ 3.15/4.4 อัปเดตให้ตรงกับผลนี้แล้วทุกจุด (ดูตารางฟิลด์สุดท้ายที่ §3.15 และ endpoint ที่ §4.4)
 
 ---
 

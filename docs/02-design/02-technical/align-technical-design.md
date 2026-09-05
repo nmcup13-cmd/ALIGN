@@ -237,6 +237,41 @@
 | `evidence_access_log` | ตาราง log แยก บันทึกทุกครั้งที่มีการเรียกดู/ดาวน์โหลดไฟล์หลักฐาน: `(log_id, evidence_id, accessed_by, accessed_at, action)` — ตาม AB-07 |
 | กติกาสิทธิ์ | ผู้เข้าถึง `evidence` ได้ต้องเป็น (ก) `instructor_id` ของ course ที่ teaching_record นั้นสังกัด หรือ (ข) ผู้ใช้ role `program_admin` ที่มี `curriculum_id` ของ course นั้นอยู่ใน `program_admin_curriculum_scope` เท่านั้น — ตรวจที่ backend API layer ทุก endpoint ที่ return ไฟล์/URL ของ evidence (ดูหัวข้อ 3) |
 
+### 2.14 `notification` (แจ้งเตือน CLO ที่ยังไม่มีหลักฐาน — กลไกบังคับใช้กฎทางธุรกิจ #2, AB-12/T-042–T-045)
+
+เอนทิตีนี้เป็นข้อมูลที่ขาดหายจาก schema เดิมของเอกสารนี้ — เพิ่มตามที่ [[../../01-requirements/03-task/task-breakdown|task-breakdown]] T-043 อ้างถึง (ผูกกับ background job T-042 ที่ตรวจ CLO ไม่มี `teaching_record`/`evidence` รองรับ แล้วส่ง notification ทันทีตาม T-044 — นี่คือกลไกที่ทำให้กฎทางธุรกิจ #2 มีผลจริง ไม่ใช่ให้ผู้ใช้ไปตรวจสอบเองแบบ manual)
+
+| ฟิลด์ | ชนิด | คำอธิบาย |
+|---|---|---|
+| notification_id | PK | |
+| user_id | FK → user | ผู้รับแจ้งเตือน (อาจารย์ผู้สอนของวิชาที่ CLO นั้นสังกัด) — **[ยืนยันแล้วจาก T-043]** |
+| clo_id | FK → clo | CLO ที่ตรวจพบว่ายังไม่มี `teaching_record`/`evidence` รองรับ (ตัวกระตุ้นการแจ้งเตือนจาก background job T-042) — สืบทอด scope กลุ่มหลักสูตรผ่าน `clo.curriculum_id` (หัวข้อ 2.3) อยู่แล้ว — **[ยืนยันแล้วจาก T-043]** |
+| curriculum_id | FK → curriculum, denormalized จาก `clo.curriculum_id` | **[ยืนยันแล้ว 2026-09-05]** เก็บซ้ำเพื่อกรองสิทธิ์เข้าถึง/แสดงกลุ่มหลักสูตรของแจ้งเตือนได้เร็วโดยไม่ต้อง join ผ่าน `clo`→`course`→`curriculum` ทุกครั้ง — ตรงกับ `program_admin_curriculum_scope` (หัวข้อ 2.12) โดยตรง ทำให้กรองสิทธิ์เข้าถึงข้ามหลักสูตรได้ง่ายกว่าการ denormalize ผ่าน `course_id` (ปิดคำถามเปิดเดิมแล้ว เลือกแนวทางนี้แทน `course_id`) |
+| message | text | ข้อความแจ้งเตือนระบุ CLO ที่ขาดหลักฐานเป็นรายข้อ (เช่น "CLO 4 ยังไม่มีข้อมูล" — ตาม AC ของ AB-12) — **[ยืนยันแล้วจาก T-043]** |
+| is_resolved | boolean, default `false` | **[ยืนยันแล้ว 2026-09-05 — แนวทาง B: Auto-resolve ผูกสถานะ CLO จริง]** แทนที่แนวคิด "ทำเครื่องหมายว่าอ่านแล้ว" (`is_read`) แบบ manual เดิมทั้งหมด — ระบบ (ไม่ใช่ผู้ใช้) เป็นผู้ set ค่านี้เป็น `true` โดยอัตโนมัติทันทีที่ CLO ที่แจ้งเตือนนี้อ้างถึงมีหลักฐาน/ผลจับคู่ที่ `confirmed` แล้ว (ไม่ gap อีกต่อไป) — ดูกลไก auto-resolve ด้านล่างตาราง |
+| resolved_at | datetime, nullable | เวลาที่ระบบ set `is_resolved = true` โดยอัตโนมัติ — ต้อง not-null คู่กับ `is_resolved = true` เสมอ (เช่นเดียวกับรูปแบบ `confirmed_at` คู่ `confirmed_by` ใน `ai_match_result`/`syllabus_gap_result`) |
+| created_at | datetime | เวลาที่สร้างแจ้งเตือน — ต้องเกิด**ทันที**ที่ background job ตรวจพบ (near-real-time เช่นเดียวกับ `gap_alerts` ที่ §3 E4) ไม่ใช่ batch job รายวัน (กฎ #2) — **[ยืนยันแล้วจาก T-043]** |
+
+> **[ยืนยันแล้ว 2026-09-05] กลไก auto-resolve**: T-042 (background job) ต้อง**ตรวจซ้ำ**สถานะ gap ของ `clo_id` ที่ผูกกับ notification ที่ยัง `is_resolved = false` อยู่ทุกครั้งที่มีเหตุการณ์ที่อาจปิด gap ได้ — คือทันทีหลังเรียก `POST /ai-match-results/{id}/confirm` (หัวข้อ 3, E3) สำเร็จ (ai_match_result ของ CLO นั้น state → confirmed, ตาม 2.9) ให้ backend ตรวจว่า CLO นั้นมี `clo_coverage_summary.is_matched = true` แล้วหรือยัง (คือมี `match_frequency > 0` จาก `ai_match_result` ที่ confirmed) — ถ้าใช่ ให้ตั้ง `notification.is_resolved = true, resolved_at = now()` สำหรับ notification ที่ยัง unresolved ของ `clo_id` นั้นทั้งหมดทันที ไม่ต้องรอรอบ background job ถัดไป (ตรงกับพฤติกรรม Gap Alert Banner ใน prototype ที่หายไปเองเมื่อแก้ปัญหาแล้ว) — ในทางกลับกัน ถ้าอาจารย์ `reject` ผลจับคู่ (state → rejected) หรือ soft-delete `teaching_record`/`evidence` ที่เคยปิด gap ไว้ ทำให้ CLO นั้นกลับไม่มีหลักฐานยืนยันอีก ระบบต้องสร้าง notification ใหม่ (ไม่ reopen แถวเดิมที่ resolved ไปแล้ว เพื่อรักษาประวัติ) ตาม T-042/T-044 ตามปกติ
+>
+> **Unique constraint**: ต้องมี partial unique index บน `clo_id` WHERE `is_resolved = false` (หรือกลไกเทียบเท่า) เพื่อกันสร้างแจ้งเตือนซ้ำซ้อนสำหรับ CLO เดียวกันที่ยัง unresolved อยู่ — background job (T-042) ต้อง `SELECT ... WHERE clo_id = ? AND is_resolved = false` ก่อนสร้างแถวใหม่ทุกครั้ง ไม่ insert ซ้ำถ้ามีแถว unresolved อยู่แล้ว
+>
+> **Query rule / ขอบเขตสิทธิ์**: `GET` รายการแจ้งเตือนต้องกรอง `user_id = current_user` เสมอ (อาจารย์เห็นเฉพาะแจ้งเตือนของตนเอง) และ default กรองเฉพาะ `is_resolved = false` (ดู §3 E4) — ไม่มีข้อมูลส่วนบุคคลของนักศึกษาปะปนใน entity นี้โดยตรง (อ้างอิงเพียง `clo_id`/`curriculum_id`) จึงไม่ต้องมี flag PII เหมือน `evidence`
+
+### 2.15 `account_approval_log` (audit trail การอนุมัติ/ปฏิเสธบัญชี — กลไกบังคับใช้ AB-26)
+
+เอนทิตีนี้เป็นข้อมูลที่ขาดหายจาก schema เดิมของเอกสารนี้ — เพิ่มตามที่ [[../../01-requirements/03-task/task-breakdown|task-breakdown]] T-092 ระบุไว้ชัดเจนแล้ว นี่คือกลไกที่ทำให้ **audit trail ของ AB-26 (การอนุมัติ/ปฏิเสธบัญชี) ตรวจสอบย้อนหลังได้จริงในระดับ schema** แยกจาก `user.approved_by`/`user.approved_at` (หัวข้อ 2.12) ที่เก็บได้เฉพาะ "การตัดสินใจล่าสุดครั้งเดียว" ต่อบัญชี
+
+| ฟิลด์ | ชนิด | คำอธิบาย |
+|---|---|---|
+| log_id | PK | |
+| account_id | FK → user.user_id | บัญชีที่ถูกอนุมัติ/ปฏิเสธ (อาจารย์ผู้สอนที่สมัครผ่าน `POST /auth/register`, AB-24) — **[ยืนยันแล้วจาก T-092]** |
+| action | enum('approve','reject') | การตัดสินใจของผู้บริหารหลักสูตรครั้งนี้ — **[ยืนยันแล้วจาก T-092]** |
+| decided_by | FK → user.user_id | ผู้บริหารหลักสูตร (`role = 'program_admin'`) ที่กดอนุมัติ/ปฏิเสธบัญชีนี้ — **[ยืนยันแล้วจาก T-092]** |
+| decided_at | datetime | เวลาที่ตัดสินใจ — **[ยืนยันแล้วจาก T-092]** |
+
+> **กลไกบังคับใช้**: `account_approval_log` เก็บเป็น**ประวัติสะสมทุกครั้ง (append-only)** ไม่ overwrite ของเดิม — ตรวจสอบย้อนหลังได้ว่าใครอนุมัติ/ปฏิเสธเมื่อไรแม้บัญชีหนึ่งถูกตัดสินใจไปมาหลายรอบ (เช่น ปฏิเสธไปก่อนแล้วอนุมัติภายหลัง) backend ต้อง insert แถวใหม่ในตารางนี้ทุกครั้งที่เรียก `POST /admin/accounts/{user_id}/approve` หรือ `.../reject` (หัวข้อ 3, E6) **ควบคู่กัน**กับการอัปเดต `user.account_status`/`approved_by`/`approved_at` เสมอ — ไม่ใช่แทนกัน
+
 **แผนภาพความสัมพันธ์แบบย่อ:**
 
 ```
@@ -253,6 +288,11 @@ user 1──* course (instructor_id)
 user *──* curriculum (program_admin_curriculum_scope)
 user 1──* user (approved_by — self-referencing, program_admin ผู้อนุมัติ/ปฏิเสธบัญชีอาจารย์ผู้สอน, E6)
 evidence 1──* evidence_access_log
+clo 1──* notification            (clo_id — CLO ที่ขาดหลักฐาน กระตุ้นแจ้งเตือน, AB-12)
+user 1──* notification           (user_id — ผู้รับแจ้งเตือน)
+curriculum 1──* notification     (curriculum_id — denormalized จาก clo.curriculum_id สำหรับกรองสิทธิ์ตาม program_admin_curriculum_scope)
+user 1──* account_approval_log   (account_id — บัญชีที่ถูกอนุมัติ/ปฏิเสธ)
+user 1──* account_approval_log   (decided_by — self-referencing, program_admin ผู้อนุมัติ/ปฏิเสธ, E6)
 ```
 
 ---
@@ -296,7 +336,7 @@ evidence 1──* evidence_access_log
 | `POST /ai-match-results/{id}/reject` | ปฏิเสธผลจับคู่ที่ผิด (state → rejected, ไม่ถูกนับเป็นหลักฐาน) | — |
 | `GET /courses/{id}/clo-coverage` | ดึงสัดส่วน % ความสอดคล้องระดับวิชา (ฐาน `total_clo_count` = 100%) พร้อม % ความถี่ที่แมทช์ต่อ CLO — คำนวณจาก `ai_match_result` ที่ confirmed เท่านั้น (ตามสูตร AB-20/AB-21 ที่ยืนยันแล้ว, หัวข้อ 2.10) | res: `{course_id, total_clo_count, matched_clo_count, coverage_percent, total_teaching_record_count, per_clo: [{clo_id, match_frequency, match_frequency_percent, is_matched}]}` |
 | `POST /courses/{id}/syllabus-gap-analysis` | สั่งให้ AI เปรียบเทียบ `teaching_record` ทั้งหมดของวิชา (ที่บันทึกจริง) กับ `syllabus.content` — ต้องมี syllabus ของวิชานี้แล้ว (ไม่เช่นนั้น 409) — งานแยกจาก ai-match (AB-22) | res: `{missing_topics, extra_topics, state:"draft"}` — สร้างระเบียน `syllabus_gap_result` state=draft |
-| `GET /courses/{id}/syllabus-gap-results` | ดึงผลวิเคราะห์ gap ล่าสุด (draft หรือ confirmed) | res: รายการ syllabus_gap_result |
+| `GET /courses/{id}/syllabus-gap-results` | ดึงผลวิเคราะห์ gap **ล่าสุดเพียงชุดเดียว** ของวิชานั้น (draft หรือ confirmed) — แม้ฐานข้อมูลจะเก็บ `syllabus_gap_result` ทุกรอบไว้เป็นประวัติแบบ append-only (ดูหัวข้อ 2.11) endpoint นี้คืนเฉพาะแถวที่ `generated_at` ล่าสุดของ `course_id` นั้น (เทียบเท่า `ORDER BY generated_at DESC LIMIT 1`) **[ยืนยันแล้ว, ดู align-api-schema-design.md §4.3]** — ถ้าต้องการดูประวัติทุกรอบ ให้เพิ่ม endpoint แยกต่างหาก (เช่น `GET /courses/{id}/syllabus-gap-results/history`) แทนการเปลี่ยนพฤติกรรม endpoint นี้ | res: `syllabus_gap_result` (**object เดียว** ไม่ใช่ array) |
 | `PATCH /syllabus-gap-results/{id}` | อาจารย์แก้ไขรายการหัวข้อที่ขาด/เกินก่อนยืนยัน (state → edited) | req: `{missing_topics?, extra_topics?}` |
 | `POST /syllabus-gap-results/{id}/confirm` | ยืนยันผล gap analysis (state → confirmed) — เช่นเดียวกับ ai-match ต้องผ่านอาจารย์ก่อนใช้เป็นหลักฐานทางการ (กฎ #3) | — |
 | `POST /syllabus-gap-results/{id}/reject` | ปฏิเสธผลวิเคราะห์ gap รอบนี้ (state → rejected) | — |
@@ -304,12 +344,12 @@ evidence 1──* evidence_access_log
 ### E4 — แดชบอร์ดและแจ้งเตือน
 | Method & Path | จุดประสงค์ | Request/Response สำคัญ |
 |---|---|---|
-| `GET /me/dashboard` | หน้าแรกอาจารย์: % ความสอดคล้องรวม (ตามสูตรใหม่ 2.10/AB-20), รายวิชาที่สอน, แจ้งเตือน CLO ขาดหลักฐาน | res: `{courses:[{course_id, curriculum_year, coverage_percent, matched_clo_count, total_clo_count}], gap_alerts:[{clo_id, code, course_id}]}` |
+| `GET /me/dashboard` | หน้าแรกอาจารย์: % ความสอดคล้องรวม (ตามสูตรใหม่ 2.10/AB-20), รายวิชาที่สอน, แจ้งเตือน CLO ขาดหลักฐาน — `gap_alerts` อ่านจากตาราง `notification` (หัวข้อ 2.14) กรอง `user_id = current_user AND is_resolved = false` เสมอ (T-045) | res: `{courses:[{course_id, curriculum_year, coverage_percent, matched_clo_count, total_clo_count}], gap_alerts:[{notification_id, clo_id, code, course_id, curriculum_id, message, created_at}]}` |
 | `GET /courses/{id}/clo-week-map` | แผนที่ CLO×สัปดาห์ + จำนวนชิ้นงานสะสม + สถานะเชื่อม PLO | res: `[{clo_id, week_no, evidence_count, linked_plo_status}]` |
 | `GET /curricula/{year}/dashboard` | ภาพรวมความสอดคล้องระดับหลักสูตร แยกกลุ่ม (สำหรับผู้บริหารหลักสูตร/`program_admin`, AB-14) — ตรวจ scope สิทธิ์ก่อนตอบ | res: `{curriculum_id, courses:[{course_id, coverage_percent}]}` |
 | `GET /courses/{id}/teaching-vs-syllabus` | **ใหม่ (AB-23)** — ส่วนเปรียบเทียบ "การสอนจริงที่บันทึก" กับ "CLO/course syllabus" สำหรับแดชบอร์ด แยกจากส่วน % ความสอดคล้องรวม (AB-11) และแจ้งเตือน CLO ขาดหลักฐาน (AB-12) อย่างชัดเจน — อ่านเฉพาะ `syllabus_gap_result` ที่ `state = 'confirmed'` เท่านั้น | res: `{course_id, missing_topics_count, extra_topics_count, missing_topics:[...], extra_topics:[...], last_confirmed_at}` — ถ้ายังไม่มีผลที่ confirmed ให้ตอบสถานะ `not_yet_confirmed` แทนตัวเลข |
 
-หมายเหตุ: `gap_alerts` คำนวณจาก query แบบ near-real-time (เช่น เมื่อโหลดแดชบอร์ดหรือ trigger หลังบันทึกการสอน/ยืนยันผล AI) เพื่อให้ตรงกฎ #2 ที่ต้องแจ้งทันที ไม่ใช่ batch job รายวัน — ส่วนเปรียบเทียบ `teaching-vs-syllabus` เป็นคนละส่วนกับ `gap_alerts`: `gap_alerts` แจ้งเตือน "CLO ที่ไม่มีข้อมูลการสอน/หลักฐานรองรับเลย" (กฎ #2) ในขณะที่ `teaching-vs-syllabus` เทียบ "เนื้อหาที่สอนจริง" กับ "แผน syllabus" (หัวข้อขาด/หัวข้อเกิน — AB-22/AB-23) ทั้งสองใช้ข้อมูลคนละชุดและต้องแสดงแยกส่วนกันในหน้าจอ
+หมายเหตุ: `gap_alerts` มาจากระเบียน `notification` (หัวข้อ 2.14) ที่สร้างโดย background job T-042 แบบ near-real-time (ทันทีที่ตรวจพบ CLO ขาดหลักฐาน ไม่ใช่ batch job รายวัน — กฎ #2) และ**หายไปเองอัตโนมัติ**จากรายการนี้เมื่อ backend set `is_resolved = true` ให้ (กลไก auto-resolve ดูหัวข้อ 2.14) — ไม่ต้องให้ผู้ใช้กดอ่าน/ปิดแจ้งเตือนเอง — ส่วนเปรียบเทียบ `teaching-vs-syllabus` เป็นคนละส่วนกับ `gap_alerts`: `gap_alerts` แจ้งเตือน "CLO ที่ไม่มีข้อมูลการสอน/หลักฐานรองรับเลย" (กฎ #2) ในขณะที่ `teaching-vs-syllabus` เทียบ "เนื้อหาที่สอนจริง" กับ "แผน syllabus" (หัวข้อขาด/หัวข้อเกิน — AB-22/AB-23) ทั้งสองใช้ข้อมูลคนละชุดและต้องแสดงแยกส่วนกันในหน้าจอ
 
 ### E5 — ออกเอกสาร Word
 | Method & Path | จุดประสงค์ | Request/Response สำคัญ |

@@ -19,3 +19,4 @@
 - [[2026-08-23-release-planner-log|2026-08-23: เพิ่ม Agent/Skill สำหรับแบ่ง Phase/Release และผูก Task ต่อ Phase]]
 - [[2026-08-23-architecture-audit-fix-log|2026-08-23: แก้ไขข้ออ้างอิงสเปคที่ผิดใน align-high-level-architecture.md (§4.2 exclusive role)]]
 - [[2026-08-23-audit-log|2026-08-23: รัน audit ทั้งระบบ พบ 8 finding แก้ 7 ข้อ]]
+- [[2026-09-05-notification-account-approval-log|2026-09-05: เพิ่ม entity `notification` และ `account_approval_log` เข้า align-api-schema-design.md]]
