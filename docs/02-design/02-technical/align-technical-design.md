@@ -269,37 +269,45 @@ notifications/{notification_id}                      ← top-level, auto id (ป
 
 > **[ยืนยันแล้ว 2026-08-20] นิยาม "ความถี่ที่แมทช์" (match frequency, AB-21):** ไม่เปลี่ยนแปลง — ดูรายละเอียดเต็มที่หัวข้อ 4.2 และ `test-plan-align.md` §6.1
 
-### 2.11 `syllabus_gap_result` (ผลวิเคราะห์ gap เทียบ course syllabus — draft/confirmed, แยกจาก ai_match_result)
+### 2.11 `syllabus_gap_result` → top-level collection `syllabus_gap_results` (append-only, ผลวิเคราะห์ gap เทียบ course syllabus — draft/confirmed, แยกจาก ai_match_result)
 | ฟิลด์ | ชนิด | คำอธิบาย |
 |---|---|---|
-| gap_result_id | PK | |
-| course_id | FK → course | |
-| syllabus_id | FK → syllabus | syllabus ที่ใช้เทียบ (ของรายวิชาเดียวกัน) |
-| missing_topics | JSON list | หัวข้อใน `syllabus.content` ที่ยังไม่พบ `teaching_record` รองรับ (AB-22) |
-| extra_topics | JSON list | หัวข้อที่มี `teaching_record` บันทึกจริง แต่ไม่พบใน `syllabus.content` (เนื้อหาที่สอนเพิ่มนอกแผน) |
-| generated_at | datetime | เวลาที่ AI ประมวลผลรอบนี้ — วิเคราะห์จาก `teaching_record` ที่มีอยู่ ณ เวลานั้น — **[ยืนยันแล้ว]** เก็บทุกรอบที่รัน gap analysis เป็นประวัติ ไม่ overwrite ผลรอบเก่า (ทุกครั้งที่รันใหม่ เช่น หลังบันทึกการสอนเพิ่มหรือแก้ syllabus จะสร้างแถวใหม่เสมอ แถวเก่ายังคงอยู่ในฐานข้อมูลตลอดไปเป็นประวัติ) — ควรมี field ระบุเวลาที่รัน/ลำดับรอบ (เช่น `generated_at` นี้เอง) เพื่อใช้แสดงเฉพาะผลล่าสุดในหน้าจอ UI แม้จะเก็บประวัติทั้งหมดไว้ในฐานข้อมูล |
-| state | enum('draft','edited','confirmed','rejected') | รูปแบบเดียวกับ `ai_match_result` (2.9) — **draft** = ผลตั้งต้นจาก AI; **edited** = อาจารย์แก้ไขรายการหัวข้อที่ขาด/เกินก่อนยืนยัน; **confirmed** = ยืนยันแล้ว ใช้เป็นข้อมูลจริงในแดชบอร์ด/เอกสาร; **rejected** = ปฏิเสธผลรอบนี้ |
-| confirmed_by | FK → user, nullable | ต้อง not-null เมื่อ state = confirmed |
-| confirmed_at | datetime, nullable | |
+| *(document id)* | auto-generated | append-only — ห้าม update/ลบ document นี้ไม่ว่ากรณีใด (ทุกรอบที่รัน gap analysis สร้าง document ใหม่เสมอ) |
+| gap_result_id | string, เก็บซ้ำเท่ากับ document id | |
+| course_id | string | reference field → `courses` (nested subcollection — ต้องรู้ `curriculum_id` ประกอบ path เต็มตอนอ่าน) |
+| curriculum_id | string, **denormalized เพิ่มใหม่** จาก `course.curriculum_id` | ใช้กรอง scope หลักสูตรโดยไม่ต้องอ่าน `course` document ซ้อน |
+| syllabus_id | string | reference field → `syllabus/main` ของ course เดียวกัน (= `course_id` เสมอ เพราะ syllabus เป็น 1:1 กับ course) |
+| missing_topics | array of struct | หัวข้อใน `syllabus.content` ที่ยังไม่พบ `teaching_record` รองรับ (AB-22) |
+| extra_topics | array of struct | หัวข้อที่มี `teaching_record` บันทึกจริง แต่ไม่พบใน `syllabus.content` (เนื้อหาที่สอนเพิ่มนอกแผน) |
+| generated_at | datetime | เวลาที่ AI ประมวลผลรอบนี้ — วิเคราะห์จาก `teaching_record` ที่มีอยู่ ณ เวลานั้น — **[ยืนยันแล้ว]** เก็บทุกรอบที่รัน gap analysis เป็นประวัติ ไม่ overwrite ผลรอบเก่า (ทุกครั้งที่รันใหม่ เช่น หลังบันทึกการสอนเพิ่มหรือแก้ syllabus จะสร้าง document ใหม่เสมอด้วย `add()`/auto-id แถวเก่ายังคงอยู่ในฐานข้อมูลตลอดไปเป็นประวัติ) — ใช้ `generated_at` นี้เป็นตัวระบุลำดับเวลาหา document "ล่าสุด" |
+| state | enum('draft','edited','confirmed','rejected') | รูปแบบเดียวกับ `ai_match_result` (2.9) — **draft** = ผลตั้งต้นจาก AI; **edited** = อาจารย์แก้ไขรายการหัวข้อที่ขาด/เกินก่อนยืนยัน; **confirmed** = ยืนยันแล้ว ใช้เป็นข้อมูลจริงในแดชบอร์ด/เอกสาร; **rejected** = ปฏิเสธผลรอบนี้ — **Draft-Confirmed: พลาดไม่ได้ตามกฎ #3** |
+| confirmed_by | string (Firebase Auth UID), nullable | ต้อง not-null เมื่อ `state = 'confirmed'` — reference field → `users` |
+| confirmed_at | datetime, nullable | คู่กับ `confirmed_by` |
 
 **กฎสำคัญ:** เช่นเดียวกับ `ai_match_result` — เฉพาะ `state = 'confirmed'` เท่านั้นที่ถูกใช้ในแดชบอร์ด (AB-23) และเอกสาร Word export (Area of Improvement, AB-16); เป็นผลวิเคราะห์ **แยก** จากการจับคู่ CLO/PLO โดยสิ้นเชิง (กฎ #3, ตาม AB-10/AB-22)
 
-### 2.12 `user` / role
+**Indexing เชิงแนวคิด**: composite index บน `(course_id, generated_at DESC)` **จำเป็นเสมอ** ก่อน deploy จริง (Firestore ปฏิเสธ query ที่ไม่มี index รองรับ ไม่ใช่แค่ optimizer เลือกเองแบบ SQL) — ใช้ query `where('course_id','==',id).orderBy('generated_at','desc').limit(1)` เพื่อดึงเฉพาะรอบล่าสุด (ดู align-api-schema-design.md §3.11, §4.3)
+
+### 2.12 `user` → collection `users` (top-level, doc id = Firebase Auth UID)
 | ฟิลด์ | ชนิด | คำอธิบาย |
 |---|---|---|
-| user_id | PK | |
-| name / email | string | |
-| password_hash | string | รหัสผ่านที่ hash แล้ว (เช่น bcrypt) — **[ยืนยันแล้ว]** อาจารย์ตั้งรหัสผ่านเองตอนสมัครสมาชิกผ่าน E6 (`POST /auth/register`) |
-| role | enum('instructor','program_admin') | 2 บทบาทตามสเปค — `program_admin` คือผู้บริหารหลักสูตร (Program Administrator) อาจารย์ที่รับผิดชอบหลักสูตร ประสานหลักสูตร และจัดทำรายงานประเมินตนเอง (SAR) — บัญชีที่สมัครเองผ่าน E6 (`POST /auth/register`) ได้ `role = 'instructor'` เสมอ เพราะสเปค (E6) ระบุว่าเฉพาะอาจารย์ผู้สอนเท่านั้นที่สมัครใช้งานเองได้ — **[ยืนยันแล้ว]** บัญชี `role = 'program_admin'` ชุดแรก (และบัญชีเพิ่มเติมในอนาคตถ้าต้องการ) สร้างผ่าน **seed script/ข้อมูลเริ่มต้นตอน deploy ระบบเท่านั้น** ไม่มี endpoint ใดในระบบ ALIGN ที่ให้สร้างบัญชีบทบาทนี้โดยตรง (ไม่ใช่ผ่าน UI ในระบบ และไม่ใช่ผ่าน `POST /auth/register` ซึ่งสร้างได้แต่ `role = 'instructor'` ตามที่ระบุข้างต้น) |
-| account_status | enum('pending','approved','rejected') | **ใหม่ตาม E6/กฎทางธุรกิจ #6** — สถานะบัญชี: `pending` = "รออนุมัติ" (ค่าเริ่มต้นทันทีที่สมัครสำเร็จผ่าน `POST /auth/register`, AB-24), `approved` = "อนุมัติแล้ว" (เข้าใช้งานฟีเจอร์อื่น E1–E5 ได้ตามสิทธิ์บทบาท, AB-26), `rejected` = "ถูกปฏิเสธ" (เข้าถึงข้อมูล/ฟีเจอร์ใดๆ ของระบบไม่ได้เช่นเดียวกับ `pending`, AB-25/AB-26) — ดูหมายเหตุบังคับใช้ด้านล่างตาราง |
-| approved_by | FK → user, nullable | ผู้บริหารหลักสูตร (`program_admin`) ที่กดอนุมัติ/ปฏิเสธบัญชีนี้ครั้งล่าสุด — ต้อง not-null เมื่อ `account_status != 'pending'` (audit trail ตาม AB-26) |
+| *(document id)* | = Firebase Authentication UID | ผูกกับ identity provider โดยตรง — ทำให้ Security Rules อ้าง `request.auth.uid` แล้ว lookup `users/{uid}` ได้ทันทีโดยไม่ต้อง query หา |
+| user_id | string, เก็บซ้ำเท่ากับ document id (= UID) | reference field จากแทบทุก entity ที่เกี่ยวกับผู้ใช้ (`created_by`, `confirmed_by`, `instructor_id`, `approved_by` ฯลฯ) |
+| name / email | string | `email` unique บังคับโดย **Firebase Authentication เอง** (ปฏิเสธสมัครซ้ำที่ชั้น auth provider ก่อนถึง Firestore ด้วยซ้ำ) — ไม่ต้องมี unique index ใน Firestore |
+| password_hash | *(ไม่เก็บใน Firestore อีกต่อไป)* | **[ยืนยันแล้ว]** Firebase Authentication จัดการ credential เอง (hash/verify รหัสผ่าน) ทั้งหมด — อาจารย์ยังคงตั้งรหัสผ่านเองตอนสมัครสมาชิกผ่าน E6 (`POST /auth/register`) เหมือนเดิมทุกประการ เปลี่ยนแค่ว่าไม่มี field นี้ใน `users` document อีกต่อไป |
+| role | enum('instructor','program_admin') | 2 บทบาทตามสเปค — `program_admin` คือผู้บริหารหลักสูตร (Program Administrator) อาจารย์ที่รับผิดชอบหลักสูตร ประสานหลักสูตร และจัดทำรายงานประเมินตนเอง (SAR) — บัญชีที่สมัครเองผ่าน E6 (`POST /auth/register`) ได้ `role = 'instructor'` เสมอ เพราะสเปค (E6) ระบุว่าเฉพาะอาจารย์ผู้สอนเท่านั้นที่สมัครใช้งานเองได้ — **[ยืนยันแล้ว]** บัญชี `role = 'program_admin'` ชุดแรก (และบัญชีเพิ่มเติมในอนาคตถ้าต้องการ) สร้างผ่าน **seed script/ข้อมูลเริ่มต้นตอน deploy ระบบเท่านั้น** ไม่มี endpoint ใดในระบบ ALIGN ที่ให้สร้างบัญชีบทบาทนี้โดยตรง (ไม่ใช่ผ่าน UI ในระบบ และไม่ใช่ผ่าน `POST /auth/register` ซึ่งสร้างได้แต่ `role = 'instructor'` ตามที่ระบุข้างต้น) — ห้ามเพิ่มค่า `qa` หรือค่าอื่นใด (Out of Scope) |
+| account_status | enum('pending','approved','rejected') | **ใหม่ตาม E6/กฎทางธุรกิจ #6** — สถานะบัญชี: `pending` = "รออนุมัติ" (ค่าเริ่มต้นทันทีที่สมัครสำเร็จผ่าน `POST /auth/register`, AB-24), `approved` = "อนุมัติแล้ว" (เข้าใช้งานฟีเจอร์อื่น E1–E5 ได้ตามสิทธิ์บทบาท, AB-26), `rejected` = "ถูกปฏิเสธ" (เข้าถึงข้อมูล/ฟีเจอร์ใดๆ ของระบบไม่ได้เช่นเดียวกับ `pending`, AB-25/AB-26) — gate การเข้าถึงทุก endpoint ที่ต้อง login ผ่านการตรวจที่ **Cloud Function ทุกครั้งที่เรียก** (Security Rules helper `isApproved()` ที่ §6 เป็น defense-in-depth ชั้นที่สองเท่านั้น) — ดูหมายเหตุบังคับใช้ด้านล่างตาราง |
+| approved_by | string (Firebase Auth UID), nullable | ผู้บริหารหลักสูตร (`program_admin`) ที่กดอนุมัติ/ปฏิเสธบัญชีนี้ครั้งล่าสุด — ต้อง not-null เมื่อ `account_status != 'pending'` (audit trail ตาม AB-26) — reference field → `users` (self-referencing) |
 | approved_at | datetime, nullable | เวลาที่อนุมัติ/ปฏิเสธครั้งล่าสุด — ต้อง not-null คู่กับ `approved_by` |
 | rejection_reason | text, nullable, ไม่บังคับกรอก | **[ยืนยันแล้ว]** เหตุผลที่ปฏิเสธบัญชี — ไม่บังคับกรอก เพราะเหตุผลปฏิเสธในทางปฏิบัติมีเพียงกรณีเดียวคือ "ไม่ใช่อาจารย์ผู้สอนของสาขา" คงฟิลด์นี้ไว้เป็น nullable เผื่อผู้บริหารหลักสูตรต้องการระบุรายละเอียดเพิ่มเติม แต่ backend ไม่ validate ว่าต้องมีค่า |
-| program_admin_curriculum_scope | FK[] → curriculum, nullable | สำหรับ `program_admin` (ผู้บริหารหลักสูตร) — ระบุว่าดูแลหลักสูตรกลุ่มใด ใช้จำกัด scope การเข้าถึงข้อมูล/หลักฐานข้ามหลักสูตร |
+| program_admin_curriculum_scope | array of string (curriculum_id), nullable | สำหรับ `program_admin` (ผู้บริหารหลักสูตร) — ระบุว่าดูแลหลักสูตรกลุ่มใด (reference field แบบ array ไม่ใช่ FK[] บังคับ — แต่ละค่าไม่ถูกตรวจการมีอยู่จริงอัตโนมัติ ต้องตรวจที่ Cloud Function ถ้าจำเป็น) ใช้จำกัด scope การเข้าถึงข้อมูล/หลักฐานข้ามหลักสูตร — Security Rules อ่าน array นี้ตรงได้ด้วย `in` operator |
+| created_at | datetime | **denormalized เพิ่มใหม่** — เวลาที่สร้างบัญชี |
 | is_deleted | boolean, default `false` | **[ยืนยันแล้ว]** ธง soft-delete — ใช้เมื่ออาจารย์/ผู้บริหารหลักสูตรพ้นสภาพ (เช่น ลาออก) แยกจาก `account_status` โดยสิ้นเชิง (`account_status` คือสถานะการอนุมัติใช้งาน E1–E5, `is_deleted` คือบัญชีถูกปิดใช้งานถาวรแล้ว) — ดูรายละเอียดที่ align-api-schema-design.md §5.1/§3.12 |
 | deleted_at | datetime, nullable | ต้อง not-null คู่กับ `is_deleted = true` |
 
-> **หมายเหตุบังคับเพิ่มเติม — กลไกตรวจ `is_deleted` ของ `user`:** บัญชีที่ `is_deleted = true` ต้อง**ถูกปฏิเสธการ login/ทุก request ทันที** เสมือนเป็นอีกเงื่อนไข gate หนึ่งที่ประตูควบคุมสิทธิ์ต้องตรวจคู่กับ `account_status = 'approved'` (เพิ่มเติมจากหมายเหตุบังคับกฎ #6 ด้านล่าง) — บัญชีที่ `is_deleted = true` ต้องเข้าถึงอะไรไม่ได้เลยไม่ว่า `account_status` จะเป็นค่าใด — ข้อมูลที่บัญชีนี้เคยสร้าง/ยืนยันไว้ (`teaching_record.created_by`, `ai_match_result.confirmed_by` ฯลฯ) ยังคง valid ครบถ้วนตามกฎ #4 ไม่ได้รับผลกระทบ เพราะ FK ยังชี้ถึง `user_id` เดิมได้ปกติ — **ช่องว่างที่ยังไม่มีนิยาม**: ปัจจุบันยังไม่มี endpoint ที่ให้ deactivate/soft-delete บัญชี user โดยตรงทั้งในเอกสารนี้และ align-api-schema-design.md (มีแต่ field/กลไก แต่ยังไม่มี `DELETE`/`POST .../deactivate` ที่เรียกใช้จริง) ต้องออกแบบเพิ่มเมื่อ backlog ระบุ flow การ deactivate บัญชีชัดเจน
+> **หมายเหตุบังคับเพิ่มเติม — กลไกตรวจ `is_deleted` ของ `user`:** บัญชีที่ `is_deleted = true` ต้อง**ถูกปฏิเสธการ login/ทุก request ทันที** เสมือนเป็นอีกเงื่อนไข gate หนึ่งที่ประตูควบคุมสิทธิ์ต้องตรวจคู่กับ `account_status = 'approved'` (เพิ่มเติมจากหมายเหตุบังคับกฎ #6 ด้านล่าง) — บัญชีที่ `is_deleted = true` ต้องเข้าถึงอะไรไม่ได้เลยไม่ว่า `account_status` จะเป็นค่าใด — ข้อมูลที่บัญชีนี้เคยสร้าง/ยืนยันไว้ (`teaching_record.created_by`, `ai_match_result.confirmed_by` ฯลฯ) ยังคง valid ครบถ้วนตามกฎ #4 ไม่ได้รับผลกระทบ เพราะ reference field เหล่านั้นยังคงเก็บค่า `user_id` เดิมไว้ครบ (Firestore ไม่มี FK บังคับที่ลบ/แก้ reference ให้อัตโนมัติเมื่อ `user` document ถูก soft-delete — ต่างจาก SQL เดิมที่อาจมี cascade/`ON DELETE` policy แต่ที่นี่ค่าที่เก็บไว้เดิมไม่หายไปเองเช่นกัน เพียงแต่ไม่มีการตรวจการมีอยู่จริงอัตโนมัติ) — **ช่องว่างที่ยังไม่มีนิยาม**: ปัจจุบันยังไม่มี endpoint ที่ให้ deactivate/soft-delete บัญชี user โดยตรงทั้งในเอกสารนี้และ align-api-schema-design.md (มีแต่ field/กลไก แต่ยังไม่มี `DELETE`/`POST .../deactivate` ที่เรียกใช้จริง) ต้องออกแบบเพิ่มเมื่อ backlog ระบุ flow การ deactivate บัญชีชัดเจน
+>
+> **ข้อควรระวังเพิ่มเติมเฉพาะ Firestore — revoke session**: ถ้า soft-delete บัญชี (`is_deleted=true`) ต้องเรียก `revokeRefreshTokens()` ของ Firebase Admin SDK **คู่กับ**การ set `is_deleted=true` เสมอ — เพราะ Firestore Security Rules ประเมินค่า `is_deleted` ใหม่ทุกครั้งที่มี request ก็จริง แต่ Firebase Authentication session/JWT ที่ออกไปแล้วยังคง valid จนกว่าจะหมดอายุเองหรือถูก revoke แบบ explicit — ไม่ทำเช่นนี้จะทำให้ session เก่ายังเรียก endpoint ต่อได้จนกว่า token จะหมดอายุเอง (รายละเอียดนี้ไม่มีในฉบับ SQL เดิมเพราะ session ผูกกับ DB โดยตรงกว่า — ดู align-api-schema-design.md §3.12)
 
 > **[ยืนยันแล้ว] ฟิลด์ฟอร์มสมัครสมาชิก:** `name`, `email`, `password` เท่านั้น — **ไม่มีฟิลด์ `department`** เพราะระบบ ALIGN ทั้งระบบให้บริการเฉพาะสาขา New Media Communication สาขาเดียว (ดู [[../../CLAUDE.md|CLAUDE.md]] และ [[../01-requirements/01-spec/plo-course-master-data|plo-course-master-data]]) การระบุสังกัดจึงไม่มีความหมาย/ไม่จำเป็น หลังสมัครสำเร็จ อาจารย์เลือกวิชาที่สอน → อัปโหลดไฟล์ syllabus ทางการ + กรอกหัวข้อที่วางแผนสอนแต่ละสัปดาห์ → กรอก CLO/ผูก PLO → กรอกข้อมูลการสอนจริงแต่ละสัปดาห์ (ลำดับตาม E1/E2 ที่มีอยู่แล้ว) ต้นแบบ `M-SignUp.dc.html` และ `align-app-screens.md` ได้อัปเดตให้สอดคล้องกับการยืนยันนี้แล้ว (2026-08-20) — ฟอร์มสมัครสมาชิกในต้นแบบมีเฉพาะ ชื่อ-นามสกุล/อีเมลสถาบัน/รหัสผ่าน/ยืนยันรหัสผ่าน ไม่มีฟิลด์ department/สังกัดหลงเหลืออยู่อีกต่อไป
 
@@ -307,69 +315,92 @@ notifications/{notification_id}                      ← top-level, auto id (ป
 
 > **หมายเหตุ — QA ไม่ใช่ role/entity ในระบบนี้:** งานประกันคุณภาพ (QA) **ไม่มี** account และ**ไม่ปรากฏ**เป็นค่าใน `role` enum ข้างต้น QA ไม่เคย login เข้าระบบ ALIGN โดยตรง — ได้รับเฉพาะเอกสาร Word ที่ `program_admin` ดาวน์โหลดจากระบบ (ดู E5 หัวข้อ 3) แล้วส่งต่อให้ QA ใช้ตรวจสอบภายนอกระบบเท่านั้น ห้ามเพิ่ม `qa` เป็นค่าใน enum หรือออกแบบ schema/endpoint ใดๆ ให้ QA เข้าถึงระบบ (ตามข้อ Out of Scope ในสเปค)
 
-### 2.13 Access-control / PDPA (ผูกกับ evidence)
-| ฟิลด์/แนวคิด | คำอธิบาย |
-|---|---|
-| `evidence_access_log` | ตาราง log แยก บันทึกทุกครั้งที่มีการเรียกดู/ดาวน์โหลดไฟล์หลักฐาน: `(log_id, evidence_id, accessed_by, accessed_at, action)` — ตาม AB-07 |
-| กติกาสิทธิ์ | ผู้เข้าถึง `evidence` ได้ต้องเป็น (ก) `instructor_id` ของ course ที่ teaching_record นั้นสังกัด หรือ (ข) ผู้ใช้ role `program_admin` ที่มี `curriculum_id` ของ course นั้นอยู่ใน `program_admin_curriculum_scope` เท่านั้น — ตรวจที่ backend API layer ทุก endpoint ที่ return ไฟล์/URL ของ evidence (ดูหัวข้อ 3) |
+**Indexing เชิงแนวคิด**: composite index บน `(account_status)`, `(role)`, `(is_deleted)`, `(role, account_status)` (คิวอนุมัติกรองทั้งสองพร้อมกัน)
 
-### 2.14 `notification` (แจ้งเตือน CLO ที่ยังไม่มีหลักฐาน — กลไกบังคับใช้กฎทางธุรกิจ #2, AB-12/T-042–T-045)
+### 2.13 `evidence_access_log` → top-level collection `evidence_access_logs` (Access-control / PDPA ผูกกับ evidence)
+| ฟิลด์ | ชนิด | คำอธิบาย |
+|---|---|---|
+| *(document id)* | auto-generated | append-only — ไม่มีเหตุผลทางธุรกิจให้แก้ไข/ลบ |
+| log_id | string, เก็บซ้ำเท่ากับ document id | |
+| evidence_id | string | reference field → `evidence` |
+| course_id, curriculum_id | string, **denormalized เพิ่มใหม่** จาก `evidence` | ให้ `GET /admin/evidence-access-log` (หัวข้อ 3, E5) และ Security Rules ตรวจ scope ของ log ได้โดยไม่ต้อง `get()` ซ้อนผ่าน `evidence` ก่อน |
+| accessed_by | string (Firebase Auth UID) | reference field → `users` — บันทึกทุกครั้งที่มีการเรียกดู/ดาวน์โหลดไฟล์หลักฐาน (ตาม AB-07) |
+| accessed_at | datetime | |
+| action | enum('view','download') | |
+
+> **กติกาสิทธิ์**: ผู้เข้าถึง `evidence` ได้ต้องเป็น (ก) `instructor_id` ของ course ที่ teaching_record นั้นสังกัด หรือ (ข) ผู้ใช้ role `program_admin` ที่มี `curriculum_id` ของ course นั้นอยู่ใน `program_admin_curriculum_scope` เท่านั้น — ตรวจที่ **Cloud Function ก่อนเสมอ** ทุก endpoint ที่ return ไฟล์/URL ของ evidence (ดูหัวข้อ 3) **และ** ที่ Firebase Cloud Storage Security Rules คู่ขนาน (สอง defense-in-depth เช่นเดียวกับ `evidence` เอง — ดูหัวข้อ 2.8/§6)
+
+**Retention**: write-only, append-only — ไม่มีเหตุผลทางธุรกิจให้แก้ไข/ลบ
+
+**Indexing เชิงแนวคิด**: composite index บน `(evidence_id)`, `(accessed_by)`, `(curriculum_id, accessed_at DESC)` (หน้าจอ Evidence Access Log ของผู้บริหารหลักสูตรกรองตามช่วงวันที่ + curriculum scope)
+
+### 2.14 `notification` → top-level collection `notifications` (แจ้งเตือน CLO ที่ยังไม่มีหลักฐาน — กลไกบังคับใช้กฎทางธุรกิจ #2, AB-12/T-042–T-045)
 
 เอนทิตีนี้เป็นข้อมูลที่ขาดหายจาก schema เดิมของเอกสารนี้ — เพิ่มตามที่ [[../../01-requirements/03-task/task-breakdown|task-breakdown]] T-043 อ้างถึง (ผูกกับ background job T-042 ที่ตรวจ CLO ไม่มี `teaching_record`/`evidence` รองรับ แล้วส่ง notification ทันทีตาม T-044 — นี่คือกลไกที่ทำให้กฎทางธุรกิจ #2 มีผลจริง ไม่ใช่ให้ผู้ใช้ไปตรวจสอบเองแบบ manual)
 
 | ฟิลด์ | ชนิด | คำอธิบาย |
 |---|---|---|
-| notification_id | PK | |
-| user_id | FK → user | ผู้รับแจ้งเตือน (อาจารย์ผู้สอนของวิชาที่ CLO นั้นสังกัด) — **[ยืนยันแล้วจาก T-043]** |
-| clo_id | FK → clo | CLO ที่ตรวจพบว่ายังไม่มี `teaching_record`/`evidence` รองรับ (ตัวกระตุ้นการแจ้งเตือนจาก background job T-042) — สืบทอด scope กลุ่มหลักสูตรผ่าน `clo.curriculum_id` (หัวข้อ 2.3) อยู่แล้ว — **[ยืนยันแล้วจาก T-043]** |
-| curriculum_id | FK → curriculum, denormalized จาก `clo.curriculum_id` | **[ยืนยันแล้ว 2026-09-05]** เก็บซ้ำเพื่อกรองสิทธิ์เข้าถึง/แสดงกลุ่มหลักสูตรของแจ้งเตือนได้เร็วโดยไม่ต้อง join ผ่าน `clo`→`course`→`curriculum` ทุกครั้ง — ตรงกับ `program_admin_curriculum_scope` (หัวข้อ 2.12) โดยตรง ทำให้กรองสิทธิ์เข้าถึงข้ามหลักสูตรได้ง่ายกว่าการ denormalize ผ่าน `course_id` (ปิดคำถามเปิดเดิมแล้ว เลือกแนวทางนี้แทน `course_id`) |
+| *(document id)* | auto-generated (ต่อประวัติ 1 รายการ) | กันสร้างซ้ำผ่าน **Firestore transaction แบบ query-then-write** (§2.0.1, §2.0.4) ไม่ใช่ document ID pattern เพราะต้องรองรับหลาย document สะสมต่อ CLO ตลอดอายุการใช้งาน |
+| notification_id | string, เก็บซ้ำเท่ากับ document id | |
+| user_id | string (Firebase Auth UID) | ผู้รับแจ้งเตือน (อาจารย์ผู้สอนของวิชาที่ CLO นั้นสังกัด) — reference field → `users` — **[ยืนยันแล้วจาก T-043]** |
+| clo_id | string | CLO ที่ตรวจพบว่ายังไม่มี `teaching_record`/`evidence` รองรับ (ตัวกระตุ้นการแจ้งเตือนจาก background job T-042) — reference field → `clos` (nested subcollection — ต้องประกอบ path เต็มด้วย `course_id`/`curriculum_id` ถ้าต้องอ่าน CLO จริง) — สืบทอด scope กลุ่มหลักสูตรผ่าน `clo.curriculum_id` (หัวข้อ 2.3) อยู่แล้ว — **[ยืนยันแล้วจาก T-043]** |
+| curriculum_id | string, denormalized จาก `clo.curriculum_id` | **[ยืนยันแล้ว 2026-09-05]** เก็บซ้ำเพื่อกรองสิทธิ์เข้าถึง/แสดงกลุ่มหลักสูตรของแจ้งเตือนได้เร็วโดยไม่ต้องอ่าน `clo`→`course`→`curriculum` ซ้อนกันหลายชั้นทุกครั้ง (Firestore ไม่มี JOIN) — ตรงกับ `program_admin_curriculum_scope` (หัวข้อ 2.12) โดยตรง ทำให้กรองสิทธิ์เข้าถึงข้ามหลักสูตรได้ง่ายกว่าการ denormalize ผ่าน `course_id` (ปิดคำถามเปิดเดิมแล้ว เลือกแนวทางนี้แทน `course_id`) |
 | message | text | ข้อความแจ้งเตือนระบุ CLO ที่ขาดหลักฐานเป็นรายข้อ (เช่น "CLO 4 ยังไม่มีข้อมูล" — ตาม AC ของ AB-12) — **[ยืนยันแล้วจาก T-043]** |
-| is_resolved | boolean, default `false` | **[ยืนยันแล้ว 2026-09-05 — แนวทาง B: Auto-resolve ผูกสถานะ CLO จริง]** แทนที่แนวคิด "ทำเครื่องหมายว่าอ่านแล้ว" (`is_read`) แบบ manual เดิมทั้งหมด — ระบบ (ไม่ใช่ผู้ใช้) เป็นผู้ set ค่านี้เป็น `true` โดยอัตโนมัติทันทีที่ CLO ที่แจ้งเตือนนี้อ้างถึงมีหลักฐาน/ผลจับคู่ที่ `confirmed` แล้ว (ไม่ gap อีกต่อไป) — ดูกลไก auto-resolve ด้านล่างตาราง |
+| is_resolved | boolean, default `false` | **[ยืนยันแล้ว 2026-09-05 — แนวทาง B: Auto-resolve ผูกสถานะ CLO จริง]** แทนที่แนวคิด "ทำเครื่องหมายว่าอ่านแล้ว" (`is_read`) แบบ manual เดิมทั้งหมด — ระบบ (ไม่ใช่ผู้ใช้) เป็นผู้ set ค่านี้เป็น `true` โดยอัตโนมัติผ่าน Firestore transaction ทันทีที่ CLO ที่แจ้งเตือนนี้อ้างถึงมีหลักฐาน/ผลจับคู่ที่ `confirmed` แล้ว (ไม่ gap อีกต่อไป) — ดูกลไก auto-resolve ด้านล่างตาราง |
 | resolved_at | datetime, nullable | เวลาที่ระบบ set `is_resolved = true` โดยอัตโนมัติ — ต้อง not-null คู่กับ `is_resolved = true` เสมอ (เช่นเดียวกับรูปแบบ `confirmed_at` คู่ `confirmed_by` ใน `ai_match_result`/`syllabus_gap_result`) |
 | created_at | datetime | เวลาที่สร้างแจ้งเตือน — ต้องเกิด**ทันที**ที่ background job ตรวจพบ (near-real-time เช่นเดียวกับ `gap_alerts` ที่ §3 E4) ไม่ใช่ batch job รายวัน (กฎ #2) — **[ยืนยันแล้วจาก T-043]** |
 
-> **[ยืนยันแล้ว 2026-09-05] กลไก auto-resolve**: T-042 (background job) ต้อง**ตรวจซ้ำ**สถานะ gap ของ `clo_id` ที่ผูกกับ notification ที่ยัง `is_resolved = false` อยู่ทุกครั้งที่มีเหตุการณ์ที่อาจปิด gap ได้ — คือทันทีหลังเรียก `POST /ai-match-results/{id}/confirm` (หัวข้อ 3, E3) สำเร็จ (ai_match_result ของ CLO นั้น state → confirmed, ตาม 2.9) ให้ backend ตรวจว่า CLO นั้นมี `clo_coverage_summary.is_matched = true` แล้วหรือยัง (คือมี `match_frequency > 0` จาก `ai_match_result` ที่ confirmed) — ถ้าใช่ ให้ตั้ง `notification.is_resolved = true, resolved_at = now()` สำหรับ notification ที่ยัง unresolved ของ `clo_id` นั้นทั้งหมดทันที ไม่ต้องรอรอบ background job ถัดไป (ตรงกับพฤติกรรม Gap Alert Banner ใน prototype ที่หายไปเองเมื่อแก้ปัญหาแล้ว) — ในทางกลับกัน ถ้าอาจารย์ `reject` ผลจับคู่ (state → rejected) หรือ soft-delete `teaching_record`/`evidence` ที่เคยปิด gap ไว้ ทำให้ CLO นั้นกลับไม่มีหลักฐานยืนยันอีก ระบบต้องสร้าง notification ใหม่ (ไม่ reopen แถวเดิมที่ resolved ไปแล้ว เพื่อรักษาประวัติ) ตาม T-042/T-044 ตามปกติ
+> **[ยืนยันแล้ว 2026-09-05] กลไก auto-resolve**: T-042 (background job) ต้อง**ตรวจซ้ำ**สถานะ gap ของ `clo_id` ที่ผูกกับ notification ที่ยัง `is_resolved = false` อยู่ทุกครั้งที่มีเหตุการณ์ที่อาจปิด gap ได้ — คือทันทีหลังเรียก `POST /ai-match-results/{id}/confirm` (หัวข้อ 3, E3) สำเร็จ (`ai_match_result` ของ CLO นั้น `state` → `confirmed`, ตาม 2.9) ให้ backend เปิด **Firestore transaction** ตรวจว่า CLO นั้นมี `clo_coverage_summary.is_matched = true` แล้วหรือยัง (คือมี `match_frequency > 0` จาก `ai_match_result` ที่ confirmed) — ถ้าใช่ ให้ query `notifications` where `clo_id == X AND is_resolved == false` แล้วอัปเดต `is_resolved = true, resolved_at = now()` ให้ทุก document ที่พบภายในทรานแซกชันเดียวกันทันที ไม่ต้องรอรอบ background job ถัดไป (ตรงกับพฤติกรรม Gap Alert Banner ใน prototype ที่หายไปเองเมื่อแก้ปัญหาแล้ว) — ในทางกลับกัน ถ้าอาจารย์ `reject` ผลจับคู่ (`state` → `rejected`) หรือ soft-delete `teaching_record`/`evidence` ที่เคยปิด gap ไว้ ทำให้ CLO นั้นกลับไม่มีหลักฐานยืนยันอีก ระบบต้องสร้าง document ใหม่ (ไม่ reopen document เดิมที่ resolved ไปแล้ว เพื่อรักษาประวัติ) ตาม T-042/T-044 ตามปกติ
 >
-> **Unique constraint**: ต้องมี partial unique index บน `clo_id` WHERE `is_resolved = false` (หรือกลไกเทียบเท่า) เพื่อกันสร้างแจ้งเตือนซ้ำซ้อนสำหรับ CLO เดียวกันที่ยัง unresolved อยู่ — background job (T-042) ต้อง `SELECT ... WHERE clo_id = ? AND is_resolved = false` ก่อนสร้างแถวใหม่ทุกครั้ง ไม่ insert ซ้ำถ้ามีแถว unresolved อยู่แล้ว
+> **แทนที่ Unique constraint (Firestore ไม่มี partial unique index)**: กันสร้างแจ้งเตือนซ้ำซ้อนสำหรับ CLO เดียวกันที่ยัง unresolved อยู่ ด้วย **Firestore transaction แบบ query-then-write** (§2.0.1, §2.0.4 — รายละเอียดเต็ม/ทางเลือกอื่นที่ align-api-schema-design.md §2.6-ข) — background job (T-042) ต้องเปิด transaction ที่ (1) query `notifications` where `clo_id == X AND is_resolved == false` (ต้องมี composite index บน `(clo_id, is_resolved)` เตรียมไว้ล่วงหน้าก่อน deploy จริง) (2) ถ้าไม่พบ document ใดเลย จึงค่อย `set()` document ใหม่ภายใน transaction เดียวกัน — ไม่ query แล้วเขียนแยกขั้นตอน (เสี่ยง race condition ถ้ารัน job ซ้อนกัน) และไม่ `set()`/`add()` ตรงๆ โดยไม่ query ก่อน
 >
 > **Query rule / ขอบเขตสิทธิ์**: `GET` รายการแจ้งเตือนต้องกรอง `user_id = current_user` เสมอ (อาจารย์เห็นเฉพาะแจ้งเตือนของตนเอง) และ default กรองเฉพาะ `is_resolved = false` (ดู §3 E4) — ไม่มีข้อมูลส่วนบุคคลของนักศึกษาปะปนใน entity นี้โดยตรง (อ้างอิงเพียง `clo_id`/`curriculum_id`) จึงไม่ต้องมี flag PII เหมือน `evidence`
 
-### 2.15 `account_approval_log` (audit trail การอนุมัติ/ปฏิเสธบัญชี — กลไกบังคับใช้ AB-26)
+**Delete — ไม่มี hard-delete/soft-delete** สำหรับ document ที่ `is_resolved=true` — เก็บไว้เป็นประวัติสะสม
+
+**Indexing เชิงแนวคิด**: composite index บน `(user_id, is_resolved, created_at DESC)` (รายการแจ้งเตือนของอาจารย์แต่ละคน T-045), `(curriculum_id)`, และ **composite index บน `(clo_id, is_resolved)` — จำเป็นเสมอ** สำหรับกลไก transaction query-then-write ข้างต้น (แทน unique/partial-unique index ของฉบับเดิม)
+
+### 2.15 `account_approval_log` → top-level collection `account_approval_logs` (audit trail การอนุมัติ/ปฏิเสธบัญชี — กลไกบังคับใช้ AB-26)
 
 เอนทิตีนี้เป็นข้อมูลที่ขาดหายจาก schema เดิมของเอกสารนี้ — เพิ่มตามที่ [[../../01-requirements/03-task/task-breakdown|task-breakdown]] T-092 ระบุไว้ชัดเจนแล้ว นี่คือกลไกที่ทำให้ **audit trail ของ AB-26 (การอนุมัติ/ปฏิเสธบัญชี) ตรวจสอบย้อนหลังได้จริงในระดับ schema** แยกจาก `user.approved_by`/`user.approved_at` (หัวข้อ 2.12) ที่เก็บได้เฉพาะ "การตัดสินใจล่าสุดครั้งเดียว" ต่อบัญชี
 
 | ฟิลด์ | ชนิด | คำอธิบาย |
 |---|---|---|
-| log_id | PK | |
-| account_id | FK → user.user_id | บัญชีที่ถูกอนุมัติ/ปฏิเสธ (อาจารย์ผู้สอนที่สมัครผ่าน `POST /auth/register`, AB-24) — **[ยืนยันแล้วจาก T-092]** |
+| *(document id)* | auto-generated | insert-only (append-only) |
+| log_id | string, เก็บซ้ำเท่ากับ document id | |
+| account_id | string (Firebase Auth UID) | บัญชีที่ถูกอนุมัติ/ปฏิเสธ (อาจารย์ผู้สอนที่สมัครผ่าน `POST /auth/register`, AB-24) — reference field → `users` — **[ยืนยันแล้วจาก T-092]** |
 | action | enum('approve','reject') | การตัดสินใจของผู้บริหารหลักสูตรครั้งนี้ — **[ยืนยันแล้วจาก T-092]** |
-| decided_by | FK → user.user_id | ผู้บริหารหลักสูตร (`role = 'program_admin'`) ที่กดอนุมัติ/ปฏิเสธบัญชีนี้ — **[ยืนยันแล้วจาก T-092]** |
+| decided_by | string (Firebase Auth UID) | ผู้บริหารหลักสูตร (`role = 'program_admin'`) ที่กดอนุมัติ/ปฏิเสธบัญชีนี้ (ตรวจ role ที่ Cloud Function) — reference field → `users` — **[ยืนยันแล้วจาก T-092]** |
 | decided_at | datetime | เวลาที่ตัดสินใจ — **[ยืนยันแล้วจาก T-092]** |
 
-> **กลไกบังคับใช้**: `account_approval_log` เก็บเป็น**ประวัติสะสมทุกครั้ง (append-only)** ไม่ overwrite ของเดิม — ตรวจสอบย้อนหลังได้ว่าใครอนุมัติ/ปฏิเสธเมื่อไรแม้บัญชีหนึ่งถูกตัดสินใจไปมาหลายรอบ (เช่น ปฏิเสธไปก่อนแล้วอนุมัติภายหลัง) backend ต้อง insert แถวใหม่ในตารางนี้ทุกครั้งที่เรียก `POST /admin/accounts/{user_id}/approve` หรือ `.../reject` (หัวข้อ 3, E6) **ควบคู่กัน**กับการอัปเดต `user.account_status`/`approved_by`/`approved_at` เสมอ — ไม่ใช่แทนกัน
+> **กลไกบังคับใช้**: `account_approval_log` เก็บเป็น**ประวัติสะสมทุกครั้ง (append-only)** ไม่ overwrite ของเดิม — ตรวจสอบย้อนหลังได้ว่าใครอนุมัติ/ปฏิเสธเมื่อไรแม้บัญชีหนึ่งถูกตัดสินใจไปมาหลายรอบ (เช่น ปฏิเสธไปก่อนแล้วอนุมัติภายหลัง) — backend ต้อง**สร้าง document ใหม่**ใน collection นี้ทุกครั้งที่เรียก `POST /admin/accounts/{user_id}/approve` หรือ `.../reject` (หัวข้อ 3, E6) **ควบคู่กัน**กับการอัปเดต `users/{uid}.account_status`/`approved_by`/`approved_at` เสมอ โดยทั้งสองการเขียนนี้ต้องอยู่ใน **Firestore transaction เดียวกัน (`runTransaction`)** — อ่าน `users/{uid}` ปัจจุบันก่อน (ตรวจ state transition ถูกต้อง) แล้วเขียนอัปเดตทั้งสองจุดพร้อมกัน ไม่ใช่แยกคำสั่งที่เสี่ยงสำเร็จแค่จุดเดียว
 
-**แผนภาพความสัมพันธ์แบบย่อ:**
+**Delete/Update — ไม่มี soft-delete, ไม่มี hard-delete**
+
+**Indexing เชิงแนวคิด**: composite index บน `(account_id)`, `(decided_by)`
+
+**สรุปความสัมพันธ์แบบย่อ (Firestore: subcollection/nest = เส้นทึบทางโครงสร้าง, reference field = เส้นประเชิงแนวคิด — ไดอะแกรมแบบเต็ม mermaid อยู่ที่ align-api-schema-design.md §2.4, ดูโครงสร้าง collection hierarchy ที่ §2.0.2 ด้านบนประกอบ):**
 
 ```
-curriculum 1──* plo
-curriculum 1──* course 1──* clo
-plo *──* clo          (ผ่าน clo_plo_mapping, บังคับ curriculum เดียวกัน)
-course 1──1 syllabus
-course 1──* teaching_record 1──* evidence
-teaching_record 1──* ai_match_result *──1 clo
-ai_match_result *──* plo   (ผ่าน linked_plo_ids)
-course 1──* clo_coverage_summary *──1 clo   (derived จาก ai_match_result ที่ confirmed)
-course 1──* syllabus_gap_result *──1 syllabus   (derived จาก teaching_record เทียบ syllabus.content)
-user 1──* course (instructor_id)
-user *──* curriculum (program_admin_curriculum_scope)
-user 1──* user (approved_by — self-referencing, program_admin ผู้อนุมัติ/ปฏิเสธบัญชีอาจารย์ผู้สอน, E6)
-evidence 1──* evidence_access_log
-clo 1──* notification            (clo_id — CLO ที่ขาดหลักฐาน กระตุ้นแจ้งเตือน, AB-12)
-user 1──* notification           (user_id — ผู้รับแจ้งเตือน)
-curriculum 1──* notification     (curriculum_id — denormalized จาก clo.curriculum_id สำหรับกรองสิทธิ์ตาม program_admin_curriculum_scope)
-user 1──* account_approval_log   (account_id — บัญชีที่ถูกอนุมัติ/ปฏิเสธ)
-user 1──* account_approval_log   (decided_by — self-referencing, program_admin ผู้อนุมัติ/ปฏิเสธ, E6)
+curricula/{curriculum_id}                                    (doc id = year_code)
+  └─ plos/{plo_id}                                            (subcollection, doc id = code)
+  └─ courses/{course_id}                                      (subcollection, doc id = รหัสวิชา)
+       └─ clos/{clo_id}                                       (subcollection, doc id = code)
+       └─ syllabus/main                                       (single document, บังคับ 1:1)
+  └─ clo_plo_mappings/{mapping_id}                             (subcollection; reference → clo_id, plo_id, confirmed_by→users)
+
+teaching_records/{record_id}                -- reference: course_id; denormalized: curriculum_id
+evidence/{evidence_id}                      -- reference: teaching_record_id, uploaded_by→users; denormalized: course_id, curriculum_id
+evidence_access_logs/{log_id}               -- reference: evidence_id, accessed_by→users; denormalized: course_id, curriculum_id
+ai_match_results/{match_result_id}          -- reference: teaching_record_id, clo_id, confirmed_by→users; denormalized: course_id, curriculum_id
+clo_coverage_summaries/{course_id}_{clo_id} -- reference: course_id, clo_id; denormalized: curriculum_id (derived จาก ai_match_result ที่ confirmed)
+syllabus_gap_results/{gap_result_id}        -- reference: course_id, syllabus_id, confirmed_by→users; denormalized: curriculum_id
+users/{user_id}                             -- reference (self): approved_by; reference (array): program_admin_curriculum_scope→curriculum_id; course.instructor_id→users
+account_approval_logs/{log_id}              -- reference: account_id→users, decided_by→users
+notifications/{notification_id}             -- reference: user_id→users, clo_id; denormalized: curriculum_id
 ```
+
+ทุกเส้น "reference"/"denormalized" ข้างต้น **ไม่ใช่ FK บังคับที่ระดับ storage** — Firestore ไม่ตรวจการมีอยู่จริงของปลายทางหรือความตรงกันของ `curriculum_id` ให้อัตโนมัติ ต้องตรวจที่ Cloud Function ก่อนเขียนทุกครั้งตามหลักการ §2.0.1
 
 ---
 
