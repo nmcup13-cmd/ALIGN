@@ -10,6 +10,8 @@ If application code is added later, prefer following whatever technical design g
 
 `DESIGN.md` at the repo root is the source of truth for **visual/UX design** (brand identity, design tokens, components, UX rules) — read it before creating or editing anything under `docs/02-design/01-prototypes/`, the same way `CLAUDE.md` is the source of truth for workflow/business rules.
 
+`SCOPE.md` at the repo root is a personal, informal scoping note (not part of the `docs/` workflow, not linked from any `index.md`) that maps a simplified homework data model against a sample app ("LeaveEasy") using entity names (`teachingPlans`, `curriculumVersions`, `weeklyContents`, `activityDescription`) that do **not** appear anywhere in `docs/02-design/02-technical/` — treat it as scratch/unconfirmed, not as a source of truth for schema or entity naming; the real schema lives in `align-api-schema-design.md` / `align-technical-design.md`.
+
 ## Documentation workflow and structure
 
 The vault encodes a fixed project workflow, and each stage's folder feeds the next. Every folder has an `index.md` describing its purpose and linking forward/backward to related stages — read the relevant `index.md` before adding a note to understand where it fits and what it should link to:
