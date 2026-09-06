@@ -54,7 +54,7 @@
 
 หลักการออกแบบที่ยึดตามกฎทางธุรกิจ:
 
-- **AI Matching Service เป็นบริการแยก** ไม่เขียนผลลงฐานข้อมูลหลักโดยตรง — ผลที่ได้ทุกครั้งจะถูกเก็บเป็น "draft" ในตาราง `ai_match_result` (จับคู่ CLO/PLO) หรือ `syllabus_gap_result` (วิเคราะห์ gap เทียบ course syllabus — เป็นงานแยกจากการจับคู่ CLO/PLO) แล้วรอ backend API เรียก endpoint ยืนยันจากอาจารย์ก่อนจึงจะแปลงเป็นข้อมูลที่ใช้งานจริง (human-in-the-loop ตามกฎ #3)
+- **AI Matching Service เป็นบริการแยก** ไม่เขียนผลลงฐานข้อมูลหลักโดยตรง — ผลที่ได้ทุกครั้งจะถูกเก็บเป็น "draft" ใน collection `ai_match_result` (จับคู่ CLO/PLO) หรือ `syllabus_gap_result` (วิเคราะห์ gap เทียบ course syllabus — เป็นงานแยกจากการจับคู่ CLO/PLO) แล้วรอ backend API เรียก endpoint ยืนยันจากอาจารย์ก่อนจึงจะแปลงเป็นข้อมูลที่ใช้งานจริง (human-in-the-loop ตามกฎ #3)
 - **Evidence/File Storage แยกจาก Cloud Firestore** เพื่อให้ควบคุมสิทธิ์การเข้าถึงไฟล์ (ที่อาจมีข้อมูลส่วนบุคคลของนักศึกษา) ได้อย่างละเอียด ตาม PDPA (กฎ #5) โดย backend API เป็นประตูเดียวที่คุยกับ storage — ห้าม client เข้าถึง storage ตรง
 - **Word-export Service อ่านเฉพาะข้อมูลที่ยืนยันแล้ว** (confirmed) ไม่ใช่ draft จาก AI เพื่อไม่ให้เอกสารอ้างอิงหลักฐานที่ยังไม่ผ่านการตรวจสอบ (กฎ #4)
 - **งานประกันคุณภาพ (QA) ไม่ใช่ user/role ของระบบ ALIGN** — เอกสารที่ Word-export Service สร้างขึ้น (มคอ./QA ในไดอะแกรมด้านบน) มีไว้ให้ **ผู้บริหารหลักสูตร** เป็นผู้ดาวน์โหลดจากระบบแล้วนำไปส่งต่อให้ QA ใช้ตรวจสอบภายนอกระบบเท่านั้น QA ไม่มี login, ไม่มี account, และไม่มี endpoint ใดในระบบนี้ที่ให้ QA เข้าถึงโดยตรง (ตามขอบเขตในสเปค)
@@ -93,7 +93,7 @@ curricula/{curriculum_id}                           ← doc id = year_code เ�
 teaching_records/{record_id}                         ← top-level, auto id, curriculum_id/course_id denormalized
 evidence/{evidence_id}                               ← top-level, auto id, teaching_record_id/course_id/curriculum_id denormalized
 evidence_access_logs/{log_id}                        ← top-level, auto id, append-only
-ai_match_results/{match_result_id}                   ← top-level, auto id [ข้อเสนอ — ยังไม่ยืนยัน ดู 2.9]
+ai_match_results/{match_result_id}                   ← top-level, auto id [ยืนยันแล้ว ดู 2.9]
 clo_coverage_summaries/{course_id}_{clo_id}          ← top-level, composite id
 syllabus_gap_results/{gap_result_id}                 ← top-level, auto id, append-only
 users/{user_id}                                      ← top-level, doc id = Firebase Auth UID
@@ -238,7 +238,7 @@ notifications/{notification_id}                      ← top-level, auto id (ป
 ### 2.9 `ai_match_result` → top-level collection `ai_match_results` (ผลจับคู่ CLO/PLO ต่อบันทึกการสอน 1 รายการ — draft/confirmed)
 | ฟิลด์ | ชนิด | คำอธิบาย |
 |---|---|---|
-| *(document id)* | **auto-generated [ข้อเสนอ — ยังไม่ยืนยัน]** | ทางเลือกอื่นที่ยังไม่ปิด: composite `"{teaching_record_id}_{clo_id}"` (เสี่ยงเขียนทับผล confirmed ถ้า AI รันซ้ำ) หรือ hybrid (composite ระหว่าง draft แล้วเปลี่ยนเป็น auto-id ตอน confirm) — เอกสารนี้ใช้ auto-generated เป็น default เพราะปลอดภัยที่สุดต่อข้อมูลที่ confirmed แล้ว รายละเอียดข้อดี-ข้อเสียครบทั้ง 3 ทางเลือกอยู่ที่ align-api-schema-design.md §5.7 — **ห้ามถือว่าเป็นการตัดสินใจสุดท้าย** |
+| *(document id)* | **auto-generated [ยืนยันแล้ว]** | ทางเลือกอื่นที่เคยพิจารณาแล้วไม่เลือก: composite `"{teaching_record_id}_{clo_id}"` (เสี่ยงเขียนทับผล confirmed ถ้า AI รันซ้ำ) หรือ hybrid (composite ระหว่าง draft แล้วเปลี่ยนเป็น auto-id ตอน confirm) — เอกสารนี้ใช้ auto-generated เป็น default เพราะปลอดภัยที่สุดต่อข้อมูลที่ confirmed แล้ว รายละเอียดข้อดี-ข้อเสียครบทั้ง 3 ทางเลือกอยู่ที่ align-api-schema-design.md §5.7 (ยืนยันตรงกันแล้วทั้ง 2 เอกสาร) |
 | match_result_id | string, เก็บซ้ำเท่ากับ document id | |
 | teaching_record_id | string | reference field → `teaching_records` |
 | course_id, curriculum_id | string, **denormalized เพิ่มใหม่** | จาก `teaching_record` |
@@ -451,7 +451,7 @@ notifications/{notification_id}             -- reference: user_id→users, clo_i
 ### E4 — แดชบอร์ดและแจ้งเตือน
 | Method & Path | จุดประสงค์ | Request/Response สำคัญ |
 |---|---|---|
-| `GET /me/dashboard` | หน้าแรกอาจารย์: % ความสอดคล้องรวม (ตามสูตรใหม่ 2.10/AB-20), รายวิชาที่สอน, แจ้งเตือน CLO ขาดหลักฐาน — `gap_alerts` อ่านจากตาราง `notification` (หัวข้อ 2.14) กรอง `user_id = current_user AND is_resolved = false` เสมอ (T-045) | res: `{courses:[{course_id, curriculum_year, coverage_percent, matched_clo_count, total_clo_count}], gap_alerts:[{notification_id, clo_id, code, course_id, curriculum_id, message, created_at}]}` |
+| `GET /me/dashboard` | หน้าแรกอาจารย์: % ความสอดคล้องรวม (ตามสูตรใหม่ 2.10/AB-20), รายวิชาที่สอน, แจ้งเตือน CLO ขาดหลักฐาน — `gap_alerts` อ่านจาก collection `notification` (หัวข้อ 2.14) กรอง `user_id = current_user AND is_resolved = false` เสมอ (T-045) | res: `{courses:[{course_id, curriculum_year, coverage_percent, matched_clo_count, total_clo_count}], gap_alerts:[{notification_id, clo_id, code, course_id, curriculum_id, message, created_at}]}` |
 | `GET /courses/{id}/clo-week-map` | แผนที่ CLO×สัปดาห์ + จำนวนชิ้นงานสะสม + สถานะเชื่อม PLO | res: `[{clo_id, week_no, evidence_count, linked_plo_status}]` |
 | `GET /curricula/{year}/dashboard` | ภาพรวมความสอดคล้องระดับหลักสูตร แยกกลุ่ม (สำหรับผู้บริหารหลักสูตร/`program_admin`, AB-14) — ตรวจ scope สิทธิ์ก่อนตอบ | res: `{curriculum_id, courses:[{course_id, coverage_percent}]}` |
 | `GET /courses/{id}/teaching-vs-syllabus` | **ใหม่ (AB-23)** — ส่วนเปรียบเทียบ "การสอนจริงที่บันทึก" กับ "CLO/course syllabus" สำหรับแดชบอร์ด แยกจากส่วน % ความสอดคล้องรวม (AB-11) และแจ้งเตือน CLO ขาดหลักฐาน (AB-12) อย่างชัดเจน — อ่านเฉพาะ `syllabus_gap_result` ที่ `state = 'confirmed'` เท่านั้น | res: `{course_id, missing_topics_count, extra_topics_count, missing_topics:[...], extra_topics:[...], last_confirmed_at}` — ถ้ายังไม่มีผลที่ confirmed ให้ตอบสถานะ `not_yet_confirmed` แทนตัวเลข |
@@ -559,7 +559,7 @@ Stack ที่เลือกจริง (สรุปจาก [[align-tech-s
 1. **ขอบเขตสิทธิ์ (Authorization scope):** ผู้ใช้ที่เข้าถึงข้อมูล `evidence` ของวิชาใดวิชาหนึ่งได้ ต้องเป็น (ก) อาจารย์ที่เป็น `instructor_id` ของ `course` นั้น หรือ (ข) ผู้บริหารหลักสูตร (`program_admin`) ที่มี `curriculum_id` ของ `course` นั้นอยู่ใน `program_admin_curriculum_scope` ของตนเองเท่านั้น — ตรวจที่ backend API layer ทุกครั้ง (ดูหัวข้อ 3) ไม่ใช่พึ่งการซ่อน UI ฝั่ง frontend อย่างเดียว
 2. **ห้ามเข้าถึง storage ตรง:** client (frontend) ไม่มีสิทธิ์อ่านไฟล์จาก Evidence/File Storage โดยตรง ต้องผ่าน backend API เท่านั้น (proxy download หรือ signed URL ที่หมดอายุเร็ว) เพื่อให้ทุกการเข้าถึงถูกตรวจสิทธิ์และบันทึก log ได้
 3. **Audit log:** ทุกครั้งที่มีการเรียกดู/ดาวน์โหลดหลักฐาน ต้องเขียนลง `evidence_access_log` (ใคร, เมื่อไร, ไฟล์ไหน) เพื่อตรวจสอบย้อนหลังได้ ตาม AB-07
-4. **Flag ข้อมูลส่วนบุคคล:** ตาราง `evidence` มีฟิลด์ `contains_student_pii` (default true) เพื่อเตือนทีมพัฒนา/ผู้ดูแลระบบว่าไฟล์เหล่านี้ต้องได้รับการปฏิบัติเป็นข้อมูลอ่อนไหวเสมอ แม้จะยังไม่ได้ตรวจสอบเนื้อหาจริงทีละไฟล์
+4. **Flag ข้อมูลส่วนบุคคล:** collection `evidence` มีฟิลด์ `contains_student_pii` (default true) เพื่อเตือนทีมพัฒนา/ผู้ดูแลระบบว่าไฟล์เหล่านี้ต้องได้รับการปฏิบัติเป็นข้อมูลอ่อนไหวเสมอ แม้จะยังไม่ได้ตรวจสอบเนื้อหาจริงทีละไฟล์
 5. **แยก scope ตามหลักสูตร:** เนื่องจากผู้บริหารหลักสูตร (`program_admin`) อาจดูแลเฉพาะหลักสูตร 2565 หรือ 2570 (ไม่จำเป็นต้องดูแลทั้งสองกลุ่ม) การตรวจสิทธิ์ระดับ endpoint ของ dashboard/export ระดับหลักสูตร (`/curricula/{year}/...`) ต้องตรวจ `program_admin_curriculum_scope` ควบคู่กับสิทธิ์ evidence เสมอ ไม่ใช่ตรวจแค่บทบาท (role) อย่างเดียว
 6. **QA ไม่ใช่ role/entity ในระบบ:** งานประกันคุณภาพ (QA) เป็นผู้ตรวจสอบ/ประเมินผลจากรายงานที่ผู้บริหารหลักสูตรจัดทำ **อยู่นอกขอบเขตของระบบ ALIGN โดยเจตนา** — ไม่มี login, ไม่มี account, ไม่มีค่าใน `role` enum (หัวข้อ 2.12) และไม่มี endpoint ใดๆ ที่ให้ QA เข้าถึงระบบโดยตรง QA ได้รับเฉพาะเอกสาร Word ที่ `program_admin` ดาวน์โหลดจากระบบ (E5) แล้วส่งต่อภายนอกระบบด้วยตนเองเท่านั้น
 7. **ขอบเขตของหัวข้อนี้:** เอกสารนี้ระบุเฉพาะกลไกควบคุมสิทธิ์ระดับออกแบบ (design-level access control) ยังไม่ครอบคลุมรายละเอียดเชิงกฎหมาย/นโยบายองค์กร (เช่น ระยะเวลาการเก็บข้อมูล, ขั้นตอนขอความยินยอม) ซึ่งควรปรึกษาหน่วยงานที่รับผิดชอบด้าน PDPA ของมหาวิทยาลัยเพิ่มเติมก่อนใช้งานจริง — ดู [[align-nfr|align-nfr]] §3 สำหรับค่าที่เสนอไว้ก่อน (retention 5 ปี, file size/type limit) ที่ยังต้องยืนยันตัวเลขซ้ำกับหน่วยงานนั้นก่อน implement จริง

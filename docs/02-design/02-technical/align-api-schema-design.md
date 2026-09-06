@@ -2,13 +2,13 @@
 
 > **อัปเดตใหญ่ (2026-09-05) — ปรับทั้งฉบับให้เข้ากับ Cloud Firestore**: [[align-tech-stack|align-tech-stack]] ยืนยันแล้ว (รอบที่ 3) ว่าโปรเจกต์นี้**ต้องใช้ Firebase ทั้ง suite** (Firebase Authentication, Cloud Firestore, Cloud Storage, Firebase Hosting) เป็นข้อกำหนดบังคับ ไม่ใช่ทางเลือกทางเทคนิคอีกต่อไป — Firestore เป็น **NoSQL document/collection store** ที่ไม่มีกลไก FK, JOIN, unique constraint ข้าม document, partial index เหมือนฐานข้อมูลเชิงสัมพันธ์ที่เอกสารฉบับก่อนหน้าตั้งสมมติฐานไว้ (PostgreSQL ผ่าน Supabase) — เอกสารนี้จึงถูกออกแบบใหม่ทั้งฉบับให้ตรงกับข้อจำกัด/ความสามารถจริงของ Firestore โดย**คงเนื้อหาทางธุรกิจทั้งหมดไว้ไม่เปลี่ยนแปลง** (ความหมายของฟิลด์, กฎทางธุรกิจที่ผูกกับแต่ละ entity, PDPA flag, การตัดสินใจ soft-delete/append-only ที่ยืนยันไปแล้วในหัวข้อ 5 เดิม) — เปลี่ยนเฉพาะ**กลไกการเก็บ/บังคับใช้ระดับ storage** ให้เข้ากับโมเดล NoSQL เท่านั้น
 >
-> **สิ่งที่ยังไม่ยืนยันจากการปรับรอบนี้** (ดูรายละเอียดเต็มที่หัวข้อ 5.6–5.7): (1) โครงสร้าง collection/subcollection ที่แท้จริง (nest ใต้ curriculum ทั้งหมด vs top-level ล้วน vs hybrid) — เอกสารนี้ใช้ **hybrid เป็น default [ข้อเสนอ — ยังไม่ยืนยัน]**, (2) รูปแบบ document ID ของ `ai_match_result` (auto-generated ต่อครั้งที่รัน AI ใหม่ vs composite key ต่อคู่ teaching_record×clo) — ใช้ **auto-generated เป็น default [ข้อเสนอ — ยังไม่ยืนยัน]** — เครื่องมือถามผู้ใช้แบบเลือกตัวเลือก (`AskUserQuestion`) ไม่พร้อมใช้งานในบริบทนี้ จึงบันทึกเป็นคำถามเปิดในเอกสารแทนตามกฎของ agent นี้ ห้ามถือว่าทั้งสองจุดนี้เป็นการตัดสินใจสุดท้าย
+> **[ปิดแล้ว 2026-09-06]** สองประเด็นที่เอกสารรอบก่อนหน้าเคยเปิดไว้เป็นคำถาม (ดูรายละเอียดเต็มที่หัวข้อ 5.6–5.7) **ได้รับการยืนยันแล้วเมื่อ 2026-09-05**: (1) โครงสร้าง collection/subcollection — ยืนยันแนวทาง **Hybrid (ทางเลือกที่ 3)** ตรงกับ default ที่เอกสารนี้ใช้อยู่แล้วทั้งฉบับ ไม่มีอะไรเปลี่ยน, (2) รูปแบบ document ID ของ `ai_match_result` — ยืนยันแนวทาง **A (auto-generated ต่อครั้งที่รัน AI ใหม่)** ตรงกับ default ที่เอกสารนี้ใช้อยู่แล้ว ไม่มีอะไรเปลี่ยน — รายละเอียดผลการยืนยันทั้งสองจุดอยู่ที่หัวข้อ 5.6/5.7 (มีป้ายกำกับ "ยืนยันแล้ว 2026-09-05" ตรงหัวข้อย่อยแต่ละอัน) ป้ายกำกับ "ข้อเสนอ — ยังไม่ยืนยัน" ที่เคยปรากฏใน §2.2 และตารางฟิลด์ของ `ai_match_result` (§3.2, §3.9) เป็นข้อความตกค้างจากก่อนการยืนยัน — แก้เป็น "[ยืนยันแล้ว 2026-09-05]" แล้วในรอบปรับปรุงนี้ ไม่ใช่การเปิดคำถามใหม่หรือเปลี่ยนเนื้อหาการตัดสินใจแต่อย่างใด
 
 เอกสารนี้เป็น**ระดับแนวคิด (conceptual)** ของโครงสร้าง collection/subcollection, รายละเอียดฟิลด์ต่อ entity, และ API Spec — ตั้งใจ**ไม่ผูกมัดกับ technical stack ใดๆ** ยกเว้นข้อจำกัดเชิงโครงสร้างของ Firestore เอง (document/collection model, ไม่มี join ระดับ engine) ซึ่งเป็นข้อกำหนดบังคับที่ [[align-tech-stack|align-tech-stack]] ยืนยันแล้วและมีผลต่อ "รูปแบบการเก็บข้อมูล" โดยตรง (ต่างจาก database engine ยี่ห้อ/เวอร์ชัน/ภาษาโปรแกรม/cloud region ที่ยังคงไม่ระบุในเอกสารนี้) — คำถาม "จะ implement/deploy ด้วยอะไร" (เช่น เวอร์ชัน SDK, ภาษาที่เขียน Cloud Function) อยู่ที่ [[align-tech-stack|align-tech-stack]] แทน
 
 **ความสัมพันธ์กับเอกสารอื่น**:
 - [[align-high-level-architecture|align-high-level-architecture]] — ชั้นแนวคิดที่มาก่อน ใช้ชื่อ logical component (เช่น "ประตูควบคุมสิทธิ์และสถานะบัญชี", "แกนประสานงานและบังคับใช้กฎทางธุรกิจ", "กลไกจับคู่/วิเคราะห์ด้วย AI") เอกสารนี้อ้างอิงชื่อเดียวกันเวลาระบุว่า endpoint ไหนอยู่ในความรับผิดชอบของ component ไหน
-- [[align-technical-design|align-technical-design]] §2 (Database Schema) และ §3 (API Design) — **ยังเป็นโมเดลเชิงสัมพันธ์เดิม (PostgreSQL) ที่ยังไม่ถูกปรับตามการเปลี่ยน stack นี้** ณ วันที่เขียนเอกสารนี้ (2026-09-05) — ดูหมายเหตุท้ายเอกสารสำหรับสิ่งที่ควรส่งต่อให้ `technical-designer` ปรับตาม เอกสารนี้เป็นฐานอ้างอิงล่าสุดสำหรับโมเดลข้อมูลที่ตรงกับ Firestore จริง ไม่ใช่ align-technical-design.md §2/§3 อีกต่อไป
+- [[align-technical-design|align-technical-design]] §2 (Database Schema) และ §3 (API Design) — ณ วันที่เขียนเอกสารนี้ครั้งแรก (2026-09-05) ยังเป็นโมเดลเชิงสัมพันธ์เดิม (PostgreSQL) ที่ยังไม่ถูกปรับตามการเปลี่ยน stack นี้ แต่สถานะนี้**ปิดแล้ว** — §2 (ทั้ง §2.1–§2.15 และไดอะแกรมท้าย §2) และ §3 ของ align-technical-design.md ได้ถูกแปลงเป็น Firestore notation ครบทั้งหมดในภายหลัง (ดู [[../../05-log/2026-09-06-technical-design-firestore-conversion-completion-log|05-log/2026-09-06-technical-design-firestore-conversion-completion-log]]) — ปัจจุบันทั้งสองเอกสารสอดคล้องกัน เอกสารนี้ยังคงเป็นฐานอ้างอิงหลักสำหรับรายละเอียด schema/API ระดับ conceptual ที่ align-technical-design.md อ้างอิงตาม
 - [[align-tech-stack|align-tech-stack]] §2.2/§2.3/§2.5/§2.7 — ข้อกำหนดบังคับ Firebase ที่เอกสารนี้ต่อยอดโดยตรง
 - [[../01-prototypes/align-app-screens|align-app-screens]] และ [[../01-prototypes/align-program-admin-screens|align-program-admin-screens]] — ใช้ตรวจว่า schema/API รองรับทุก field/flow ที่หน้าจอต้องการจริง
 - [[../../01-requirements/02-plan/product-backlog|product-backlog]] — ทุก endpoint/entity อ้าง AC ที่เกี่ยวข้อง
@@ -47,9 +47,9 @@ Firestore ไม่มีกลไกต่อไปนี้ที่ฉบั�
 | CHECK constraint / Trigger ระดับ DB | ไม่มีกลไกฝั่ง database engine ที่รันโค้ดตรวจก่อน/หลัง write | **Cloud Function เป็นจุดบังคับใช้กฎทางธุรกิจเดียว** (ตรงกับที่ [[align-tech-stack|align-tech-stack]] §2.2 ยืนยันแล้วว่าการบังคับใช้กฎหลักอยู่ที่โค้ด server ไม่ใช่ security rules) — **Firestore Security Rules เป็น defense-in-depth ชั้นที่สองเท่านั้น** (ดูหัวข้อ 2.8) |
 | Transaction ระดับ SQL (multi-table) | ไม่มี SQL transaction ข้าม table หลายตัวแบบเดิม | **Firestore transaction (`runTransaction`)** สำหรับ read-then-write ที่ต้อง atomic และ **batched write (`writeBatch`)** สำหรับหลาย write พร้อมกันที่ไม่ต้องอ่านก่อน (ดูหัวข้อ 2.7) |
 
-### 2.2 โครงสร้าง Collection Hierarchy — **[ข้อเสนอ — ยังไม่ยืนยัน, รายละเอียดเต็มที่หัวข้อ 5.6]**
+### 2.2 โครงสร้าง Collection Hierarchy — **[ยืนยันแล้ว 2026-09-05: แนวทาง Hybrid (ทางเลือกที่ 3), รายละเอียดเต็มที่หัวข้อ 5.6]**
 
-นี่คือการตัดสินใจที่กระทบทั้งเอกสารมากที่สุด เพราะกฎที่สำคัญที่สุดของระบบคือ "ห้าม query/merge ข้ามกลุ่มหลักสูตร" — เอกสารนี้เสนอ 3 ทางเลือก (รายละเอียดตาราง/ข้อดี-ข้อเสียเต็มอยู่ที่หัวข้อ 5.6) และ**ใช้ทางเลือกที่ 3 (Hybrid) เป็น default ระหว่างรอการยืนยัน**:
+นี่คือการตัดสินใจที่กระทบทั้งเอกสารมากที่สุด เพราะกฎที่สำคัญที่สุดของระบบคือ "ห้าม query/merge ข้ามกลุ่มหลักสูตร" — เอกสารนี้เคยเสนอ 3 ทางเลือก (รายละเอียดตาราง/ข้อดี-ข้อเสียเต็มอยู่ที่หัวข้อ 5.6) และ**ใช้ทางเลือกที่ 3 (Hybrid) เป็น default** ซึ่งได้รับการยืนยันแล้วเมื่อ 2026-09-05 ว่าตรงกับ default นี้พอดี ไม่มีอะไรต้องเปลี่ยน:
 
 **โครงสร้างที่ใช้ตลอดทั้งเอกสารนี้ (Hybrid — ทางเลือกที่ 3):**
 
@@ -87,7 +87,7 @@ notifications/{notification_id}                     ← top-level, auto id (ป�
 | `teaching_record` | auto-generated | ไม่มี natural key ที่เหมาะสม (หลายบันทึกต่อวิชา/สัปดาห์ได้) |
 | `evidence` | auto-generated | แนบได้หลายไฟล์ต่อบันทึกการสอนเดียว |
 | `evidence_access_log` | auto-generated | append-only, ไม่มี uniqueness ที่ต้องบังคับ |
-| `ai_match_result` | auto-generated **[ข้อเสนอ — ยังไม่ยืนยัน, ดูหัวข้อ 5.7]** | ยังไม่ชัดว่าการรัน AI ซ้ำสำหรับคู่ teaching_record×clo เดิมควรสร้าง document ใหม่ (ประวัติ) หรืออัปเดต document เดิม (composite id) — ดูหัวข้อ 5.7 |
+| `ai_match_result` | auto-generated **[ยืนยันแล้ว 2026-09-05: แนวทาง A, ดูหัวข้อ 5.7]** | การรัน AI ซ้ำสำหรับคู่ teaching_record×clo เดิมสร้าง document ใหม่เสมอ (เก็บประวัติ) แทนการอัปเดต document เดิม (composite id) — ยืนยันแล้ว ดูหัวข้อ 5.7 |
 | `clo_coverage_summary` | `"{course_id}_{clo_id}"` | composite key ตรงกับที่ฉบับเดิมระบุว่า "ไม่มี PK ของตัวเองแยกต่างหาก" อยู่แล้ว — เหมาะกับ Firestore doc id พอดี |
 | `syllabus_gap_result` | auto-generated | append-only history ตามที่ยืนยันแล้ว (§3.11) |
 | `user` | Firebase Auth UID | ผูกกับ Firebase Authentication โดยตรงตามที่ [[align-tech-stack|align-tech-stack]] §2.7 ระบุไว้ — ทำให้ Security Rules อ้าง `request.auth.uid` แล้ว lookup `users/{uid}` ได้ทันทีโดยไม่ต้อง query หา |
@@ -400,7 +400,7 @@ match /notifications/{id} { allow read: if isApproved() && resource.data.user_id
 
 | ฟิลด์ | ชนิดเชิงแนวคิด | Constraint (Firestore) | ความสัมพันธ์ | PDPA/Draft-Confirmed |
 |---|---|---|---|---|
-| *(document id)* | **auto-generated [ข้อเสนอ — ยังไม่ยืนยัน, ดูหัวข้อ 5.7]** | ทางเลือกอื่น: composite `"{teaching_record_id}_{clo_id}"` — ดูหัวข้อ 5.7 | — | — |
+| *(document id)* | **auto-generated [ยืนยันแล้ว 2026-09-05: แนวทาง A, ดูหัวข้อ 5.7]** | ทางเลือกที่ไม่เลือก: composite `"{teaching_record_id}_{clo_id}"` — ดูหัวข้อ 5.7 | — | — |
 | match_result_id | string, เก็บซ้ำเท่ากับ document id | required | — | — |
 | teaching_record_id | string | required | reference field → `teaching_records` | — |
 | course_id, curriculum_id | string | required — **denormalized เพิ่มใหม่** (หัวข้อ 2.5) | — | — |
@@ -656,14 +656,16 @@ match /notifications/{id} { allow read: if isApproved() && resource.data.user_id
 
 ---
 
-## 6. สิ่งที่ควรส่งต่อให้ `technical-designer` ปรับ `align-technical-design.md`
+## 6. สิ่งที่เคยต้องส่งต่อให้ `technical-designer` ปรับ `align-technical-design.md` — **[ปิดแล้ว 2026-09-06]**
 
-เอกสาร [[align-technical-design|align-technical-design]] §2 (Database Schema) และ §3 (API Design) **ยังคงเขียนด้วยสมมติฐานเชิงสัมพันธ์ (PostgreSQL) เดิมทั้งหมด** ณ วันที่เขียนเอกสารนี้ (2026-09-05) แม้ §5 (Tech Stack) ของเอกสารเดียวกันจะถูกปรับให้ชี้ไปที่ [[align-tech-stack|align-tech-stack]] ที่ยืนยัน Firebase แล้วก็ตาม — เกิดความไม่สอดคล้องภายในเอกสารเดียวกัน (§2/§3 อิง Postgres, §5 อิง Firebase) — **ประเด็นที่ควรแจ้งให้ `technical-designer` ปรับ**:
+**สถานะเดิม (ณ วันที่เขียนเอกสารนี้ครั้งแรก 2026-09-05)**: เอกสาร [[align-technical-design|align-technical-design]] §2 (Database Schema) และ §3 (API Design) ยังคงเขียนด้วยสมมติฐานเชิงสัมพันธ์ (PostgreSQL) เดิมทั้งหมด แม้ §5 (Tech Stack) ของเอกสารเดียวกันจะถูกปรับให้ชี้ไปที่ [[align-tech-stack|align-tech-stack]] ที่ยืนยัน Firebase แล้วก็ตาม — เกิดความไม่สอดคล้องภายในเอกสารเดียวกัน (§2/§3 อิง Postgres, §5 อิง Firebase) ในตอนนั้น
 
-1. §2.1–2.15 (Database Schema) ควรอ้างอิงโครงสร้าง collection/document ที่เอกสารนี้ (§2–§3) ออกแบบไว้แทนตาราง SQL เดิมทั้งหมด — โดยเฉพาะการลบคำว่า "FK", "unique index", "CHECK constraint" ที่ไม่มีอยู่จริงใน Firestore ออกจากคำอธิบาย
-2. §3 (API Design) ควรเพิ่มหมายเหตุเรื่อง Firestore transaction/batched write ที่จุดที่เคยเขียนว่า "SQL transaction เดียว" (approve/reject account, confirm ai_match_result + auto-resolve notification) ตามที่เอกสารนี้ระบุไว้ในหัวข้อ 2.7
-3. §6 (PDPA/Security Note) ควรเพิ่มอ้างอิงถึง Firestore Security Rules + Cloud Storage Security Rules คู่ขนาน (หัวข้อ 2.8 ของเอกสารนี้) แทนการอ้างอิง RLS ของ PostgreSQL เพียงอย่างเดียว
-4. ทั้ง §2/§3/§6 ควรเพิ่มลิงก์ชี้มาที่เอกสารนี้ ([[align-api-schema-design|align-api-schema-design]]) เป็นแหล่งอ้างอิงหลักสำหรับรายละเอียด schema/API ที่ตรงกับ Firestore จริง เช่นเดียวกับที่ §5 ชี้ไปที่ [[align-tech-stack|align-tech-stack]] ไปแล้ว
+**สถานะปัจจุบัน (ปิดแล้ว)**: `technical-designer` ได้แปลง §2 (ทั้ง §2.1–§2.15 และไดอะแกรมท้าย §2) และ §3 ของ align-technical-design.md เป็น Firestore notation ครบทั้งหมดแล้ว (§2.1–§2.10 เมื่อ 2026-09-05, ส่วน §2.11–§2.15 และไดอะแกรมท้าย §2 ปิดครบเพิ่มเติมภายหลัง — ดู [[../../05-log/2026-09-06-technical-design-firestore-conversion-completion-log|05-log/2026-09-06-technical-design-firestore-conversion-completion-log]]) — ทั้ง 4 ประเด็นที่เคยระบุไว้ด้านล่างนี้ได้รับการแก้ไขแล้ว ไม่มีความไม่สอดคล้องเหลืออยู่ระหว่างเอกสารทั้งสองฉบับอีกต่อไป (คงรายการเดิมไว้เพื่อ traceability):
+
+1. ~~§2.1–2.15 (Database Schema) ควรอ้างอิงโครงสร้าง collection/document ที่เอกสารนี้ (§2–§3) ออกแบบไว้แทนตาราง SQL เดิมทั้งหมด — โดยเฉพาะการลบคำว่า "FK", "unique index", "CHECK constraint" ที่ไม่มีอยู่จริงใน Firestore ออกจากคำอธิบาย~~ — แก้แล้ว
+2. ~~§3 (API Design) ควรเพิ่มหมายเหตุเรื่อง Firestore transaction/batched write ที่จุดที่เคยเขียนว่า "SQL transaction เดียว" (approve/reject account, confirm ai_match_result + auto-resolve notification) ตามที่เอกสารนี้ระบุไว้ในหัวข้อ 2.7~~ — แก้แล้ว
+3. ~~§6 (PDPA/Security Note) ควรเพิ่มอ้างอิงถึง Firestore Security Rules + Cloud Storage Security Rules คู่ขนาน (หัวข้อ 2.8 ของเอกสารนี้) แทนการอ้างอิง RLS ของ PostgreSQL เพียงอย่างเดียว~~ — แก้แล้ว
+4. ~~ทั้ง §2/§3/§6 ควรเพิ่มลิงก์ชี้มาที่เอกสารนี้ ([[align-api-schema-design|align-api-schema-design]]) เป็นแหล่งอ้างอิงหลักสำหรับรายละเอียด schema/API ที่ตรงกับ Firestore จริง เช่นเดียวกับที่ §5 ชี้ไปที่ [[align-tech-stack|align-tech-stack]] ไปแล้ว~~ — แก้แล้ว
 
 ---
 
