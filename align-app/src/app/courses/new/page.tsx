@@ -1,10 +1,18 @@
+import { redirect } from "next/navigation";
 import { adminDb } from "@/lib/firebase/admin";
+import { getCurrentUser } from "@/lib/auth/session";
 import { createCourse } from "./actions";
 
 // Reads Firestore per-request — must not be statically cached at build time.
 export const dynamic = "force-dynamic";
 
 export default async function NewCoursePage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (user.account_status !== "approved" || user.role !== "program_admin") {
+    redirect("/account-status");
+  }
+
   const curriculaSnap = await adminDb.collection("curricula").orderBy("year_code").get();
   const curricula = curriculaSnap.docs.map((doc) => ({
     id: doc.id,

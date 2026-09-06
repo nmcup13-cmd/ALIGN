@@ -3,12 +3,13 @@
 import { redirect } from "next/navigation";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
+import { requireApprovedUser } from "@/lib/auth/session";
 
 // POST /courses per align-technical-design.md — program_admin creates a course directly,
 // no pending/approval status (align-api-schema-design.md §3.5 has no status field on `course`).
-// TODO: enforce account_status='approved' + role='program_admin' (rule #6) once Firebase Auth
-// + the `users` collection lookup exist in this app — currently unauthenticated.
 export async function createCourse(formData: FormData) {
+  await requireApprovedUser(["program_admin"]);
+
   const curriculumId = String(formData.get("curriculum_id") ?? "").trim();
   const code = String(formData.get("code") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();

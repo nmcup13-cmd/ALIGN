@@ -1,9 +1,16 @@
+import { redirect } from "next/navigation";
 import { adminDb } from "@/lib/firebase/admin";
+import { getCurrentUser } from "@/lib/auth/session";
+import { LogoutButton } from "../logout-button";
 
 // Reads Firestore per-request — must not be statically cached at build time.
 export const dynamic = "force-dynamic";
 
 export default async function CoursesPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (user.account_status !== "approved") redirect("/account-status");
+
   const coursesSnap = await adminDb.collectionGroup("courses").get();
   const courses = coursesSnap.docs
     .map((doc) => ({
@@ -37,6 +44,10 @@ export default async function CoursesPage() {
           ))}
         </ul>
       )}
+
+      <div style={{ marginTop: 24 }}>
+        <a href="/account-status">&larr; กลับ</a> · <LogoutButton />
+      </div>
     </main>
   );
 }
