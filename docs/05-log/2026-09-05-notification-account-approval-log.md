@@ -56,3 +56,12 @@
   - TC-AB26-10 (Rejection): `decided_by` ต้องเป็นบัญชี `role=program_admin` เท่านั้น — มี constraint สำรองที่ระดับ schema ไม่ใช่พึ่งเฉพาะการตรวจ role ที่ backend API layer ชั้นเดียว
 
 **ผลกระทบต่อยอดรวม test plan**: อัปเดต §5 ของ [[../03-testing/01-test-plan/test-plan-align|test-plan-align]] และสรุปใน [[../03-testing/01-test-plan/index|index]] — E4 จาก 20 เป็น **25** (happy 9→11, edge 5→6, rejection 6→8), E6 จาก 25 เป็น **28** (happy 12→14, edge คงที่ 4, rejection 9→10) — ยอดรวมทั้งโปรเจกต์จาก **146 เป็น 154 test case** placeholder ยังคงเป็น 0 รายการ ไม่มีคำถามเปิดใหม่เกิดขึ้นจากงานนี้ (ทั้ง 2 entity มี field/พฤติกรรมยืนยันแล้วครบตาม `align-technical-design.md` §2.14/§2.15 และ `align-api-schema-design.md` §3.14/§3.15 อยู่แล้วก่อนเริ่มเขียน test case)
+
+## อัปเดต (2026-09-05, ต่อเนื่อง): ปิดคำถามเปิด §5.6/§5.7 ของ align-api-schema-design.md (Firestore conversion)
+
+ผู้ใช้ยืนยันคำตอบสำหรับ 2 คำถามเปิดที่เพิ่มเข้ามาในรอบแปลงเอกสารเป็น Firestore ([[../02-design/02-technical/align-api-schema-design|align-api-schema-design]] §5.6–5.7):
+
+1. **§5.6 โครงสร้าง Collection Hierarchy** → ยืนยัน **แนวทาง Hybrid (ทางเลือกที่ 3)** — nest เฉพาะ `plo`/`course`/`clo`/`clo_plo_mapping` ใต้ `curricula/{year}`, ส่วนที่เหลือเป็น top-level พร้อม `curriculum_id` denormalized — **ตรงกับ default ที่เอกสารใช้อยู่แล้วทั้งฉบับ ไม่มีการเปลี่ยนแปลงเนื้อหา/path/diagram/Security Rules ใดๆ**
+2. **§5.7 Document ID Strategy ของ `ai_match_result`** → ยืนยัน **แนวทาง A — Auto-generated** ต่อครั้งที่ AI รัน (ไม่ใช่ composite id) — **ตรงกับ default ที่เอกสารใช้อยู่แล้ว ไม่มีการเปลี่ยนแปลงเนื้อหา/index ใดๆ**
+
+เนื้อหาเปลี่ยนเฉพาะสถานะกำกับหัวข้อ: §5.6/§5.7 (และย่อหน้านำของหัวข้อ 5) เปลี่ยนจาก "ยังไม่ยืนยัน — ใช้ ... เป็น default" เป็น **"[ยืนยันแล้ว 2026-09-05]"** — ไม่มีการแก้ schema/API/diagram ใดๆ เพิ่มเติม เพราะ default ที่เคยใช้ตรงกับคำตอบสุดท้ายพอดี — **หัวข้อ 5 ทั้งหมด (5.1–5.7) ของ `align-api-schema-design.md` ปิดคำถามเปิดครบทุกข้อแล้ว** ไม่มีคำถามเปิดค้างในเอกสารนี้อีก
