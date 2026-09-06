@@ -65,3 +65,14 @@
 2. **§5.7 Document ID Strategy ของ `ai_match_result`** → ยืนยัน **แนวทาง A — Auto-generated** ต่อครั้งที่ AI รัน (ไม่ใช่ composite id) — **ตรงกับ default ที่เอกสารใช้อยู่แล้ว ไม่มีการเปลี่ยนแปลงเนื้อหา/index ใดๆ**
 
 เนื้อหาเปลี่ยนเฉพาะสถานะกำกับหัวข้อ: §5.6/§5.7 (และย่อหน้านำของหัวข้อ 5) เปลี่ยนจาก "ยังไม่ยืนยัน — ใช้ ... เป็น default" เป็น **"[ยืนยันแล้ว 2026-09-05]"** — ไม่มีการแก้ schema/API/diagram ใดๆ เพิ่มเติม เพราะ default ที่เคยใช้ตรงกับคำตอบสุดท้ายพอดี — **หัวข้อ 5 ทั้งหมด (5.1–5.7) ของ `align-api-schema-design.md` ปิดคำถามเปิดครบทุกข้อแล้ว** ไม่มีคำถามเปิดค้างในเอกสารนี้อีก
+
+## อัปเดต (2026-09-06): แก้ 4 test case ที่ยังอ้างอิงกลไก SQL-specific ที่ไม่มีจริงใน Firestore
+
+Audit พบว่า test case ที่เพิ่มไว้ในอัปเดตก่อนหน้า (ช่วงที่ schema ยังเป็น PostgreSQL เชิงสัมพันธ์) ยังบรรยาย "กลไกที่คาดว่าจะบังคับผลลัพธ์" ด้วยศัพท์ SQL (unique constraint, DB-level constraint, commit/rollback) ที่ไม่มีอยู่จริงใน Cloud Firestore ตามที่ `align-technical-design.md` §2.0/§2.0.4 และ `align-api-schema-design.md` §2.6/§2.7/§2.8 ยืนยันไว้แล้ว — **ผลลัพธ์ทางธุรกิจที่ทดสอบไม่เปลี่ยนแปลง** แก้เฉพาะคำอธิบายกลไกที่ทำให้เกิดผลนั้น:
+
+- **TC-AB12-07** ([[../03-testing/01-test-plan/e4-dashboard-alerts|e4-dashboard-alerts]]) — เปลี่ยนจาก "partial unique index บน `clo_id` WHERE `is_resolved=false`" เป็น **Firestore transaction แบบ query-then-write** (`runTransaction`) — ปรับสถานการณ์ทดสอบเป็นจำลอง 2 background job รันซ้อนกันพร้อมกันเป๊ะ (concurrent) เพื่อพิสูจน์ atomicity ของ transaction แทนการอ้าง DB constraint ที่ไม่มีจริง
+- **TC-AB26-08** ([[../03-testing/01-test-plan/e6-user-registration-approval|e6-user-registration-approval]]) — เปลี่ยนศัพท์ "commit/rollback แยกกัน" (SQL transaction) เป็น **`runTransaction`** ของ Firestore — ระบุพฤติกรรมจริง (all-or-nothing, retry อัตโนมัติโดย SDK ถ้าชนกันระหว่างอ่าน-เขียน ไม่มีแนวคิด "commit ฝั่งเดียวแล้ว rollback อีกฝั่ง")
+- **TC-AB26-10** (ไฟล์เดียวกัน) — เขียนใหม่ทั้งหมด: เดิมอ้าง "constraint ระดับ schema/ฐานข้อมูล" ที่บังคับ `decided_by` ต้องเป็น `role=program_admin` ซึ่ง Firestore ไม่มีกลไกเทียบเท่า — เปลี่ยนเป็นทดสอบ **2 ชั้นจริง**: (1) Cloud Function ตรวจ role ก่อนเขียนทุกครั้ง (กลไกหลัก) และ (2) Firestore Security Rules `match /account_approval_logs/{id} { allow write: if false }` ปฏิเสธการเขียนตรงจาก client ทุกกรณี (defense-in-depth ชั้นที่สอง — บล็อกทั้งหมดไม่ใช่ตรวจเงื่อนไข `decided_by` เฉพาะเจาะจง)
+- **TC-AB09-02** ([[../03-testing/01-test-plan/e3-ai-matching-gap-analysis|e3-ai-matching-gap-analysis]]) — เปลี่ยน "constraint ตอนสร้าง mapping" เป็น "การตรวจที่ Cloud Function ตอนสร้าง `clo_plo_mapping` (เช็ค `clo.curriculum_id == plo.curriculum_id` ก่อนเขียน)" ให้ชัดว่าไม่ใช่ DB constraint
+
+ไม่มีการเปลี่ยนจำนวน test case หรือผลลัพธ์ที่คาดหวังทางธุรกิจ — แก้ไขโดย `test-designer` ตามคำสั่งตรวจ audit เฉพาะจุด
