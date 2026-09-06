@@ -62,7 +62,7 @@ sequenceDiagram
             Gate-->>UI: 409
             UI-->>Instructor: แจ้งเตือน พาไปหน้าจอ 3 (จัดการ CLO/PLO) — บล็อกการบันทึกการสอนเสมอ
         else clo_plo_ready == true
-            Core->>DB: INSERT teaching_record (status = draft_ai_pending)
+            Core->>DB: สร้าง document ใหม่ใน teaching_record (status = draft_ai_pending)
             Core->>Evid: เก็บไฟล์แนบเป็น evidence (contains_student_pii default true)
             Core->>AI: ส่ง teaching_record + เนื้อหาหลักฐาน + เฉพาะ CLO ของ curriculum เดียวกับวิชานี้ (ป้องกันข้ามหลักสูตร 2565↔2570, AB-08)
             opt AI ประมวลผลไม่สำเร็จ/หมดเวลา [ยืนยันแล้ว — ไม่ retry อัตโนมัติ, §4.3 Q3]
@@ -71,7 +71,7 @@ sequenceDiagram
                 UI-->>Instructor: เห็นข้อความ + ปุ่มลองใหม่ (เรียกซ้ำ POST /teaching-records/{id}/ai-match)
             end
             AI-->>Core: รายการ [{clo_id, match_confidence}] + linked_plo_ids (ดึงจาก clo_plo_mapping ปัจจุบัน ไม่ใช่ AI เดา)
-            Core->>DB: INSERT ai_match_result (state = draft) ต่อ CLO แต่ละข้อที่จับคู่ได้
+            Core->>DB: สร้าง document ใหม่ใน ai_match_result (state = draft) ต่อ CLO แต่ละข้อที่จับคู่ได้
             Note over Core,DB: [TRUST BOUNDARY / DRAFT — กฎ #3] เขียนเป็น "draft" เท่านั้น ยังไม่ใช่ข้อมูลจริง ไม่มี auto-confirm ไม่ว่า match_confidence จะสูงแค่ไหน
             Core-->>Gate: สำเร็จ พร้อมผล draft
             Gate-->>UI: 2xx + ผล draft
@@ -87,7 +87,7 @@ sequenceDiagram
                         Core-->>UI: 409 Conflict — state transition ไม่ถูกต้อง
                         UI-->>Instructor: แจ้งเตือน รีเฟรชรายการล่าสุด
                     else state เป็น draft/edited
-                        Core->>DB: UPDATE state=confirmed, confirmed_by, confirmed_at, ล็อก linked_plo_ids เป็น snapshot ถาวร
+                        Core->>DB: อัปเดต state=confirmed, confirmed_by, confirmed_at ใน document เดิม, ล็อก linked_plo_ids เป็น snapshot ถาวร
                         Note over Core,DB: [กฎ #3 — จุดเดียวที่ผล AI กลายเป็นข้อมูลจริง] เกิดเฉพาะเมื่ออาจารย์สั่งยืนยันเองเท่านั้น
                         Core-->>UI: 2xx
                     end
@@ -95,14 +95,14 @@ sequenceDiagram
                     Instructor->>UI: ปรับ match_confidence หรือปลด CLO ที่จับคู่ผิด
                     UI->>Gate: PATCH /ai-match-results/{id}
                     Gate->>Core: ส่งต่อ (ผ่านการตรวจสิทธิ์แล้ว)
-                    Core->>DB: UPDATE state=edited พร้อมค่าที่แก้ไข
+                    Core->>DB: อัปเดต state=edited พร้อมค่าที่แก้ไข ใน document เดิม
                     Core-->>UI: 2xx
                     UI-->>Instructor: กลับไปกด "ยืนยัน" ในรอบถัดไปของ loop นี้
                 else ปฏิเสธ
                     Instructor->>UI: กด "ปฏิเสธ"
                     UI->>Gate: POST /ai-match-results/{id}/reject
                     Gate->>Core: ส่งต่อ
-                    Core->>DB: UPDATE state=rejected
+                    Core->>DB: อัปเดต state=rejected ใน document เดิม
                     Core-->>UI: 2xx
                     Note over Core,DB: rejected ไม่ถูกนับเป็นหลักฐานในการคำนวณใดๆ (กฎ #3/#4)
                 end
@@ -119,7 +119,7 @@ sequenceDiagram
 | ขั้นตอน | กฎที่บังคับใช้ | รายละเอียด |
 |---|---|---|
 | ตรวจ `account_status == approved` ก่อนเข้าสู่แกนประสานงาน | กฎ #6 | เกิดที่ **ประตูควบคุมสิทธิ์** ก่อนแตะ business logic ใดๆ ทั้งสิ้น — ไม่ใช่แค่ตอน login |
-| ตรวจ `course.clo_plo_ready` ก่อน INSERT `teaching_record` | กฎ #1 | บังคับที่ฝั่งระบบ (แกนประสานงาน) เสมอ ไม่ใช่เชื่อปุ่ม UI ที่ disable ไว้ฝั่งเดียว |
+| ตรวจ `course.clo_plo_ready` ก่อนสร้าง document ใหม่ใน `teaching_record` | กฎ #1 | บังคับที่ฝั่งระบบ (แกนประสานงาน) เสมอ ไม่ใช่เชื่อปุ่ม UI ที่ disable ไว้ฝั่งเดียว |
 | เขียน `ai_match_result` เป็น `state=draft` เท่านั้นหลัง AI คืนผล | กฎ #3 (ข้อบังคับที่พลาดไม่ได้ที่สุด) | ไม่มีเส้นทางใดที่ AI เขียนตรงเป็น `confirmed` ได้ |
 | `POST /ai-match-results/{id}/confirm` เปลี่ยน state → `confirmed` | กฎ #3 | จุดเดียวในทั้งระบบที่ผล AI กลายเป็นข้อมูลจริง ต้องมาจากคำสั่งอาจารย์ผู้สอนวิชานั้นเท่านั้น |
 | เก็บไฟล์แนบผ่าน **ที่เก็บหลักฐาน/ชิ้นงาน (PDPA)** แทนที่จะให้ UI เขียนตรง | กฎ #5 | ทุกการเข้าถึงไฟล์ในภายหลังต้องผ่านแกนประสานงานตรวจสิทธิ์ก่อนเสมอ |
@@ -152,7 +152,7 @@ sequenceDiagram
             Core-->>UI: แจ้งไม่สำเร็จ พร้อมปุ่ม "ลองวิเคราะห์ใหม่"
         end
         AI-->>Core: missing_topics, extra_topics (เทียบเชิงความหมาย/semantic ไม่ใช่ string ตรงตัว)
-        Core->>DB: INSERT syllabus_gap_result (state = draft, generated_at = ตอนนี้)
+        Core->>DB: สร้าง document ใหม่ใน syllabus_gap_result (state = draft, generated_at = ตอนนี้)
         Note over Core,DB: [TRUST BOUNDARY / DRAFT — กฎ #3] เขียนเป็น draft เสมอ แยกกล่องจากผลจับคู่ CLO/PLO ส่วนที่ 1 ของหน้าจอ 6 อย่างชัดเจน
         Core-->>UI: ผล draft
         UI-->>Instructor: แสดงที่หน้าจอ 6 ส่วนที่ 2 ด้วยสถานะภาพ "draft"
@@ -166,20 +166,20 @@ sequenceDiagram
                 alt state เป็น confirmed/rejected ไปแล้ว
                     Core-->>UI: 409 Conflict
                 else state เป็น draft/edited
-                    Core->>DB: UPDATE state=confirmed, confirmed_by, confirmed_at
+                    Core->>DB: อัปเดต state=confirmed, confirmed_by, confirmed_at ใน document เดิม
                     Core-->>UI: 2xx
                 end
             else แก้ไขก่อนยืนยัน
                 Instructor->>UI: แก้ไขรายการ missing_topics/extra_topics
                 UI->>Gate: PATCH /syllabus-gap-results/{id}
                 Gate->>Core: ส่งต่อ
-                Core->>DB: UPDATE state=edited
+                Core->>DB: อัปเดต state=edited ใน document เดิม
                 Core-->>UI: 2xx
             else ปฏิเสธ
                 Instructor->>UI: กด "ปฏิเสธ"
                 UI->>Gate: POST /syllabus-gap-results/{id}/reject
                 Gate->>Core: ส่งต่อ
-                Core->>DB: UPDATE state=rejected
+                Core->>DB: อัปเดต state=rejected ใน document เดิม
                 Core-->>UI: 2xx
             end
         end
@@ -223,7 +223,7 @@ sequenceDiagram
         Core-->>UI: 409 Conflict
         UI-->>Applicant: แจ้งอีเมลซ้ำ ให้แก้ไขแล้วส่งใหม่
     else อีเมลไม่ซ้ำ
-        Core->>DB: INSERT user (role=instructor, account_status=pending) ทันที
+        Core->>DB: สร้าง document ใหม่ใน user (role=instructor, account_status=pending) ทันที
         Core-->>UI: 2xx {user_id, account_status:"pending"}
         UI-->>Applicant: พาไปหน้าจอ 0B แสดง "รออนุมัติ" — ทางตัน ไม่มีเส้นทางลัดไปหน้าจออื่นของระบบ (กฎ #6)
     end
@@ -249,7 +249,7 @@ sequenceDiagram
             Core-->>UI: 409 Conflict "บัญชีนี้ถูกดำเนินการไปแล้ว"
             UI-->>Admin: แจ้งเตือน รีเฟรชรายการอัตโนมัติ
         else ยังเป็น pending อยู่จริง
-            Core->>DB: UPDATE account_status=approved/rejected, approved_by, approved_at, rejection_reason(ถ้ามี)
+            Core->>DB: อัปเดต account_status=approved/rejected, approved_by, approved_at, rejection_reason(ถ้ามี) ใน document เดิม
             Core-->>UI: 2xx
             UI-->>Admin: อัปเดตรายการทันที
         end
@@ -510,7 +510,7 @@ stateDiagram-v2
 
 | กฎทางธุรกิจ | Sequence ที่บังคับใช้ | จุดบังคับใช้หลัก |
 |---|---|---|
-| #1 ผูก CLO–PLO ก่อนบันทึกการสอน | §1.1 | Core ตรวจ `course.clo_plo_ready` ก่อน INSERT `teaching_record` ทุกครั้ง (409 ถ้าไม่ครบ) |
+| #1 ผูก CLO–PLO ก่อนบันทึกการสอน | §1.1 | Core ตรวจ `course.clo_plo_ready` ก่อนสร้าง document ใหม่ใน `teaching_record` ทุกครั้ง (409 ถ้าไม่ครบ) |
 | #2 แจ้งเตือน CLO ไม่มีหลักฐานทันที | §1.5 | คำนวณ near-real-time ทุกครั้งที่เปิดแดชบอร์ด (Trigger A) หรือมีเหตุการณ์เกี่ยวข้อง (Trigger B) — ไม่ใช่ batch job |
 | #3 AI เป็นค่าตั้งต้น ไม่ใช่ค่าบังคับ | §1.1, §1.2 | ผล AI ทุกงาน (จับคู่ CLO/PLO และวิเคราะห์ gap) เขียนเป็น `state=draft` เสมอ ต้องรอคำสั่งยืนยันจากอาจารย์เท่านั้นจึงเปลี่ยนเป็น `confirmed` |
 | #4 เอกสารส่งออกอ้างอิงหลักฐานจริงเท่านั้น | §1.4 | Export อ่านเฉพาะข้อมูล `state=confirmed` + ไฟล์หลักฐานที่แนบจริง ไม่มีทางเชื่อมต่อ draft/AI โดยตรง |
@@ -532,15 +532,15 @@ stateDiagram-v2
 3. `course.clo_plo_ready == true` (กฎ #1)
 4. ฟิลด์บังคับของ `teaching_record` ครบ: `topic` (ไม่ว่าง), `week_no` (จำนวนเต็ม), `taught_at` (ไม่เป็นวันที่ในอนาคต — ตาม `align-api-schema-design.md` §3.7)
 5. มีไฟล์หลักฐานแนบอย่างน้อย 1 ไฟล์ (ตาม AB-05) ก่อนกด "บันทึกและให้ AI ประมวลผล" จริง
-6. จึง INSERT `teaching_record` (status=`draft_ai_pending`) และไฟล์เข้า **ที่เก็บหลักฐาน** ในขั้นตอนเดียวกัน (ไม่ใช่แยกทำสองคำร้องที่อาจไม่สำเร็จพร้อมกัน — รายละเอียดว่า transaction นี้ atomic แค่ไหนเป็นการตัดสินใจเชิง implementation ที่ไม่ผูกในเอกสารชั้นนี้)
+6. จึงสร้าง document ใหม่ใน `teaching_record` (status=`draft_ai_pending`) และไฟล์เข้า **ที่เก็บหลักฐาน** ในขั้นตอนเดียวกัน (ไม่ใช่แยกทำสองคำร้องที่อาจไม่สำเร็จพร้อมกัน — รายละเอียดว่า transaction นี้ atomic แค่ไหนเป็นการตัดสินใจเชิง implementation ที่ไม่ผูกในเอกสารชั้นนี้)
 
 ### 4.2 Concurrency ที่กระทบกฎทางธุรกิจ
 
 | สถานการณ์ | ผลกระทบต่อกฎทางธุรกิจ | แนวทางที่ใช้ในเอกสารนี้ |
 |---|---|---|
-| อาจารย์เปิดหน้าจอ 6 สองแท็บพร้อมกัน แล้วกด "ยืนยัน"/"ปฏิเสธ" ซ้ำรายการเดียวกัน | เสี่ยงเขียนทับ state ที่ terminal แล้ว (กฎ #3) | ตรวจ state ปัจจุบันก่อน UPDATE เสมอ — ถ้าไม่ใช่ `draft`/`edited` แล้ว ตอบ 409 Conflict (ดู §1.1, §1.2) |
+| อาจารย์เปิดหน้าจอ 6 สองแท็บพร้อมกัน แล้วกด "ยืนยัน"/"ปฏิเสธ" ซ้ำรายการเดียวกัน | เสี่ยงเขียนทับ state ที่ terminal แล้ว (กฎ #3) | ตรวจ state ปัจจุบันก่อนอัปเดตเสมอ — ถ้าไม่ใช่ `draft`/`edited` แล้ว ตอบ 409 Conflict (ดู §1.1, §1.2) |
 | ผู้บริหารหลักสูตร 2 คนกด "อนุมัติ"/"ปฏิเสธ" บัญชีเดียวกันพร้อมกัน | เสี่ยงสถานะบัญชีขัดแย้งกัน/เขียนทับกันโดยไม่รู้ตัว (กฎ #6) | **[ยืนยันแล้ว — §4.3 Q2]** Optimistic concurrency — ตรวจ `account_status` ปัจจุบันก่อนเขียนทับเสมอ คำขอที่มาถึงทีหลังได้ 409 Conflict (ดูไดอะแกรม §1.3) |
-| soft-delete `plo`/`clo` ระหว่างที่มีอาจารย์กำลังบันทึกการสอนอยู่พอดี | อาจทำให้ `course.clo_plo_ready` กลับเป็น `false` ระหว่างที่อาจารย์กรอกฟอร์มอยู่ | Core ต้อง re-evaluate `clo_plo_ready` **ที่จุดตรวจจริงตอน INSERT** (§4.1 ข้อ 3) ไม่ใช่เชื่อค่าที่ UI cache ไว้ตอนโหลดหน้าจอ — ถ้าเพิ่งกลายเป็น `false` ระหว่างนั้น ต้องตอบ 409 เหมือนกรณีปกติ (ตรงกับที่ `align-api-schema-design.md` §3.2/§3.4 ระบุว่าต้อง re-evaluate ทันทีหลัง soft-delete) |
+| soft-delete `plo`/`clo` ระหว่างที่มีอาจารย์กำลังบันทึกการสอนอยู่พอดี | อาจทำให้ `course.clo_plo_ready` กลับเป็น `false` ระหว่างที่อาจารย์กรอกฟอร์มอยู่ | Core ต้อง re-evaluate `clo_plo_ready` **ที่จุดตรวจจริงตอนสร้าง document ใหม่** (§4.1 ข้อ 3) ไม่ใช่เชื่อค่าที่ UI cache ไว้ตอนโหลดหน้าจอ — ถ้าเพิ่งกลายเป็น `false` ระหว่างนั้น ต้องตอบ 409 เหมือนกรณีปกติ (ตรงกับที่ `align-api-schema-design.md` §3.2/§3.4 ระบุว่าต้อง re-evaluate ทันทีหลัง soft-delete) |
 
 ### 4.3 ประเด็นที่เคยเป็นคำถามเปิด — สถานะ: ยืนยันแล้วทั้ง 4 ข้อ
 
