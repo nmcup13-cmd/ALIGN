@@ -76,3 +76,16 @@ Audit พบว่า test case ที่เพิ่มไว้ในอัป
 - **TC-AB09-02** ([[../03-testing/01-test-plan/e3-ai-matching-gap-analysis|e3-ai-matching-gap-analysis]]) — เปลี่ยน "constraint ตอนสร้าง mapping" เป็น "การตรวจที่ Cloud Function ตอนสร้าง `clo_plo_mapping` (เช็ค `clo.curriculum_id == plo.curriculum_id` ก่อนเขียน)" ให้ชัดว่าไม่ใช่ DB constraint
 
 ไม่มีการเปลี่ยนจำนวน test case หรือผลลัพธ์ที่คาดหวังทางธุรกิจ — แก้ไขโดย `test-designer` ตามคำสั่งตรวจ audit เฉพาะจุด
+
+## อัปเดต (2026-09-06, ต่อเนื่อง): แก้คำศัพท์ "แถว"/"insert" ที่ตกค้างระดับคำ (ไม่ใช่กลไก) ใน test case ใกล้เคียง
+
+Audit รอบถัดมาพบว่ารอบแก้ก่อนหน้า (ด้านบน) แก้เฉพาะศัพท์กลไกที่เป็น SQL-specific ชัดเจน (unique constraint, DB constraint, commit/rollback) แต่ยังมีคำว่า "แถว" (row) และ "insert" หลงเหลืออยู่ระดับคำในบาง test case ที่อยู่นอกและในขอบเขตของรอบก่อน — ไม่ใช่การเปลี่ยนผลลัพธ์ทางธุรกิจ เป็นแค่ปรับศัพท์ให้ตรงกับ Cloud Firestore (ใช้ "document" แทน "แถว/row", "สร้าง/เพิ่ม document ใหม่" แทน "insert"):
+
+- **E1** ([[../03-testing/01-test-plan/e1-clo-plo-syllabus-setup|e1-clo-plo-syllabus-setup]]) — TC-AB01-06, TC-AB02-05: "แถว" → "document" (soft-delete ของ `clo_plo_mapping`/`ai_match_result` ยังคงอยู่ในฐานข้อมูล)
+- **E2** ([[../03-testing/01-test-plan/e2-teaching-record-evidence|e2-teaching-record-evidence]]) — TC-AB06-06: "แถว" → "document" (soft-delete ของ `evidence`)
+- **E4** ([[../03-testing/01-test-plan/e4-dashboard-alerts|e4-dashboard-alerts]]) — TC-AB12-07 (เพิ่มเติมนอกรายการเดิม — พบ "แถว" หลงเหลือแม้กลไกหลักถูกแก้ไปแล้วในรอบก่อน), TC-AB12-08, TC-AB12-09: "แถว" → "document" ทั้งหมด (reopen สร้าง document ใหม่ไม่ reuse ของเดิม, document ที่ resolved ยังอยู่ในฐานข้อมูล)
+- **E6** ([[../03-testing/01-test-plan/e6-user-registration-approval|e6-user-registration-approval]]) — TC-AB26-09: "แถว"/"insert" → "document"/"สร้าง document ใหม่"
+- **test-plan-align.md** §5 (สรุปยอดรวมของ E4/E6): "แถวใหม่" → "document ใหม่"
+- **index.md**: ปรับสรุป TC-AB12-06–10/TC-AB26-08–10 ที่ยังบรรยาย "unique constraint"/"insert" (กลไกเดิมก่อนรอบแก้ 2026-09-06 ด้านบน) ให้ตรงกับข้อความจริงในไฟล์ย่อยปัจจุบัน (Firestore transaction แบบ query-then-write, เขียน document ใหม่ผ่าน Firestore transaction เดียวกับการอัปเดต `user`)
+
+ไม่มีการเปลี่ยนจำนวน test case, ID, หรือผลลัพธ์ที่คาดหวังทางธุรกิจ — แก้ไขโดย `test-designer` ตามคำสั่งตรวจ audit เฉพาะจุดต่อเนื่องจากรอบก่อนหน้าในวันเดียวกัน
