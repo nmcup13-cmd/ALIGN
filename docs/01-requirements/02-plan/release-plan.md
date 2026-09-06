@@ -58,7 +58,7 @@
 
 **Epic/Story ที่รวมอยู่**: E6 ทั้งหมด — AB-24, AB-25, AB-26, AB-27
 
-**เงื่อนไขเริ่มต้น (Entry)**: ไม่ผูกกับ Phase อื่นมาก่อน (เป็น Phase แรกสุดตามการตัดสินใจ dependency-first) — ต้องมี infra พื้นฐานตาม `align-tech-stack.md` (Next.js + Supabase Auth/Postgres) พร้อมใช้งาน
+**เงื่อนไขเริ่มต้น (Entry)**: ไม่ผูกกับ Phase อื่นมาก่อน (เป็น Phase แรกสุดตามการตัดสินใจ dependency-first) — ต้องมี infra พื้นฐานตาม `align-tech-stack.md` (Next.js + Firebase Authentication/Cloud Firestore) พร้อมใช้งาน
 
 **เงื่อนไขจบ (Definition of Done)**:
 - สมัครสมาชิกสำเร็จ → บัญชีสถานะ `pending` เสมอ ไม่ auto-approve (กฎ #6)
@@ -69,7 +69,7 @@
 
 **ความเสี่ยง/สมมติฐาน**:
 - Guard ที่ยังไม่มี endpoint จริงให้ป้องกัน ตรวจสอบความถูกต้อง 100% ไม่ได้จนกว่าจะมี endpoint ของ E1 มาทดสอบร่วมจริงใน Phase 2 — ความเสี่ยงนี้ถูกส่งต่อเป็นเงื่อนไขตรวจสอบซ้ำใน Phase 2–6 ทุก Phase (ทีมต้องอัปเดต checklist ของ T-087 ทุกครั้งที่เพิ่ม endpoint ใหม่ ไม่ใช่รอทำทีเดียวตอนจบ)
-- สมมติฐาน: Supabase Auth (ตาม align-tech-stack.md §2.7) ใช้งานได้ตามคาด ไม่มีข้อจำกัดที่ค้นพบทีหลัง
+- สมมติฐาน: Firebase Authentication (ตาม align-tech-stack.md §2.7) ใช้งานได้ตามคาด ไม่มีข้อจำกัดที่ค้นพบทีหลัง
 
 ---
 
