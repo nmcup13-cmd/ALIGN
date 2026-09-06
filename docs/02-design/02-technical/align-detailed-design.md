@@ -4,7 +4,7 @@
 
 **ความสัมพันธ์กับเอกสารอื่น**:
 - [[align-high-level-architecture|align-high-level-architecture]] — เป็นแหล่งชื่อ **logical component** ที่เอกสารนี้ใช้เป็น participant ใน sequence diagram ทุกตัว (ไม่คิดชื่อใหม่)
-- [[align-api-schema-design|align-api-schema-design]] — เป็นแหล่งชื่อ **entity/field/state/endpoint** ที่เอกสารนี้อ้างอิงตรงเป๊ะ (เช่น `ai_match_result.state`, `POST /ai-match-results/{id}/confirm`)
+- [[align-api-schema-design|align-api-schema-design]] — เป็นแหล่งชื่อ **entity/field/state/endpoint** ที่เอกสารนี้อ้างอิงตรงเป๊ะ (เช่น `ai_match_result.state`, `POST /ai-match-results/{id}/confirm`, `notification.is_resolved`)
 - [[align-technical-design|align-technical-design]] §4 (แนวทาง AI Matching และ Gap Analysis) — เป็นฐาน input/output/state contract ของกลไก AI ที่เอกสารนี้แตกเป็น sequence step ที่ละเอียดกว่า ไม่ขัดแย้งกัน
 - [[../01-prototypes/align-user-journey|align-user-journey]] และ [[../01-prototypes/align-navigation-flow|align-navigation-flow]] — เป็นฐานของลำดับเหตุการณ์/หมายเลขหน้าจอที่ sequence diagram ทุกอันอ้างอิงตรงๆ ไม่ได้แต่ง flow ใหม่
 
@@ -23,7 +23,7 @@
 | `AI` | กลไกจับคู่/วิเคราะห์ด้วย AI (AI Matching & Gap-Analysis Engine) — 1 component ที่ทำ 2 งานอิสระจากกัน (จับคู่ CLO/PLO และวิเคราะห์ gap) |
 | `DB` | ที่เก็บข้อมูลโครงสร้าง (Structured Data Store) |
 | `Evid` | ที่เก็บหลักฐาน/ชิ้นงานควบคุมสิทธิ์ตาม PDPA (Access-Controlled Evidence Repository) |
-| `GapNotify` | กลไกแจ้งเตือนช่องว่างหลักฐาน (Gap Notification Mechanism) — อ่านอย่างเดียว |
+| `GapNotify` | กลไกแจ้งเตือนช่องว่างหลักฐาน (Gap Notification Mechanism) — **อ่านและแสดงผลเท่านั้น ไม่มีสิทธิ์เขียนไม่ว่ากรณีใด** (least-privilege) — การเขียนสร้าง/ปิด `notification` ทั้งหมดเป็นความรับผิดชอบของ `Core` เพียงผู้เดียว (ดู §1.6) |
 | `Export` | กลไกสร้างเอกสารส่งออก (Document Export Generator) |
 | `AuditLog` | บันทึกการเข้าถึงหลักฐาน (Access Audit Log) |
 
@@ -89,6 +89,10 @@ sequenceDiagram
                     else state เป็น draft/edited
                         Core->>DB: อัปเดต state=confirmed, confirmed_by, confirmed_at ใน document เดิม, ล็อก linked_plo_ids เป็น snapshot ถาวร
                         Note over Core,DB: [กฎ #3 — จุดเดียวที่ผล AI กลายเป็นข้อมูลจริง] เกิดเฉพาะเมื่ออาจารย์สั่งยืนยันเองเท่านั้น
+                        Core->>DB: ภายในการเขียนชุดเดียวกันนี้ ตรวจต่อว่า CLO ข้อนี้ปิดช่องว่างหลักฐานได้แล้วหรือยัง (มี ai_match_result ที่ state=confirmed อ้างถึงแล้ว)
+                        opt CLO นี้มี notification ที่ is_resolved=false ค้างอยู่ (เคยถูกแจ้งเตือนว่าขาดหลักฐานมาก่อน — ดู §1.6.1)
+                            Core->>DB: auto-resolve — ค้นหา notification ที่ clo_id ตรงกันและ is_resolved=false ทั้งหมด แล้วอัปเดตเป็น is_resolved=true, resolved_at=now() ภายในทรานแซกชันเดียวกับการยืนยันนี้ [กฎ #2 — Core เขียนเอง ไม่ใช่ GapNotify ซึ่งอ่านอย่างเดียว, รายละเอียดเต็มที่ §1.6.2]
+                        end
                         Core-->>UI: 2xx
                     end
                 else แก้ไขก่อนยืนยัน
@@ -124,6 +128,7 @@ sequenceDiagram
 | `POST /ai-match-results/{id}/confirm` เปลี่ยน state → `confirmed` | กฎ #3 | จุดเดียวในทั้งระบบที่ผล AI กลายเป็นข้อมูลจริง ต้องมาจากคำสั่งอาจารย์ผู้สอนวิชานั้นเท่านั้น |
 | เก็บไฟล์แนบผ่าน **ที่เก็บหลักฐาน/ชิ้นงาน (PDPA)** แทนที่จะให้ UI เขียนตรง | กฎ #5 | ทุกการเข้าถึงไฟล์ในภายหลังต้องผ่านแกนประสานงานตรวจสิทธิ์ก่อนเสมอ |
 | `re-compute clo_coverage_summary` อ่านเฉพาะ `state=confirmed` | กฎ #3, #4 | ค่าที่แสดงในแดชบอร์ดสืบทอดความน่าเชื่อถือจากค่าที่ยืนยันแล้วเท่านั้น |
+| หลังยืนยันสำเร็จ ตรวจ/ปิด `notification` ที่ยัง `is_resolved=false` ของ CLO เดียวกัน (auto-resolve) | กฎ #2 | เขียนโดย `Core` เท่านั้น ภายในทรานแซกชันเดียวกับการยืนยัน — ไม่ใช่ `GapNotify` (อ่านอย่างเดียวเสมอ) รายละเอียดเต็มที่ §1.6.2 |
 
 ---
 
@@ -407,24 +412,22 @@ sequenceDiagram
         Instructor->>UI: เปิดหน้าจอ 1
         UI->>Gate: GET /me/dashboard
         Gate->>Core: ส่งต่อ (ผ่านการตรวจสิทธิ์แล้ว)
-        Core->>GapNotify: ร้องขอคำนวณ CLO ที่ยังไม่มีหลักฐานของทุกวิชาที่อาจารย์คนนี้สอน
-        GapNotify->>DB: query CLO (is_deleted=false) ที่ไม่มี ai_match_result(state=confirmed) ใดๆ อ้างอิงเลย
-        DB-->>GapNotify: รายการ CLO ที่ขาดหลักฐาน
-        GapNotify-->>Core: gap_alerts: [{clo_id, code, course_id}]
+        Core->>GapNotify: ร้องขอรายการแจ้งเตือนช่องว่างหลักฐานของอาจารย์คนนี้
+        GapNotify->>DB: query notification ที่ user_id = อาจารย์คนนี้ AND is_resolved = false เรียงตาม created_at ใหม่สุดก่อน [แก้ไข — อ่านจาก notification ที่ Core เขียนไว้จริงแล้ว (สร้าง/ปิดตาม §1.6) ไม่ใช่คำนวณสดจาก CLO/ai_match_result เองอีกต่อไป เพราะ GapNotify เป็น component อ่านอย่างเดียว การตรวจพบ gap ที่แท้จริงเกิดที่ Core ตาม §1.6.1]
+        DB-->>GapNotify: รายการ notification ที่ยังไม่ resolve
+        GapNotify-->>Core: gap_alerts: [{notification_id, clo_id, code, course_id, curriculum_id, message, created_at}] (ตรงกับ align-technical-design.md §3 E4)
         Core-->>UI: รวมกับค่า coverage_percent/รายวิชาอื่นของแดชบอร์ด
         UI-->>Instructor: แสดงแจ้งเตือนทันที เช่น "CLO 4 ยังไม่มีข้อมูล" ระบุตามกลุ่มหลักสูตรของวิชานั้น
     end
 
-    Note over Core,GapNotify: Trigger B — คำนวณซ้ำแบบ near-real-time ทันทีหลังเหตุการณ์ที่กระทบผลลัพธ์ (ไม่ใช่รอรอบ batch — ตามกฎ #2)
+    Note over Core,GapNotify: [แก้ไข] Trigger B — เดิมเขียนว่า "GapNotify re-evaluate" ซึ่งขัดกับสถานะอ่านอย่างเดียวของ GapNotify (ดู §0 Legend) — ที่ถูกต้องคือ Core เป็นผู้ตรวจ/เขียน notification เองทันทีที่เหตุการณ์เกิด (สร้างใหม่ถ้าพบ gap ใหม่ตาม §1.6.1 หรือ auto-resolve ถ้าเหตุการณ์นี้ปิด gap เดิมตาม §1.6.2) ภายในการเขียนชุดเดียวกับคำร้องที่ทำให้เกิดเหตุการณ์นั้น ไม่ใช่คำร้องแยกที่ GapNotify ริเริ่มเอง (ไม่ใช่รอรอบ batch — ตามกฎ #2)
     opt หลังบันทึกการสอนใหม่สำเร็จ (§1.1) หรือยืนยัน/ปฏิเสธ ai_match_result (§1.1) หรือปลดการผูก CLO–PLO
-        Core->>GapNotify: re-evaluate CLO ที่ขาดหลักฐานของวิชานั้นทันที
-        GapNotify->>DB: query ใหม่ด้วยข้อมูลล่าสุด
-        GapNotify-->>Core: gap_alerts อัปเดต
+        Core->>DB: ตรวจ/เขียน notification ที่เกี่ยวข้องทันที (สร้างใหม่ตาม §1.6.1 หรือ auto-resolve ตาม §1.6.2 แล้วแต่กรณี)
         alt อาจารย์เปิดหน้าจอ 1 ค้างอยู่ในขณะนั้น
-            Core-->>UI: ส่งค่าที่อัปเดตแล้ว
+            Core-->>UI: ส่งค่าที่อัปเดตแล้ว (ถ้าคำร้องที่ทำให้เกิดเหตุการณ์นี้ตอบกลับพร้อมข้อมูลแดชบอร์ดในตัว)
             UI-->>Instructor: แจ้งเตือนอัปเดตทันทีโดยไม่ต้องรีเฟรชเอง
         else ไม่ได้เปิดหน้าจอ 1 อยู่
-            Note over Core,GapNotify: ค่าที่คำนวณใหม่จะถูกอ่านครั้งถัดไปที่อาจารย์เปิดหน้าจอ 1 (Trigger A) — ไม่ใช่การ push แจ้งเตือนผ่านช่องทางอื่น (ไม่ผูก mechanism เฉพาะในเอกสารชั้นนี้)
+            Note over Core,GapNotify: ค่าที่เขียนใหม่จะถูก GapNotify อ่านครั้งถัดไปที่อาจารย์เปิดหน้าจอ 1 (Trigger A ด้านบน) — ไม่ใช่การ push แจ้งเตือนผ่านช่องทางอื่น (ไม่ผูก mechanism เฉพาะในเอกสารชั้นนี้)
         end
     end
 ```
@@ -434,9 +437,97 @@ sequenceDiagram
 | ขั้นตอน | กฎที่บังคับใช้ | รายละเอียด |
 |---|---|---|
 | ตรวจ `account_status` ก่อนคำนวณ gap ใดๆ | กฎ #6 | บัญชีไม่อนุมัติเห็นข้อมูลอะไรไม่ได้เลย รวมถึงการแจ้งเตือน |
-| คำนวณแบบ near-real-time ทุกครั้งที่เปิดแดชบอร์ด/มีเหตุการณ์เกี่ยวข้อง | กฎ #2 | ห้ามเป็น batch job รายวัน — ต้อง "ทันที" ตามสเปค |
-| นับเฉพาะ CLO ที่ `is_deleted=false` และไม่มี `ai_match_result(state=confirmed)` | กฎ #2, #3 | ไม่นับ draft เป็น "มีหลักฐานแล้ว" |
-| `GapNotify` เป็น component อ่านอย่างเดียว | ความสอดคล้องสถาปัตยกรรม | ไม่มีสิทธิ์เขียนข้อมูลใดๆ |
+| อ่านแบบ near-real-time ทุกครั้งที่เปิดแดชบอร์ด/มีเหตุการณ์เกี่ยวข้อง | กฎ #2 | ห้ามเป็น batch job รายวัน — ต้อง "ทันที" ตามสเปค (ฝั่งเขียนจริงที่ทำให้ทันทีนี้เป็นไปได้อยู่ที่ §1.6) |
+| นับเฉพาะ CLO ที่ `is_deleted=false` และไม่มี `ai_match_result(state=confirmed)` | กฎ #2, #3 | ไม่นับ draft เป็น "มีหลักฐานแล้ว" — เงื่อนไขนี้ใช้ตรวจตอน**สร้าง** `notification` ที่ §1.6.1 (ไม่ใช่สิ่งที่ GapNotify คำนวณเองอีกต่อไป) |
+| `GapNotify` เป็น component อ่านอย่างเดียว | ความสอดคล้องสถาปัตยกรรม | ไม่มีสิทธิ์เขียนข้อมูลใดๆ — **[แก้ไข]** การเขียนสร้าง/ปิด `notification` ทั้งหมดเป็นหน้าที่ของ `Core` เพียงผู้เดียว (สร้างใหม่ §1.6.1, auto-resolve §1.6.2) ไม่ใช่ `GapNotify` |
+
+---
+
+### 1.6 สร้าง/ปิด `notification` — ฝั่งเขียนที่ §1.5 ยังไม่เคยแสดง (T-042, Auto-resolve)
+
+อ้างอิง: [[align-high-level-architecture#35-clo-ขาดหลักฐาน-→-เกิดการแจ้งเตือน-→-แจ้งเตือนปิดอัตโนมัติเมื่อยืนยันผล-ai-ที่ปิดช่องว่างนั้น-บังคับใช้กฎทางธุรกิจ-2|align-high-level-architecture §3.5]] (ซึ่งปิด audit finding เดียวกันนี้ไว้แล้วในเอกสารนั้น), [[align-technical-design|align-technical-design]] §2.14 (entity `notification`), [[../../01-requirements/03-task/task-breakdown|task-breakdown]] T-042–T-045, กฎทางธุรกิจ #2
+
+> **บริบท**: §1.5 (ข้างต้น) อธิบายเฉพาะฝั่ง**อ่าน**ของกลไกแจ้งเตือนช่องว่างหลักฐาน (`GapNotify` อ่านอย่างเดียว) — เอกสารรุ่นก่อนหน้าไม่เคยกล่าวถึง entity `notification` เลยทั้งไฟล์ ทั้งที่เป็นกลไกที่ทำให้กฎ #2 เป็นจริง หัวข้อนี้เติมฝั่ง**เขียน**ที่ขาดไป: การเขียนทั้งหมด (สร้างใหม่ + ปิดอัตโนมัติ) เป็นความรับผิดชอบของ **`Core`** เพียงผู้เดียว — `GapNotify` ไม่มีเส้นทางเขียนใดๆ เลยไม่ว่ากรณีใด (สถานะ read-only เดิมไม่เปลี่ยนแปลง)
+
+#### 1.6.1 ฝั่งสร้าง — งานเบื้องหลัง (T-042) ตรวจพบ CLO ขาดหลักฐาน แล้วสร้าง `notification` ใหม่
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Core as "แกนประสานงานและบังคับใช้กฎทางธุรกิจ (งานเบื้องหลัง)"
+    participant DB as "ที่เก็บข้อมูลโครงสร้าง"
+
+    Note over Core: T-042 — งานเบื้องหลังที่ทำงานเป็นส่วนหนึ่งของแกนประสานงานเอง (ไม่ใช่ component แยก) ทำงานตามกำหนดเวลาเป็นระยะ เพื่อจับ CLO ที่อาจไม่ถูกครอบคลุมโดยเหตุการณ์ทันทีใน §1.1/§1.3 (เช่น CLO ที่ถูกผูก PLO ไว้นานแล้วแต่ไม่เคยมีใครแตะต้องเลย)
+    loop ต่อ CLO แต่ละข้อที่ is_deleted=false ในระบบ
+        Core->>DB: ตรวจว่า CLO ข้อนี้มี ai_match_result(state=confirmed) อ้างถึงแล้วหรือยัง (เงื่อนไข "มีหลักฐานรองรับ" เดียวกับที่ §1.5 เคยใช้)
+        alt มีหลักฐานรองรับแล้ว (ไม่ gap)
+            Note over Core,DB: ข้ามไป ไม่ต้องทำอะไร — ถ้าเคยมี notification ค้างอยู่ก่อนหน้านี้ ให้เป็นหน้าที่ของฝั่ง auto-resolve ที่ §1.6.2 ปิดแทน ไม่ใช่ที่นี่
+        else ยังไม่มีหลักฐานรองรับ (พบ gap)
+            Note over Core,DB: [TRUST BOUNDARY — กฎ #2] ตรวจพบ gap → สร้าง notification ใหม่ภายในธุรกรรมเดียว (กันสร้างซ้ำซ้อน)
+            Core->>DB: เปิดธุรกรรมเดียว — (1) query notification ที่ clo_id == CLO นี้ AND is_resolved == false
+            alt พบ notification ที่ยัง unresolved อยู่แล้วอย่างน้อย 1 รายการ
+                Core->>DB: ไม่เขียนซ้ำ — ปิดธุรกรรมโดยไม่สร้างเอกสารใหม่ (กันแจ้งเตือนซ้ำซ้อนสำหรับ CLO เดียวกัน)
+            else ไม่พบเลย
+                Core->>DB: (2) สร้าง notification ใหม่ภายในธุรกรรมเดียวกัน — {user_id: อาจารย์ผู้สอนวิชาที่ CLO นี้สังกัด, clo_id, curriculum_id (denormalized), message: "CLO {code} ยังไม่มีข้อมูล", is_resolved: false, created_at: ตอนนี้}
+                Note over Core,DB: created_at ต้องเป็นเวลาที่ตรวจพบจริง (near-real-time ตามกฎ #2) — ไม่ใช่ batch job ที่ค้างผลลัพธ์เป็นรอบ
+            end
+        end
+    end
+```
+
+**จุดบังคับใช้กฎทางธุรกิจในลำดับนี้**
+
+| ขั้นตอน | กฎที่บังคับใช้ | รายละเอียด |
+|---|---|---|
+| ตรวจ "มีหลักฐานรองรับ" จาก `ai_match_result(state=confirmed)` เท่านั้น | กฎ #2, #3 | ใช้เงื่อนไขเดียวกับที่ §1.5 เคยใช้ — ไม่นับ `draft`/`edited` เป็นหลักฐาน |
+| เปิดธุรกรรมเดียวแบบ query-then-write ก่อนสร้าง `notification` ใหม่ | ความถูกต้องของข้อมูล (กันสร้างซ้ำ) | ป้องกัน CLO เดียวกันมี `notification` ที่ `is_resolved=false` พร้อมกันมากกว่า 1 รายการ |
+| `Core` เป็นผู้เขียนเพียงผู้เดียว | ความสอดคล้องสถาปัตยกรรม (`GapNotify` อ่านอย่างเดียว) | ไม่มีเส้นทางใดที่ `GapNotify` เขียนข้อมูลนี้ได้เลย |
+
+#### 1.6.2 ฝั่งปิดอัตโนมัติ (auto-resolve) — ต่อเนื่องจาก §1.1 ขั้นตอน "ยืนยันตรงๆ"
+
+ไดอะแกรมนี้**ไม่ใช่ flow ใหม่ที่แยกจาก §1.1** — เป็นการขยายรายละเอียดของขั้นตอนที่เพิ่มไว้แล้วใน §1.1 (การอัปเดต `state=confirmed` แล้วตรวจ/ปิด `notification` ภายในการเขียนชุดเดียวกัน) พร้อมแสดงต่อว่า `GapNotify` เข้ามาอ่านผลลัพธ์นั้นเมื่อไร (downstream reader แยกคำร้อง แยกเวลา ไม่ใช่ response เดียวกัน):
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Instructor as อาจารย์ผู้สอน
+    participant UI as "ส่วนติดต่อผู้ใช้"
+    participant Core as "แกนประสานงานและบังคับใช้กฎทางธุรกิจ"
+    participant DB as "ที่เก็บข้อมูลโครงสร้าง"
+    participant GapNotify as "กลไกแจ้งเตือนช่องว่างหลักฐาน"
+
+    Note over Instructor,DB: ต่อจาก §1.1 — อาจารย์เพิ่งกด "ยืนยัน" ผล ai_match_result ของ CLO ที่มี notification ค้างอยู่
+    Instructor->>UI: (สืบเนื่องจาก §1.1) POST /ai-match-results/{id}/confirm สำเร็จ
+    UI->>Core: (ผ่าน Gate แล้วตามปกติ — ดู §1.1 เต็ม)
+    Core->>DB: อัปเดต state=confirmed (เหมือน §1.1)
+    Core->>DB: ภายในการเขียนชุดเดียวกัน — ตรวจว่า CLO นี้ "ปิด gap" แล้วหรือยัง (มี ai_match_result ที่ confirmed อ้างถึงแล้ว)
+    alt ปิด gap ได้แล้ว และมี notification (clo_id เดียวกัน, is_resolved=false) ค้างอยู่
+        Core->>DB: auto-resolve — อัปเดตทุกรายการที่พบเป็น is_resolved=true, resolved_at=now() ภายในทรานแซกชันเดียวกับการยืนยัน [กฎ #2 — Core เขียนเอง ไม่ใช่ GapNotify]
+    else ไม่มี notification ค้างอยู่ (ไม่เคยมี gap หรือถูกปิดไปก่อนหน้านี้แล้ว)
+        Note over Core,DB: ไม่ต้องทำอะไรเพิ่ม
+    end
+    Core-->>UI: 2xx (เหมือน §1.1)
+
+    Note over Instructor,GapNotify: เวลาต่อมา — คำร้องแยกต่างหาก ไม่ใช่ response เดียวกับ confirm ด้านบน
+    Instructor->>UI: เปิดหน้าจอ 1 (แดชบอร์ด) อีกครั้ง
+    UI->>Core: GET /me/dashboard (ผ่าน Gate แล้ว — ดู §1.5 Trigger A เต็ม)
+    Core->>GapNotify: ร้องขอรายการแจ้งเตือนล่าสุด
+    GapNotify->>DB: query notification ที่ user_id=ตนเอง AND is_resolved=false (อ่านอย่างเดียว)
+    DB-->>GapNotify: รายการที่เหลือ — notification ที่เพิ่งถูก auto-resolve ไปจะไม่ปรากฏอีก
+    GapNotify-->>Core: gap_alerts อัปเดตแล้ว (CLO ที่เพิ่งปิด gap หายไปจากรายการเอง)
+    Core-->>UI: ส่งต่อ
+    UI-->>Instructor: Gap Alert Banner ของ CLO นั้นหายไปเอง — ไม่ต้องกดอะไรเพิ่ม
+```
+
+**จุดบังคับใช้กฎทางธุรกิจในลำดับนี้**
+
+| ขั้นตอน | กฎที่บังคับใช้ | รายละเอียด |
+|---|---|---|
+| auto-resolve เกิดภายในทรานแซกชันเดียวกับการยืนยัน `ai_match_result` | กฎ #2, #3 | ไม่ใช่คำร้องแยก ไม่ใช่ batch job — ปิดแจ้งเตือนทันทีที่ผล AI ที่ยืนยันแล้วปิดช่องว่างจริง |
+| `Core` เป็นผู้เขียนเพียงผู้เดียว, `GapNotify` อ่านอย่างเดียวเสมอ | ความสอดคล้องสถาปัตยกรรม | ตรงกับ [[align-high-level-architecture#35-clo-ขาดหลักฐาน-→-เกิดการแจ้งเตือน-→-แจ้งเตือนปิดอัตโนมัติเมื่อยืนยันผล-ai-ที่ปิดช่องว่างนั้น-บังคับใช้กฎทางธุรกิจ-2|align-high-level-architecture §3.5]] ที่ปิด audit finding เดียวกันนี้แล้ว |
+| `GapNotify` อ่าน `notification` ผ่าน `Core` เท่านั้น ไม่อ่าน DB ตรง | Trust boundary | ทุกคำร้องอ่านต้องผ่านแกนประสานงาน — ดู §0 Legend |
+
+> **หมายเหตุแก้ไข §1.5**: จุด "Trigger A" ใน §1.5 (ด้านบน) เดิมเขียนว่า `GapNotify` "query CLO (is_deleted=false) ที่ไม่มี ai_match_result(state=confirmed) ใดๆ อ้างอิงเลย" — คำอธิบายนั้นแท้จริงแล้วเป็น**เงื่อนไขการตรวจพบ gap** (ตรงกับ §1.6.1 ข้อ 1) ไม่ใช่สิ่งที่ `GapNotify` ทำเองอีกต่อไปเมื่อมี entity `notification` แล้ว — ที่ถูกต้องคือ `GapNotify` **อ่านจาก `notification` collection ที่ถูกสร้าง/ปิดไว้แล้วโดย `Core`** (ตาม §1.6.1/§1.6.2) ไม่ใช่ไปคำนวณ query CLO/ai_match_result เองซ้ำอีกชั้นหนึ่ง — สอดคล้องกับ [[align-technical-design|align-technical-design]] §3 (`GET /me/dashboard` คืนค่า `gap_alerts` เป็น `[{notification_id, clo_id, code, course_id, curriculum_id, message, created_at}]` อ่านจาก collection `notification` โดยตรง) ไม่กระทบพฤติกรรม near-real-time ที่ยืนยันไว้แล้ว (ยังคง "ทันที" ตามกฎ #2 เพราะ §1.6.1/§1.6.2 เขียน `notification` ทันทีที่เหตุการณ์เกิด) — §1.5 ด้านบนได้แก้ไขข้อความให้ตรงกับความเข้าใจนี้แล้ว (ดูหมายเหตุ "[แก้ไข]" ในไดอะแกรม §1.5)
 
 ---
 
@@ -504,6 +595,27 @@ stateDiagram-v2
 
 > **หมายเหตุ cross-cutting**: `is_deleted` (soft-delete ตาม [[align-api-schema-design#51-soft-delete-หรือ-hard-delete|align-api-schema-design §5.1]]) เป็นฟิลด์แยกจาก `account_status` โดยสิ้นเชิง — ถ้า `is_deleted=true` บัญชีถูกปฏิเสธการ login ทันทีไม่ว่า `account_status` จะเป็นค่าใดก็ตาม (ดู §1.3 ส่วนที่ 4)
 
+### 2.5 `notification.is_resolved` — เพิ่มใหม่ (ปิด audit finding: เอกสารนี้ไม่เคยกล่าวถึง `notification` มาก่อน)
+
+อ้างอิงฟิลด์จาก [[align-technical-design|align-technical-design]] §2.14 — ดูฝั่งเขียนเต็มที่ §1.6 (สร้างใหม่ §1.6.1 / auto-resolve §1.6.2) และฝั่งอ่านที่ §1.5
+
+```mermaid
+stateDiagram-v2
+    [*] --> unresolved: Core ตรวจพบ CLO ขาดหลักฐาน (T-042, §1.6.1) — สร้าง document ใหม่ is_resolved=false, created_at=ตอนนี้
+    unresolved --> resolved: Core auto-resolve ทันทีที่ CLO นี้มีผลจับคู่ AI ที่ confirmed ปิดช่องว่างแล้ว (§1.6.2, ภายในทรานแซกชันเดียวกับการยืนยัน) — resolved_at=now()
+    resolved --> [*]: สถานะสุดท้ายของ document นี้ — ไม่มี endpoint ใดเปลี่ยนกลับเป็น unresolved ได้
+    note right of resolved
+        ถ้า CLO นี้กลับมาขาดหลักฐานอีกครั้งในอนาคต
+        (เช่น อาจารย์ปฏิเสธผลที่เคยยืนยันภายหลัง หรือ
+        soft-delete หลักฐาน/บันทึกการสอนที่เคยปิด gap ไว้)
+        Core สร้าง document ใหม่ (unresolved) แทนการ reopen
+        document เดิมที่ resolved ไปแล้ว — เพื่อรักษาประวัติสะสม
+        (ตาม align-technical-design.md §2.14)
+    end note
+```
+
+> ไม่มี hard-delete/soft-delete สำหรับ document ที่ `resolved` แล้ว — เก็บไว้เป็นประวัติสะสมตลอดไป (ตรงกับ [[align-technical-design|align-technical-design]] §2.14)
+
 ---
 
 ## 3. จุดบังคับใช้กฎทางธุรกิจต่อ Sequence — ตารางรวม (Cross-Reference)
@@ -511,7 +623,7 @@ stateDiagram-v2
 | กฎทางธุรกิจ | Sequence ที่บังคับใช้ | จุดบังคับใช้หลัก |
 |---|---|---|
 | #1 ผูก CLO–PLO ก่อนบันทึกการสอน | §1.1 | Core ตรวจ `course.clo_plo_ready` ก่อนสร้าง document ใหม่ใน `teaching_record` ทุกครั้ง (409 ถ้าไม่ครบ) |
-| #2 แจ้งเตือน CLO ไม่มีหลักฐานทันที | §1.5 | คำนวณ near-real-time ทุกครั้งที่เปิดแดชบอร์ด (Trigger A) หรือมีเหตุการณ์เกี่ยวข้อง (Trigger B) — ไม่ใช่ batch job |
+| #2 แจ้งเตือน CLO ไม่มีหลักฐานทันที | §1.5, §1.6 | อ่าน near-real-time ทุกครั้งที่เปิดแดชบอร์ด (§1.5 Trigger A) จาก `notification` collection — ฝั่งเขียนจริง (สร้าง/ปิด `notification`) เป็นหน้าที่ของ `Core` เพียงผู้เดียว เกิดทันทีที่ตรวจพบ/ปิด gap (§1.6.1 งานเบื้องหลัง T-042, §1.6.2 auto-resolve ต่อเนื่องจาก §1.1) ไม่ใช่ batch job |
 | #3 AI เป็นค่าตั้งต้น ไม่ใช่ค่าบังคับ | §1.1, §1.2 | ผล AI ทุกงาน (จับคู่ CLO/PLO และวิเคราะห์ gap) เขียนเป็น `state=draft` เสมอ ต้องรอคำสั่งยืนยันจากอาจารย์เท่านั้นจึงเปลี่ยนเป็น `confirmed` |
 | #4 เอกสารส่งออกอ้างอิงหลักฐานจริงเท่านั้น | §1.4 | Export อ่านเฉพาะข้อมูล `state=confirmed` + ไฟล์หลักฐานที่แนบจริง ไม่มีทางเชื่อมต่อ draft/AI โดยตรง |
 | #5 PDPA — จำกัดสิทธิ์เข้าถึงข้อมูลส่วนบุคคล | §1.4 | ตรวจ `instructor_id`/`program_admin_curriculum_scope` ก่อน return ไฟล์หลักฐานเสมอ + เขียน `evidence_access_log` ทุกครั้งที่เข้าถึงสำเร็จ |
