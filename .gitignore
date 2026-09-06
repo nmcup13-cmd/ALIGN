@@ -2,3 +2,17 @@
 .claude/settings.local.json
 ALIGN/
 Aling workwork/
+
+# Config/secret files — repo-wide safety net (in addition to align-app/.gitignore)
+.env
+.env.*
+!.env.example
+*firebase-adminsdk*.json
+*serviceAccountKey*.json
+*service-account*.json
+firebase-debug.log
+.firebase/
+*.pem
+*.key
+*.p12
+*.pfx

@@ -4,9 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository purpose
 
-This is a **documentation-only Obsidian vault** for the planning/design/testing lifecycle of **ALIGN** — a CLO/PLO teaching-alignment tracker — there is no application source code, build tooling, or test suite here yet. All content lives under `docs/` as Markdown notes written in Thai, cross-linked with Obsidian `[[wikilink]]` syntax. There are no build, lint, or test commands to run.
+This started as a **documentation-only Obsidian vault** for the planning/design/testing lifecycle of **ALIGN** — a CLO/PLO teaching-alignment tracker — and most of the repo is still that: `docs/` holds Markdown notes written in Thai, cross-linked with Obsidian `[[wikilink]]` syntax. As of 2026-09-06 there is also real application code under `align-app/` (see "Application code" below).
 
-If application code is added later, prefer following whatever technical design gets recorded in `docs/02-design/02-technical/` rather than inventing a stack from scratch — specifically the stack proposal in `align-technical-design.md` §5, which should itself stay consistent with the conceptual architecture/schema/detailed-design documents in the same folder that precede it (see the note under "Sub Agents & Agent Skills" for how these documents relate).
+Prefer following whatever technical design is recorded in `docs/02-design/02-technical/` rather than inventing something from scratch — specifically `align-tech-stack.md` (confirmed stack/decisions) and `align-api-schema-design.md` (confirmed Firestore collection structure, §2.2), which should stay consistent with the conceptual architecture/detailed-design documents in the same folder (see the note under "Sub Agents & Agent Skills" for how these documents relate). `align-technical-design.md` §5 pointing to `align-tech-stack.md` and its own §2/§3 are downstream of those two — treat them as derived, not as the primary source when in doubt.
+
+## Application code (`align-app/`)
+
+A Next.js 16 (App Router, Turbopack) + TypeScript + Tailwind CSS v4 app, scaffolded 2026-09-06 per `align-tech-stack.md` — see [[docs/05-log/2026-09-06-scaffold-align-app-log|05-log/2026-09-06-scaffold-align-app-log]] for what was decided/created.
+
+- **Commands** (run from `align-app/`): `npm run dev`, `npm run build`, `npm run lint`, `npx tsc --noEmit` (no separate test suite yet)
+- **Firebase project**: `nmc-align-2026` (Auth/Firestore/Storage) — client SDK config in `.env.local` (gitignored; see `.env.example` for the required variable names), client init in `src/lib/firebase/client.ts`
+- **`src/lib/firebase/admin.ts`** — Firebase Admin SDK, guarded with `import "server-only"`. This is where the Access Gate / Core Orchestration logic (Next.js Server Actions/API Routes) enforces business rules #1/#3/#5 with elevated privileges — never import it from a client component. It throws until a real `FIREBASE_SERVICE_ACCOUNT_KEY` is added to `.env.local` (not generated yet).
+- Not built yet: `firestore.rules`/`storage.rules`/`firebase.json`, the actual collection structure from `align-api-schema-design.md` §2.2, and a decision between Firebase App Hosting vs. Cloud Functions 2nd gen for deploy (§2.2 of `align-tech-stack.md` recommends App Hosting but flags it as unverified for compatibility)
 
 `DESIGN.md` at the repo root is the source of truth for **visual/UX design** (brand identity, design tokens, components, UX rules) — read it before creating or editing anything under `docs/02-design/01-prototypes/`, the same way `CLAUDE.md` is the source of truth for workflow/business rules.
 

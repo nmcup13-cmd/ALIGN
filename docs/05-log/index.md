@@ -25,3 +25,4 @@
 - [[2026-09-06-high-level-architecture-notification-writer-fix-log|2026-09-06: ปิด audit finding — ระบุชัดว่า "แกนประสานงาน" เป็นผู้เขียน `notification` ใน align-high-level-architecture.md (GapNotify คง read-only)]]
 - [[2026-09-06-api-schema-design-stale-status-cleanup-log|2026-09-06: ปิด audit finding — แก้ป้ายกำกับสถานะตกค้าง (ai_match_result document ID, collection hierarchy, อ้างอิง align-technical-design.md) ใน align-api-schema-design.md]]
 - [[2026-09-06-detailed-design-notification-sequence-log|2026-09-06: ปิด audit finding — เพิ่ม sequence diagram ของ notification (T-042 สร้าง/auto-resolve) เข้า align-detailed-design.md, แก้ §1.5 ให้ GapNotify อ่านจาก notification collection แทนคำนวณสด]]
+- [[2026-09-06-scaffold-align-app-log|2026-09-06: Scaffold โปรเจกต์ Next.js จริง (`align-app/`) ผูก Firebase project `nmc-align-2026` — TypeScript, ติดตั้ง firebase/firebase-admin SDK]]
