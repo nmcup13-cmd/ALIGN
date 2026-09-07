@@ -25,17 +25,15 @@ export default async function CoursesPage() {
         clo_plo_ready: boolean;
       }),
     }))
-    .filter((c) => user.role === "program_admin" || c.instructor_id === user.uid)
+    .filter((c) => user.effectiveRole === "program_admin" || c.instructor_id === user.uid)
     .sort((a, b) => a.code.localeCompare(b.code));
 
   return (
     <main style={{ maxWidth: 640, margin: "40px auto", padding: "0 16px", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ fontSize: "1.4rem" }}>{user.role === "program_admin" ? "รายวิชาทั้งหมด" : "รายวิชาของฉัน"}</h1>
-      {user.role === "program_admin" && (
-        <p>
-          <a href="/courses/new">+ เพิ่มรายวิชาใหม่</a>
-        </p>
-      )}
+      <h1 style={{ fontSize: "1.4rem" }}>{user.effectiveRole === "program_admin" ? "รายวิชาทั้งหมด" : "รายวิชาของฉัน"}</h1>
+      <p>
+        <a href="/courses/new">+ เพิ่มรายวิชาใหม่</a>
+      </p>
 
       {courses.length === 0 ? (
         <p>ยังไม่มีรายวิชาในระบบ</p>

@@ -4,19 +4,32 @@ import { redirect } from "next/navigation";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
 import { requireApprovedUser } from "@/lib/auth/session";
+import { COURSE_CATALOG } from "@/lib/course-catalog";
 
-// POST /courses per align-technical-design.md — program_admin creates a course directly,
-// no pending/approval status (align-api-schema-design.md §3.5 has no status field on `course`).
+// POST /courses per align-technical-design.md. align-api-schema-design.md §3.5 doesn't name
+// a specific role for this endpoint (unlike PLO management, which is explicitly
+// program_admin-only) — per the user's 2026-09-07 decision, both roles may create a course:
+// - instructor: always assigns themselves as instructor_id (never someone else's course)
+// - program_admin: assigns whichever instructor_id they specify (delegating on someone's behalf)
+// Course code/name now come from the real catalog (course-catalog.ts, sourced from
+// plo-course-master-data.md) via a dropdown — never free-typed — so `name` is looked up
+// server-side from `code`, never trusted from the client.
 export async function createCourse(formData: FormData) {
-  await requireApprovedUser(["program_admin"]);
+  const user = await requireApprovedUser(["instructor", "program_admin"]);
 
   const curriculumId = String(formData.get("curriculum_id") ?? "").trim();
   const code = String(formData.get("code") ?? "").trim();
-  const name = String(formData.get("name") ?? "").trim();
-  const instructorId = String(formData.get("instructor_id") ?? "").trim();
 
-  if (!curriculumId || !code || !name || !instructorId) {
-    throw new Error("กรุณากรอกข้อมูลให้ครบทุกช่อง");
+  const catalogEntry = COURSE_CATALOG[curriculumId]?.find((c) => c.code === code);
+  if (!catalogEntry) {
+    throw new Error("รายวิชานี้ไม่อยู่ในหลักสูตรที่เลือก");
+  }
+  const name = catalogEntry.nameTh;
+
+  const instructorId =
+    user.effectiveRole === "instructor" ? user.uid : String(formData.get("instructor_id") ?? "").trim();
+  if (!instructorId) {
+    throw new Error("กรุณาระบุ Instructor UID");
   }
 
   const curriculumRef = adminDb.collection("curricula").doc(curriculumId);

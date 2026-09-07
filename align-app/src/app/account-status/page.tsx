@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { LogoutButton } from "../logout-button";
+import { setActAsInstructor } from "./actions";
 
 // GET /auth/me/account-status per align-technical-design.md §3 (E6) — one of only 2
 // authenticated endpoints exempt from the account_status='approved' check, since
@@ -27,10 +28,26 @@ export default async function AccountStatusPage() {
       </p>
       <p>
         บทบาท: {user.role === "program_admin" ? "ผู้บริหารหลักสูตร" : "อาจารย์ผู้สอน"}
+        {user.isActingAsInstructor && " (กำลังดูมุมมองอาจารย์ผู้สอน)"}
       </p>
       <p style={{ fontSize: "1.2rem", fontWeight: 600 }}>
         สถานะ: {STATUS_LABEL[user.account_status] ?? user.account_status}
       </p>
+
+      {user.role === "program_admin" && user.account_status === "approved" && (
+        <form action={setActAsInstructor} style={{ margin: "16px 0" }}>
+          <input type="hidden" name="mode" value={user.isActingAsInstructor ? "admin" : "instructor"} />
+          <button type="submit" style={{ padding: "6px 12px", cursor: "pointer" }}>
+            {user.isActingAsInstructor
+              ? "กลับเป็นมุมมองผู้บริหารหลักสูตร"
+              : "ดูในมุมมองอาจารย์ผู้สอน (กรอกข้อมูลแทนตนเอง)"}
+          </button>
+          <p style={{ color: "#555", fontSize: "0.9rem", marginTop: 4 }}>
+            [เบี่ยงเบนจากสเปกจริงของ ALIGN — สเปกกำหนดว่า 1 บัญชี = 1 บทบาทตายตัว] ใช้ได้เฉพาะผู้บริหารหลักสูตรจริงเท่านั้น
+            ไม่ทำให้อาจารย์ผู้สอนได้สิทธิ์ผู้บริหารหลักสูตรเพิ่มขึ้นแต่อย่างใด
+          </p>
+        </form>
+      )}
 
       {user.account_status === "pending" && (
         <p style={{ color: "#555" }}>รอผู้บริหารหลักสูตรอนุมัติบัญชีนี้ก่อนจึงจะใช้งานฟีเจอร์อื่นได้</p>
@@ -41,7 +58,7 @@ export default async function AccountStatusPage() {
       {user.account_status === "approved" && (
         <p>
           ใช้งานระบบได้แล้ว — <a href="/courses">ไปที่รายวิชา</a>
-          {user.role === "program_admin" && (
+          {user.effectiveRole === "program_admin" && (
             <>
               {" "}
               · <a href="/admin/accounts">จัดการบัญชีผู้ใช้</a>

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { adminDb } from "@/lib/firebase/admin";
 import { getCurrentUser } from "@/lib/auth/session";
 import { createCourse } from "./actions";
+import { CourseSelectFields } from "./course-select-fields";
 
 // Reads Firestore per-request — must not be statically cached at build time.
 export const dynamic = "force-dynamic";
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function NewCoursePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (user.account_status !== "approved" || user.role !== "program_admin") {
+  if (user.account_status !== "approved") {
     redirect("/account-status");
   }
 
@@ -24,51 +25,19 @@ export default async function NewCoursePage() {
       <h1 style={{ fontSize: "1.4rem" }}>เพิ่มรายวิชาใหม่</h1>
 
       <form action={createCourse} style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 24 }}>
-        <label style={{ fontWeight: 600 }}>
-          หลักสูตร
-          <select
-            name="curriculum_id"
-            required
-            disabled={curricula.length === 0}
-            style={{ width: "100%", padding: 8, marginTop: 4, fontSize: "1rem" }}
-          >
-            {curricula.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <CourseSelectFields curricula={curricula} />
 
-        <label style={{ fontWeight: 600 }}>
-          รหัสวิชา
-          <input
-            name="code"
-            required
-            placeholder="เช่น 127121"
-            style={{ width: "100%", padding: 8, marginTop: 4, fontSize: "1rem", boxSizing: "border-box" }}
-          />
-        </label>
-
-        <label style={{ fontWeight: 600 }}>
-          ชื่อวิชา
-          <input
-            name="name"
-            required
-            placeholder="เช่น การรู้เท่าทันสื่อดิจิทัล"
-            style={{ width: "100%", padding: 8, marginTop: 4, fontSize: "1rem", boxSizing: "border-box" }}
-          />
-        </label>
-
-        <label style={{ fontWeight: 600 }}>
-          Instructor UID (ชั่วคราว — ยังไม่มีระบบ login/เลือกอาจารย์)
-          <input
-            name="instructor_id"
-            required
-            placeholder="Firebase Auth UID ของอาจารย์ผู้สอนหลัก"
-            style={{ width: "100%", padding: 8, marginTop: 4, fontSize: "1rem", boxSizing: "border-box" }}
-          />
-        </label>
+        {user.effectiveRole === "program_admin" && (
+          <label style={{ fontWeight: 600 }}>
+            Instructor UID (มอบหมายให้อาจารย์ท่านอื่น)
+            <input
+              name="instructor_id"
+              required
+              placeholder="Firebase Auth UID ของอาจารย์ผู้สอนหลัก"
+              style={{ width: "100%", padding: 8, marginTop: 4, fontSize: "1rem", boxSizing: "border-box" }}
+            />
+          </label>
+        )}
 
         <button
           type="submit"
