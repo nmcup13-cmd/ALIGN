@@ -19,6 +19,10 @@ export async function decideAccount(formData: FormData) {
     throw new Error("คำขอไม่ถูกต้อง");
   }
 
+  if (userId === admin.uid) {
+    throw new Error("ไม่สามารถอนุมัติ/ปฏิเสธบัญชีของตัวเองได้");
+  }
+
   const userRef = adminDb.collection("users").doc(userId);
   const logRef = adminDb.collection("account_approval_logs").doc();
 

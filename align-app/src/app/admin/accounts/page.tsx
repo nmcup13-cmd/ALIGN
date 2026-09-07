@@ -37,26 +37,32 @@ export default async function AdminAccountsPage() {
               </p>
               <p style={{ margin: "4px 0", color: "#555" }}>บทบาท: {u.role}</p>
 
-              <form action={decideAccount} style={{ display: "inline" }}>
-                <input type="hidden" name="user_id" value={u.id} />
-                <input type="hidden" name="action" value="approve" />
-                <button type="submit" style={{ marginRight: 8, padding: "6px 12px", cursor: "pointer" }}>
-                  อนุมัติ
-                </button>
-              </form>
+              {u.id === user.uid ? (
+                <p style={{ color: "#900", fontStyle: "italic" }}>(บัญชีของคุณเอง — อนุมัติ/ปฏิเสธเองไม่ได้)</p>
+              ) : (
+                <>
+                  <form action={decideAccount} style={{ display: "inline" }}>
+                    <input type="hidden" name="user_id" value={u.id} />
+                    <input type="hidden" name="action" value="approve" />
+                    <button type="submit" style={{ marginRight: 8, padding: "6px 12px", cursor: "pointer" }}>
+                      อนุมัติ
+                    </button>
+                  </form>
 
-              <form action={decideAccount} style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-                <input type="hidden" name="user_id" value={u.id} />
-                <input type="hidden" name="action" value="reject" />
-                <input
-                  name="rejection_reason"
-                  placeholder="เหตุผล (ไม่บังคับ)"
-                  style={{ padding: 6 }}
-                />
-                <button type="submit" style={{ padding: "6px 12px", cursor: "pointer" }}>
-                  ปฏิเสธ
-                </button>
-              </form>
+                  <form action={decideAccount} style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+                    <input type="hidden" name="user_id" value={u.id} />
+                    <input type="hidden" name="action" value="reject" />
+                    <input
+                      name="rejection_reason"
+                      placeholder="เหตุผล (ไม่บังคับ)"
+                      style={{ padding: 6 }}
+                    />
+                    <button type="submit" style={{ padding: "6px 12px", cursor: "pointer" }}>
+                      ปฏิเสธ
+                    </button>
+                  </form>
+                </>
+              )}
             </li>
           ))}
         </ul>
