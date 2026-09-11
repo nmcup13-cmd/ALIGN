@@ -12,10 +12,25 @@ Prefer following whatever technical design is recorded in `docs/02-design/02-tec
 
 A Next.js 16 (App Router, Turbopack) + TypeScript + Tailwind CSS v4 app, scaffolded 2026-09-06 per `align-tech-stack.md` — see [[docs/05-log/2026-09-06-scaffold-align-app-log|05-log/2026-09-06-scaffold-align-app-log]] for what was decided/created.
 
-- **Commands** (run from `align-app/`): `npm run dev`, `npm run build`, `npm run lint`, `npx tsc --noEmit` (no separate test suite yet)
-- **Firebase project**: `nmc-align-2026` (Auth/Firestore/Storage) — client SDK config in `.env.local` (gitignored; see `.env.example` for the required variable names), client init in `src/lib/firebase/client.ts`
-- **`src/lib/firebase/admin.ts`** — Firebase Admin SDK, guarded with `import "server-only"`. This is where the Access Gate / Core Orchestration logic (Next.js Server Actions/API Routes) enforces business rules #1/#3/#5 with elevated privileges — never import it from a client component. It throws until a real `FIREBASE_SERVICE_ACCOUNT_KEY` is added to `.env.local` (not generated yet).
-- Not built yet: `firestore.rules`/`storage.rules`/`firebase.json`, the actual collection structure from `align-api-schema-design.md` §2.2, and a decision between Firebase App Hosting vs. Cloud Functions 2nd gen for deploy (§2.2 of `align-tech-stack.md` recommends App Hosting but flags it as unverified for compatibility)
+- **Commands** (run from `align-app/`): `npm run dev`, `npm run build`, `npm run lint`, `npx tsc --noEmit` (no separate test suite yet — verify changes with these three plus manual testing in the browser)
+- **Firebase project**: `nmc-align-2026` (Auth/Firestore/Storage) — client SDK config in `.env.local` (gitignored; see `.env.example` for the required variable names), client init in `src/lib/firebase/client.ts`. Deploy target is **Firebase App Hosting** (`align-app/apphosting.yaml` — `NEXT_PUBLIC_*` values committed as plain env vars since the Web SDK apiKey isn't a secret; `FIREBASE_SERVICE_ACCOUNT_KEY` is a Secret Manager reference, never inline)
+- **One-time setup before the app is usable**: `node scripts/seed-curricula.mjs` (creates `curricula/2565` and `curricula/2570` — courses can't be created until these exist) and `node scripts/seed-program-admin.mjs <email> <password> [name]` (the only way to create a `program_admin` account — there is no in-app path, by design)
+
+### Access Gate / auth model
+
+- **`src/lib/auth/session.ts`** is the single enforcement point for business rule #6 (login + `approved` status + role check) — every protected Server Action/page calls `requireApprovedUser(roles?)` first, never checks `role`/`account_status` ad hoc.
+- Session is an httpOnly cookie (`align_session`, Firebase session cookie via Admin SDK) set by `POST /api/session` (login) and `POST /api/register` (self-registration), cleared by `DELETE /api/session` (logout). Firestore `users/{uid}` — not the Firebase Auth record — is the source of truth for `role`/`account_status`.
+- **`effectiveRole`, not `role`**, is what every permission check must gate on: a `program_admin` can toggle a short-lived "act as instructor" view (`align_act_as` cookie, 12h, set only via `/account-status`) to narrow themselves down to instructor for data entry. This is a confirmed deviation from `align-technical-design.md` §2.12 (1 account = 1 fixed role) — see `ACL.md` for the exact rule. It only ever narrows program_admin → instructor, never the reverse.
+- **`src/lib/firebase/admin.ts`** (Firebase Admin SDK, `import "server-only"`) is what `requireApprovedUser` and every Server Action/API Route use to enforce business rules #1/#3/#5 with elevated privileges — never import it from a client component.
+- `firestore.rules` is intentionally a single blanket rule (any authenticated user may read/write anything) — it's defense-in-depth only; real authorization lives entirely in the Next.js Server Action/API Route layer above. Don't try to push business-rule enforcement down into Firestore rules.
+
+### Data shape actually implemented
+
+Firestore collections in use today (subset of `align-api-schema-design.md` §2.2 — check that doc + `api-schema-design-stale-status-cleanup-log` before assuming a field exists beyond these): `users`, `curricula/{curriculum_id}/courses/{code}` (course doc IDs are the catalog course code, unique **system-wide** — see the transaction in `courses/new/actions.ts` for how uniqueness is checked across both curricula without a collection-group index), `account_approval_logs`.
+
+`src/lib/course-catalog.ts` hardcodes the real course list per curriculum year (2565/2570), mirrored from `docs/01-requirements/01-spec/plo-course-master-data.md` — it's reference data, not a fixture. `/courses/new` looks up `name` from this catalog server-side by `code`; never trust a course name from the client.
+
+**Two confirmed deviations from the technical-design/api-schema docs** (both logged in `ACL.md` and dated 2026-09-07 — treat as intentional, not drift, but don't extend them without asking): (1) course create/edit/delete exists even though the schema doc defines no such endpoints and no `is_deleted` field for `course` — edit is scoped to reassigning `instructor_id` only, delete is a real hard delete with client-side `confirm()`; (2) the act-as-instructor view described above. If other entities' behavior seems to contradict `align-technical-design.md`, that's a bug to flag, not another deviation to assume.
 
 `DESIGN.md` at the repo root is the source of truth for **visual/UX design** (brand identity, design tokens, components, UX rules) — read it before creating or editing anything under `docs/02-design/01-prototypes/`, the same way `CLAUDE.md` is the source of truth for workflow/business rules.
 
