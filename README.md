@@ -4,7 +4,7 @@
 
 ## URL ออนไลน์
 
-_ยังไม่ได้ deploy — จะเพิ่มลิงก์ตรงนี้หลัง deploy ขึ้น Firebase App Hosting_
+**https://align-app-sage.vercel.app** — deploy ขึ้น Vercel (ไม่ใช่ Firebase App Hosting ตามแผนเดิม เพราะ App Hosting บังคับต้อง upgrade Firebase project เป็น Blaze plan ก่อน — ดู [[docs/05-log|05-log]] สำหรับรายละเอียด)
 
 ## โครงสร้างโปรเจกต์
 

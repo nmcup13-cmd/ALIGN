@@ -27,3 +27,4 @@
 - [[2026-09-06-detailed-design-notification-sequence-log|2026-09-06: ปิด audit finding — เพิ่ม sequence diagram ของ notification (T-042 สร้าง/auto-resolve) เข้า align-detailed-design.md, แก้ §1.5 ให้ GapNotify อ่านจาก notification collection แทนคำนวณสด]]
 - [[2026-09-06-scaffold-align-app-log|2026-09-06: Scaffold โปรเจกต์ Next.js จริง (`align-app/`) ผูก Firebase project `nmc-align-2026` — TypeScript, ติดตั้ง firebase/firebase-admin SDK]]
 - [[2026-09-06-firebase-storage-blaze-deferred-log|2026-09-06: เลื่อนเปิด Cloud Storage ออกไปก่อน (ต้อง upgrade Blaze plan) — พัฒนาต่อด้วย Firestore+Auth ก่อน]]
+- [[2026-09-11-deploy-to-vercel-log|2026-09-11: Deploy ขึ้น Vercel แทน Firebase App Hosting (ยังไม่ upgrade Blaze) — แก้บั๊ก jose/jwks-rsa, git author block, Root Directory]]
