@@ -3,6 +3,7 @@ import { adminDb } from "@/lib/firebase/admin";
 import { getCurrentUser } from "@/lib/auth/session";
 import { createCourse } from "./actions";
 import { CourseSelectFields } from "./course-select-fields";
+import { Button, Card, Field, InfoNote, Input, PageShell, PageTitle, TextLink } from "@/components/ui";
 
 // Reads Firestore per-request — must not be statically cached at build time.
 export const dynamic = "force-dynamic";
@@ -21,42 +22,36 @@ export default async function NewCoursePage() {
   }));
 
   return (
-    <main style={{ maxWidth: 640, margin: "40px auto", padding: "0 16px", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ fontSize: "1.4rem" }}>เพิ่มรายวิชาใหม่</h1>
+    <PageShell>
+      <PageTitle>เพิ่มรายวิชาใหม่</PageTitle>
 
-      <form action={createCourse} style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 24 }}>
-        <CourseSelectFields curricula={curricula} />
+      <Card className="mt-6">
+        <form action={createCourse} className="flex flex-col gap-4">
+          <CourseSelectFields curricula={curricula} />
 
-        {user.effectiveRole === "program_admin" && (
-          <label style={{ fontWeight: 600 }}>
-            Instructor UID (มอบหมายให้อาจารย์ท่านอื่น)
-            <input
-              name="instructor_id"
-              required
-              placeholder="Firebase Auth UID ของอาจารย์ผู้สอนหลัก"
-              style={{ width: "100%", padding: 8, marginTop: 4, fontSize: "1rem", boxSizing: "border-box" }}
-            />
-          </label>
-        )}
+          {user.effectiveRole === "program_admin" && (
+            <Field label="Instructor UID (มอบหมายให้อาจารย์ท่านอื่น)">
+              <Input name="instructor_id" required placeholder="Firebase Auth UID ของอาจารย์ผู้สอนหลัก" />
+            </Field>
+          )}
 
-        <button
-          type="submit"
-          disabled={curricula.length === 0}
-          style={{ padding: "10px 16px", fontSize: "1rem", cursor: "pointer", marginTop: 8 }}
-        >
-          บันทึกรายวิชา
-        </button>
-      </form>
+          <Button type="submit" disabled={curricula.length === 0} className="mt-2">
+            บันทึกรายวิชา
+          </Button>
+        </form>
+      </Card>
 
       {curricula.length === 0 && (
-        <p style={{ color: "#900", marginTop: 16 }}>
-          ยังไม่มีข้อมูลหลักสูตรในระบบ — รัน <code>node scripts/seed-curricula.mjs</code> ก่อน
-        </p>
+        <div className="mt-4">
+          <InfoNote>
+            ยังไม่มีข้อมูลหลักสูตรในระบบ — รัน <code className="font-mono text-text-primary">node scripts/seed-curricula.mjs</code> ก่อน
+          </InfoNote>
+        </div>
       )}
 
-      <p style={{ marginTop: 24 }}>
-        <a href="/courses">&larr; กลับหน้ารายการ</a>
+      <p className="mt-6 text-body-sm">
+        <TextLink href="/courses">&larr; กลับหน้ารายการ</TextLink>
       </p>
-    </main>
+    </PageShell>
   );
 }

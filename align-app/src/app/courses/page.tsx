@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { adminDb } from "@/lib/firebase/admin";
 import { getCurrentUser } from "@/lib/auth/session";
 import { LogoutButton } from "../logout-button";
 import { updateCourseInstructor } from "./actions";
 import { DeleteCourseButton } from "./delete-course-button";
+import { Button, Card, CurriculumTag, EmptyState, Input, PageShell, PageTitle, TextLink } from "@/components/ui";
 
 // Reads Firestore per-request — must not be statically cached at build time.
 export const dynamic = "force-dynamic";
@@ -31,58 +33,77 @@ export default async function CoursesPage() {
     .sort((a, b) => a.code.localeCompare(b.code));
 
   return (
-    <main style={{ maxWidth: 720, margin: "40px auto", padding: "0 16px", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ fontSize: "1.4rem" }}>{user.effectiveRole === "program_admin" ? "รายวิชาทั้งหมด" : "รายวิชาของฉัน"}</h1>
-      <p>
-        <a href="/courses/new">+ เพิ่มรายวิชาใหม่</a>
-      </p>
+    <PageShell width="lg">
+      <div className="flex items-center justify-between gap-4">
+        <PageTitle>{user.effectiveRole === "program_admin" ? "รายวิชาทั้งหมด" : "รายวิชาของฉัน"}</PageTitle>
+        <Link href="/courses/new">
+          <Button variant="primary">+ เพิ่มรายวิชาใหม่</Button>
+        </Link>
+      </div>
 
       {courses.length === 0 ? (
-        <p>ยังไม่มีรายวิชาในระบบ</p>
+        <div className="mt-6">
+          <EmptyState>ยังไม่มีรายวิชาในระบบ</EmptyState>
+        </div>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0 }}>
+        <ul className="mt-6 flex flex-col gap-3">
           {courses.map((c) => {
             const canDelete = user.effectiveRole === "program_admin" || c.instructor_id === user.uid;
             return (
-              <li
-                key={`${c.curriculum_id}-${c.id}`}
-                style={{ border: "1px solid #ddd", borderRadius: 6, padding: 12, marginBottom: 12 }}
-              >
-                <p style={{ margin: 0 }}>
-                  [{c.curriculum_id}] {c.code} — {c.name}
-                </p>
-                <p style={{ margin: "4px 0", color: "#555" }}>
-                  instructor: {c.instructor_id}, clo_plo_ready: {String(c.clo_plo_ready)}
-                </p>
+              <li key={`${c.curriculum_id}-${c.id}`}>
+                <Card className="flex flex-col gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CurriculumTag id={c.curriculum_id} />
+                    <span className="font-mono text-body-sm text-text-secondary">{c.code}</span>
+                    <span className="text-h3 font-medium text-text-primary">{c.name}</span>
+                  </div>
 
-                {user.effectiveRole === "program_admin" && (
-                  <form action={updateCourseInstructor} style={{ display: "inline-flex", gap: 8, alignItems: "center", marginRight: 12 }}>
-                    <input type="hidden" name="curriculum_id" value={c.curriculum_id} />
-                    <input type="hidden" name="code" value={c.code} />
-                    <input
-                      name="instructor_id"
-                      defaultValue={c.instructor_id}
-                      placeholder="Instructor UID ใหม่"
-                      style={{ padding: 6 }}
-                    />
-                    <button type="submit" style={{ padding: "4px 10px", cursor: "pointer" }}>
-                      บันทึกผู้สอน
-                    </button>
-                  </form>
-                )}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-body-sm text-text-secondary">
+                    <span>
+                      ผู้สอน: <span className="font-mono text-text-primary">{c.instructor_id}</span>
+                    </span>
+                    <span className={c.clo_plo_ready ? "text-status-confirmed" : "text-status-gap"}>
+                      {c.clo_plo_ready ? "ผูก CLO–PLO แล้ว" : "ยังไม่ได้ผูก CLO–PLO"}
+                    </span>
+                  </div>
 
-                {canDelete && (
-                  <DeleteCourseButton curriculumId={c.curriculum_id} code={c.code} courseLabel={`${c.code} — ${c.name}`} />
-                )}
+                  <div className="flex flex-wrap items-center gap-3 border-t border-border-default pt-3">
+                    {user.effectiveRole === "program_admin" && (
+                      <form action={updateCourseInstructor} className="flex items-center gap-2">
+                        <input type="hidden" name="curriculum_id" value={c.curriculum_id} />
+                        <input type="hidden" name="code" value={c.code} />
+                        <Input
+                          name="instructor_id"
+                          defaultValue={c.instructor_id}
+                          placeholder="Instructor UID ใหม่"
+                          className="w-56"
+                        />
+                        <Button type="submit" variant="secondary" className="px-3 py-1">
+                          บันทึกผู้สอน
+                        </Button>
+                      </form>
+                    )}
+
+                    {canDelete && (
+                      <DeleteCourseButton
+                        curriculumId={c.curriculum_id}
+                        code={c.code}
+                        courseLabel={`${c.code} — ${c.name}`}
+                      />
+                    )}
+                  </div>
+                </Card>
               </li>
             );
           })}
         </ul>
       )}
 
-      <div style={{ marginTop: 24 }}>
-        <a href="/account-status">&larr; กลับ</a> · <LogoutButton />
+      <div className="mt-8 flex items-center gap-3 text-body-sm">
+        <TextLink href="/account-status">&larr; กลับ</TextLink>
+        <span className="text-border-strong">·</span>
+        <LogoutButton />
       </div>
-    </main>
+    </PageShell>
   );
 }

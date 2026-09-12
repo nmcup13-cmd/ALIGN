@@ -1,6 +1,7 @@
 "use client";
 
 import { deleteCourse } from "./actions";
+import { Button } from "@/components/ui";
 
 // Native <form action={serverAction}> forms have no built-in confirm step — this wraps the
 // submit in a plain window.confirm() so delete always asks first, per the requirement.
@@ -21,13 +22,13 @@ export function DeleteCourseButton({
           e.preventDefault();
         }
       }}
-      style={{ display: "inline" }}
+      className="inline"
     >
       <input type="hidden" name="curriculum_id" value={curriculumId} />
       <input type="hidden" name="code" value={code} />
-      <button type="submit" style={{ padding: "4px 10px", cursor: "pointer", color: "#900" }}>
+      <Button type="submit" variant="danger" className="px-3 py-1">
         ลบ
-      </button>
+      </Button>
     </form>
   );
 }

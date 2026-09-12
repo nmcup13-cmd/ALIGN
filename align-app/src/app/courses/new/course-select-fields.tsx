@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { COURSE_CATALOG } from "@/lib/course-catalog";
+import { Field, Select } from "@/components/ui";
 
 interface Curriculum {
   id: string;
@@ -17,39 +18,31 @@ export function CourseSelectFields({ curricula }: { curricula: Curriculum[] }) {
 
   return (
     <>
-      <label style={{ fontWeight: 600 }}>
-        หลักสูตร
-        <select
+      <Field label="หลักสูตร">
+        <Select
           name="curriculum_id"
           required
           value={curriculumId}
           onChange={(e) => setCurriculumId(e.target.value)}
           disabled={curricula.length === 0}
-          style={{ width: "100%", padding: 8, marginTop: 4, fontSize: "1rem" }}
         >
           {curricula.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
-        </select>
-      </label>
+        </Select>
+      </Field>
 
-      <label style={{ fontWeight: 600 }}>
-        รายวิชา
-        <select
-          name="code"
-          required
-          disabled={courses.length === 0}
-          style={{ width: "100%", padding: 8, marginTop: 4, fontSize: "1rem" }}
-        >
+      <Field label="รายวิชา">
+        <Select name="code" required disabled={courses.length === 0}>
           {courses.map((c) => (
             <option key={c.code} value={c.code}>
               {c.code} — {c.nameTh} ({c.nameEn})
             </option>
           ))}
-        </select>
-      </label>
+        </Select>
+      </Field>
     </>
   );
 }

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
+import { Button } from "@/components/ui";
 
 export function LogoutButton() {
   const router = useRouter();
@@ -14,8 +15,8 @@ export function LogoutButton() {
   }
 
   return (
-    <button onClick={handleLogout} style={{ padding: "6px 12px", cursor: "pointer" }}>
+    <Button variant="ghost" onClick={handleLogout} className="px-0! py-0!">
       ออกจากระบบ
-    </button>
+    </Button>
   );
 }

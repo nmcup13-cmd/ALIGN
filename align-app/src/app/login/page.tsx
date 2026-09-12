@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
+import { Button, Card, ErrorText, Field, Input, PageShell, PageTitle, TextLink } from "@/components/ui";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,41 +40,29 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={{ maxWidth: 420, margin: "40px auto", padding: "0 16px", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ fontSize: "1.4rem" }}>เข้าสู่ระบบ</h1>
+    <PageShell width="sm">
+      <PageTitle>เข้าสู่ระบบ</PageTitle>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 24 }}>
-        <label style={{ fontWeight: 600 }}>
-          อีเมล
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ width: "100%", padding: 8, marginTop: 4, fontSize: "1rem", boxSizing: "border-box" }}
-          />
-        </label>
-        <label style={{ fontWeight: 600 }}>
-          รหัสผ่าน
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: "100%", padding: 8, marginTop: 4, fontSize: "1rem", boxSizing: "border-box" }}
-          />
-        </label>
+      <Card className="mt-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <Field label="อีเมล">
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </Field>
+          <Field label="รหัสผ่าน">
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </Field>
 
-        {error && <p style={{ color: "#900" }}>{error}</p>}
+          {error && <ErrorText>{error}</ErrorText>}
 
-        <button type="submit" disabled={submitting} style={{ padding: "10px 16px", fontSize: "1rem", cursor: "pointer" }}>
-          {submitting ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
-        </button>
-      </form>
+          <Button type="submit" disabled={submitting} className="mt-2">
+            {submitting ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+          </Button>
+        </form>
+      </Card>
 
-      <p style={{ marginTop: 24 }}>
-        ยังไม่มีบัญชี? <a href="/register">สมัครใช้งาน</a>
+      <p className="mt-6 text-body-sm text-text-secondary">
+        ยังไม่มีบัญชี? <TextLink href="/register">สมัครใช้งาน</TextLink>
       </p>
-    </main>
+    </PageShell>
   );
 }
