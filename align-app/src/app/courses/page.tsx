@@ -68,6 +68,22 @@ export default async function CoursesPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 border-t border-border-default pt-3">
+                    {user.effectiveRole === "instructor" && c.instructor_id === user.uid && (
+                      <Link href={`/courses/${c.curriculum_id}/${c.id}`}>
+                        <Button variant="secondary" className="px-3 py-1">
+                          จัดการ CLO
+                        </Button>
+                      </Link>
+                    )}
+
+                    {user.effectiveRole === "instructor" && c.instructor_id === user.uid && c.clo_plo_ready && (
+                      <Link href={`/courses/${c.curriculum_id}/${c.id}/teaching-records/new`}>
+                        <Button variant="secondary" className="px-3 py-1">
+                          บันทึกการสอน
+                        </Button>
+                      </Link>
+                    )}
+
                     {user.effectiveRole === "program_admin" && (
                       <form action={updateCourseInstructor} className="flex items-center gap-2">
                         <input type="hidden" name="curriculum_id" value={c.curriculum_id} />

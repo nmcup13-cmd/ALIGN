@@ -65,7 +65,9 @@ export default async function AccountStatusPage() {
         )}
         {user.account_status === "approved" && (
           <p className="text-body-sm">
-            ใช้งานระบบได้แล้ว — <TextLink href="/courses">ไปที่รายวิชา</TextLink>
+            ใช้งานระบบได้แล้ว —{" "}
+            <TextLink href="/dashboard">หน้าแรก</TextLink> ·{" "}
+            <TextLink href="/courses">ไปที่รายวิชา</TextLink>
             {user.effectiveRole === "program_admin" && (
               <>
                 {" "}
