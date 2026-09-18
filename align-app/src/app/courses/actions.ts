@@ -24,6 +24,15 @@ export async function updateCourseInstructor(formData: FormData) {
     throw new Error("กรุณากรอกข้อมูลให้ครบ");
   }
 
+  // This field used to accept any free text — someone typing a plain name instead of a real
+  // UID silently broke ownership filtering everywhere (course looked "missing" for every
+  // instructor). Reject anything that isn't an existing, non-deleted instructor account.
+  const targetUserSnap = await adminDb.collection("users").doc(newInstructorId).get();
+  const targetUser = targetUserSnap.data() as { role?: string; is_deleted?: boolean; name?: string } | undefined;
+  if (!targetUserSnap.exists || targetUser?.is_deleted || targetUser?.role !== "instructor") {
+    throw new Error(`"${newInstructorId}" ไม่ใช่ UID ของบัญชีอาจารย์ผู้สอนที่มีอยู่จริง — ต้องเป็น UID (ไม่ใช่ชื่อ) ของบัญชีที่สมัครและได้รับอนุมัติแล้ว`);
+  }
+
   const courseRef = adminDb.collection("curricula").doc(curriculumId).collection("courses").doc(code);
   await courseRef.update({
     instructor_id: newInstructorId,
