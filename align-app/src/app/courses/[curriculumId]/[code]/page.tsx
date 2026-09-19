@@ -80,11 +80,23 @@ export default async function ManageCoursePage({
           <PageTitle>จัดการรายวิชา</PageTitle>
           <CurriculumTag id={curriculumId} />
         </div>
-        <a href={`/courses/${curriculumId}/${code}/export-word`}>
-          <Button type="button" variant="secondary">
-            ดาวน์โหลดเอกสาร Word
-          </Button>
-        </a>
+        <div className="flex items-center gap-2">
+          <a href={`/courses/${curriculumId}/${code}/syllabus`}>
+            <Button type="button" variant="secondary">
+              กำหนด Course Syllabus
+            </Button>
+          </a>
+          <a href={`/courses/${curriculumId}/${code}/export-word`}>
+            <Button type="button" variant="secondary">
+              ดาวน์โหลดเอกสาร Word
+            </Button>
+          </a>
+          <a href={`/courses/${curriculumId}/${code}/clo-week-map`}>
+            <Button type="button" variant="secondary">
+              แผนที่ CLO × สัปดาห์
+            </Button>
+          </a>
+        </div>
       </div>
       <p className="mt-1 text-body-sm text-text-secondary">
         {code} — {course.name}

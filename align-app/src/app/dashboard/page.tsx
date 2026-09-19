@@ -186,6 +186,11 @@ async function ProgramAdminDashboard({
             ดาวน์โหลดเอกสาร AUN-QA
           </Button>
         </a>
+        <Link href={`/curricula/${activeCurriculum}/plos`}>
+          <Button type="button" variant="secondary" className="px-3 py-1">
+            จัดการ PLO
+          </Button>
+        </Link>
       </div>
 
       <Card className="mt-4 flex flex-col gap-2">

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button, Card, ErrorText, Field, Input, Select } from "@/components/ui";
 import { checkExistingRecordForWeek, createTeachingRecord } from "../actions";
 
 const CURRENT_THAI_YEAR = new Date().getFullYear() + 543;
+const MAX_EVIDENCE_FILE_BYTES = 4 * 1024 * 1024;
 
 export function TeachingRecordForm({ curriculumId, code, today }: { curriculumId: string; code: string; today: string }) {
   const [week, setWeek] = useState(12);
@@ -15,6 +16,7 @@ export function TeachingRecordForm({ curriculumId, code, today }: { curriculumId
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [conflict, setConflict] = useState<{ id: string; topic: string; taughtAt: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function buildFormData() {
     const fd = new FormData();
@@ -25,6 +27,9 @@ export function TeachingRecordForm({ curriculumId, code, today }: { curriculumId
     fd.set("topic", topic);
     fd.set("semester", semester);
     fd.set("academic_year", String(academicYear));
+    for (const file of fileInputRef.current?.files ?? []) {
+      fd.append("evidence_files", file);
+    }
     return fd;
   }
 
@@ -45,6 +50,11 @@ export function TeachingRecordForm({ curriculumId, code, today }: { curriculumId
     setError(null);
     if (!topic.trim()) {
       setError("กรุณาระบุหัวข้อการสอน");
+      return;
+    }
+    const oversizedFile = Array.from(fileInputRef.current?.files ?? []).find((f) => f.size > MAX_EVIDENCE_FILE_BYTES);
+    if (oversizedFile) {
+      setError(`ไฟล์ ${oversizedFile.name} มีขนาดเกิน 4MB`);
       return;
     }
 
@@ -101,6 +111,16 @@ export function TeachingRecordForm({ curriculumId, code, today }: { curriculumId
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             required
+          />
+        </Field>
+
+        <Field label="แนบไฟล์หลักฐาน (ไม่บังคับ, ไฟล์ละไม่เกิน 4MB)">
+          <input
+            ref={fileInputRef}
+            type="file"
+            name="evidence_files"
+            multiple
+            className="w-full rounded-sm border border-border-default bg-bg-surface px-3 py-2 text-body-sm text-text-primary file:mr-3 file:rounded-sm file:border-0 file:bg-bg-surface-sunken file:px-3 file:py-1.5 file:text-body-sm file:font-medium file:text-text-primary"
           />
         </Field>
 

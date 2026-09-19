@@ -2,6 +2,8 @@
 
 ## 🌐 URL ออนไลน์: https://align-app-sage.vercel.app
 
+📋 ผลทดสอบระบบ (รันจริงผ่านเบราว์เซอร์ 5 เคสหลัก): [test-results.md](test-results.md)
+
 ระบบติดตามความสอดคล้อง CLO/PLO (สาขา New Media Communication) — อาจารย์ผู้สอนบันทึกการสอนจริงและแนบหลักฐาน ระบบช่วยจับคู่กับ CLO ด้วย AI (เป็นค่าตั้งต้นที่ต้องให้อาจารย์ยืนยันเสมอ) และผู้บริหารหลักสูตรติดตามความครบถ้วนของทั้งหลักสูตร
 
 deploy ขึ้น Vercel (ไม่ใช่ Firebase App Hosting ตามแผนเดิม เพราะ App Hosting บังคับต้อง upgrade Firebase project เป็น Blaze plan ก่อน — ดู [[docs/05-log|05-log]] สำหรับรายละเอียด)

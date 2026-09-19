@@ -2,9 +2,15 @@
 
 import { redirect } from "next/navigation";
 import { FieldValue } from "firebase-admin/firestore";
+import { put } from "@vercel/blob";
 import { adminDb } from "@/lib/firebase/admin";
 import { requireApprovedUser } from "@/lib/auth/session";
 import { runCloMatchAgent, AiMatchError } from "@/lib/ai/openrouter";
+
+// Server Actions body limit is raised to 4mb in next.config.ts, but Vercel serverless
+// Functions hard-reject request bodies above ~4.5MB regardless — so each individual evidence
+// file is capped well under that ceiling.
+const MAX_EVIDENCE_FILE_BYTES = 4 * 1024 * 1024;
 
 // POST /teaching-records + POST /teaching-records/{id}/ai-match per align-technical-design.md
 // §4 (E3). AI results always land as ai_match_result.state='draft' (business rule #3) — the
@@ -198,6 +204,15 @@ export async function createTeachingRecord(formData: FormData, replaceRecordId?:
     throw new Error("ปีการศึกษาไม่ถูกต้อง");
   }
 
+  // Evidence files (AB-05/AB-06) — validate every file BEFORE creating/replacing anything,
+  // so a too-large file never leaves behind a partially-created teaching record.
+  const evidenceFiles = formData.getAll("evidence_files").filter((f): f is File => f instanceof File && f.size > 0);
+  for (const file of evidenceFiles) {
+    if (file.size > MAX_EVIDENCE_FILE_BYTES) {
+      throw new Error(`ไฟล์ ${file.name} มีขนาดเกิน 4MB`);
+    }
+  }
+
   if (replaceRecordId) {
     // Soft-delete only — this also correctly excludes it from coverage/frequency aggregation
     // (align-api-schema-design.md §3.7: "กรอง is_deleted=false ก่อนคำนวณ...clo_coverage_summary").
@@ -225,6 +240,27 @@ export async function createTeachingRecord(formData: FormData, replaceRecordId?:
     deleted_at: null,
     created_at: FieldValue.serverTimestamp(),
   });
+
+  // Upload evidence files (AB-05/AB-06) after the teaching_record exists. Evidence is
+  // supplementary — a failed upload here does not roll back the already-created record — but
+  // the error still surfaces to the instructor so they know a file didn't attach.
+  for (const file of evidenceFiles) {
+    const pathname = `evidence/${curriculumId}/${code}/${recordRef.id}/${Date.now()}-${file.name}`;
+    const blob = await put(pathname, file, { access: "private" });
+    const evidenceRef = adminDb.collection("evidence").doc();
+    await evidenceRef.create({
+      evidence_id: evidenceRef.id,
+      teaching_record_id: recordRef.id,
+      course_id: code,
+      curriculum_id: curriculumId,
+      file_name: file.name,
+      blob_pathname: blob.pathname,
+      content_type: blob.contentType ?? file.type ?? null,
+      uploaded_by: user.uid,
+      created_at: FieldValue.serverTimestamp(),
+      is_deleted: false,
+    });
+  }
 
   // teaching_record is saved regardless of AI outcome — runAiMatch never throws (it logs
   // failures to agent_logs instead), and the review page offers a retry button if it failed,

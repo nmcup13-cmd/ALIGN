@@ -23,6 +23,10 @@ interface AgentLogDoc {
   error_message: string | null;
 }
 
+interface EvidenceDoc {
+  file_name: string;
+}
+
 export default async function ReviewPage({
   params,
 }: {
@@ -47,7 +51,7 @@ export default async function ReviewPage({
     redirect("/courses");
   }
 
-  const [closSnap, matchSnap, latestLogSnap] = await Promise.all([
+  const [closSnap, matchSnap, latestLogSnap, evidenceSnap] = await Promise.all([
     courseRef.collection("clos").where("is_deleted", "==", false).get(),
     adminDb.collection("ai_match_results").where("teaching_record_id", "==", recordId).get(),
     adminDb
@@ -57,7 +61,14 @@ export default async function ReviewPage({
       .orderBy("created_at", "desc")
       .limit(1)
       .get(),
+    adminDb
+      .collection("evidence")
+      .where("teaching_record_id", "==", recordId)
+      .where("is_deleted", "==", false)
+      .get(),
   ]);
+
+  const evidenceItems = evidenceSnap.docs.map((d) => ({ id: d.id, ...(d.data() as EvidenceDoc) }));
 
   const cloByCode = new Map(closSnap.docs.map((d) => [d.id, d.data() as { description: string }]));
   const latestLog = latestLogSnap.docs[0]?.data() as AgentLogDoc | undefined;
@@ -102,6 +113,21 @@ export default async function ReviewPage({
       </p>
 
       <div className="mt-6 flex flex-col gap-4">
+        <Card>
+          <h2 className="text-h3 font-medium text-text-primary">ไฟล์หลักฐานที่แนบ</h2>
+          {evidenceItems.length === 0 ? (
+            <InfoNote>ไม่มีไฟล์แนบสำหรับบันทึกนี้</InfoNote>
+          ) : (
+            <ul className="mt-2 flex flex-col gap-1">
+              {evidenceItems.map((item) => (
+                <li key={item.id} className="text-body-sm">
+                  <TextLink href={`/evidence/${item.id}/download`}>{item.file_name}</TextLink>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
         {latestLog?.status === "ok" && latestLog.summary && (
           <Card className="border-status-info bg-bg-surface-sunken">
             <p className="text-caption font-medium text-status-info">สรุปจาก AI (ข้อเสนอแนะเบื้องต้น ไม่ใช่ข้อสรุปสุดท้าย)</p>
